@@ -1,0 +1,37 @@
+# Typed handoff packet registry: every packet type, its schema, producer,
+# and known consumers. The runtime resolver routes missing required consumed
+# packets through this table (producer chain) instead of hard-coding
+# StateWork names.
+version: 1.1.0
+packets:
+  repository_truth_packet:
+    schema: repository-truth-packet.schema.json
+    schema_version: "1.1.0"
+    producer: gitter
+    consumers: [getter]
+    freshness_validator: repository_truth_v1
+    required_any_context: [repository_path, repository_fingerprint]
+  repository_evidence_packet:
+    schema: repository-evidence-packet.schema.json
+    schema_version: "1.1.0"
+    producer: getter
+    consumers: []
+  infrastructure_truth_packet:
+    schema: infrastructure-truth-packet.schema.json
+    schema_version: "1.1.0"
+    producer: infrae
+    consumers: [infrae]
+    freshness_validator: infrastructure_truth_v1
+    required_context: [infrastructure_fingerprint]
+  infrastructure_evidence_packet:
+    schema: infrastructure-evidence-packet.schema.json
+    schema_version: "1.1.0"
+    producer: infrae
+    consumers: []
+  tui_validation_packet:
+    schema: tui-validation-packet.schema.json
+    schema_version: "1.1.0"
+    producer: tuid
+    consumers: []
+    freshness_validator: tui_validation_v1
+    required_context: [validation_fingerprint]

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitivestatework.dev/schemas/repository-truth-packet.schema.json",
+  "title": "Gitter repository truth packet",
+  "description": "Freshness-carrying truth packet for the Gitter → Getter handoff. Composes the common handoff envelope; domain data lives in the nested payload (repository / change / assessment / freshness).",
+  "allOf": [
+    { "$ref": "handoff-packet.schema.json" },
+    {
+      "properties": {
+        "packet_type": { "const": "repository_truth_packet" },
+        "producer": { "const": "gitter" },
+        "schema_version": { "const": "1.1.0" },
+        "payload": {
+          "type": "object",
+          "required": ["repository", "change", "assessment", "freshness"],
+          "properties": {
+            "repository": {
+              "type": "object",
+              "required": ["root", "current_branch", "head_sha", "working_tree", "untracked_files", "active_worktrees", "remote_visibility"],
+              "properties": {
+                "root": { "type": "string", "minLength": 1 },
+                "current_branch": { "type": ["string", "null"] },
+                "head_sha": { "type": "string", "minLength": 1 },
+                "tracking_branch": { "type": ["string", "null"] },
+                "target_base": { "type": ["string", "null"] },
+                "target_base_sha": { "type": ["string", "null"] },
+                "merge_base": { "type": ["string", "null"] },
+                "working_tree": { "type": "object", "additionalProperties": true },
+                "staged_changes": { "type": "array", "items": { "type": "string" } },
+                "unstaged_changes": { "type": "array", "items": { "type": "string" } },
+                "untracked_files": { "type": "array", "items": { "type": "string" } },
+                "ahead": { "type": ["integer", "null"], "minimum": 0 },
+                "behind": { "type": ["integer", "null"], "minimum": 0 },
+                "local_only_commits": { "type": "array", "items": { "type": "string" } },
+                "remote_only_commits": { "type": "array", "items": { "type": "string" } },
+                "active_worktrees": { "type": "array", "items": { "type": "string" } },
+                "operation_in_progress": { "type": ["string", "null"] },
+                "remote_visibility": { "type": ["string", "null"] }
+              },
+              "additionalProperties": false
+            },
+            "change": {
+              "type": "object",
+              "required": ["intended_task", "branch_purpose", "integration_risk"],
+              "properties": {
+                "intended_task": { "type": "string" },
+                "branch_purpose": { "type": ["string", "null"] },
+                "logical_change_units": { "type": "array", "items": { "type": "string" } },
+                "unrelated_changes": { "type": "array", "items": { "type": "string" } },
+                "unexpected_commits": { "type": "array", "items": { "type": "string" } },
+                "branch_owner": { "type": ["string", "null"] },
+                "concurrent_workers": { "type": "array", "items": { "type": "string" } },
+                "rewrite_risk": { "type": "string", "enum": ["none", "low", "medium", "high"] },
+                "integration_risk": { "type": "string", "enum": ["none", "low", "medium", "high"] }
+              },
+              "additionalProperties": false
+            },
+            "assessment": {
+              "type": "object",
+              "required": ["standard_assessment"],
+              "properties": {
+                "standard_assessment": { "type": "string", "minLength": 1 },
+                "disposition": { "type": "string", "enum": ["safe", "unsafe", "uncertain"] }
+              },
+              "additionalProperties": false
+            },
+            "freshness": {
+              "type": "object",
+              "required": ["repo_identity", "observed_head", "working_tree_fingerprint", "active_worktree_snapshot", "invalidation_conditions"],
+              "properties": {
+                "repo_identity": { "type": "string", "minLength": 1 },
+                "observed_head": { "type": "string", "minLength": 1 },
+                "working_tree_fingerprint": { "type": "string", "minLength": 1 },
+                "active_worktree_snapshot": { "type": "string", "minLength": 1 },
+                "remote_state_fingerprint": { "type": ["string", "null"] },
+                "invalidation_conditions": { "type": "array", "items": { "type": "string" } }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

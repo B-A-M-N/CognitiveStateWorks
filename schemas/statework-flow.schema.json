@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitivestatework.dev/schemas/statework-flow.schema.json",
+  "type": "object",
+  "required": ["flow", "required_specialists", "optional_specialists"],
+  "properties": {
+    "flow": { "type": "string", "minLength": 1 },
+    "operations": { "type": "array", "items": { "type": "string" } },
+    "triggers": { "type": "array", "items": { "type": "string" } },
+    "task_shapes": { "type": "array", "items": { "type": "string" } },
+    "domain_tags": { "type": "array", "items": { "type": "string" } },
+    "states": {
+      "type": "object",
+      "required": ["from", "through"],
+      "properties": {
+        "from": { "type": "array", "items": { "type": "string" } },
+        "through": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "framework_requirements": { "type": "array", "items": { "type": "string" } },
+    "required_specialists": { "type": "array", "items": { "type": "string" } },
+    "optional_specialists": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

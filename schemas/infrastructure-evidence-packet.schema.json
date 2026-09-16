@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitivestatework.dev/schemas/infrastructure-evidence-packet.schema.json",
+  "title": "Infrastructure evidence packet",
+  "description": "Evidence produced by Infrae actions (rollback results, capacity tests, deployment verification).",
+  "allOf": [
+    { "$ref": "handoff-packet.schema.json" },
+    {
+      "properties": {
+        "packet_type": { "const": "infrastructure_evidence_packet" },
+        "producer": { "const": "infrae" },
+        "schema_version": { "const": "1.1.0" },
+        "payload": {
+          "type": "object",
+          "required": ["action", "result", "evidence"],
+          "properties": {
+            "action": { "type": "string", "minLength": 1 },
+            "result": { "type": "string", "enum": ["success", "failure", "partial", "aborted"] },
+            "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+            "notes": { "type": ["string", "null"] }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+id: getter
+name: Getter
+entrypoint: getter/SKILL.md
+triggers:
+- merge
+- rebase
+- squash
+- revert
+- cherry-pick
+- force push
+- reset
+- conflict resolution
+- repository recovery
+phase: mutation
+inputs:
+  required:
+  - repository_truth_packet
+  optional: []
+emits:
+- repository_evidence_packet
+core_requirements:
+- owl
+- anchor
+- ward
+context_budget: low
+exclusive_group: repository_state
+handoff: repository_evidence_packet
+version: 1.1.0

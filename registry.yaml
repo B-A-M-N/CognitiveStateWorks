@@ -1,0 +1,7 @@
+version: 1.0.0
+schema: schemas/statework-manifest.schema.json
+stateworks:
+  - infrae
+  - gitter
+  - getter
+  - tuid

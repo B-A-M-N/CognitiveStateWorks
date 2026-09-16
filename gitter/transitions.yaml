@@ -1,0 +1,26 @@
+version: "1.1.0"
+initial_state: UNKNOWN
+states:
+- UNKNOWN
+- OBSERVED
+- STALE
+completion_states:
+- OBSERVED
+normal_path:
+- UNKNOWN
+- OBSERVED
+transitions:
+- from: UNKNOWN
+  to: OBSERVED
+  trigger: observe
+  required_evidence: [repository_truth]
+- from: OBSERVED
+  to: STALE
+  trigger: invalidate
+  required_evidence: [invalidation]
+  path_class: invalidation
+- from: STALE
+  to: UNKNOWN
+  trigger: reobserve
+  required_evidence: [reinspection]
+  path_class: recovery

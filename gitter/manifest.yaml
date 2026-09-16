@@ -1,0 +1,26 @@
+id: gitter
+name: Gitter
+entrypoint: gitter/SKILL.md
+triggers:
+- repository state
+- branch
+- commit
+- worktree
+- HEAD
+- ownership
+- divergence
+- what actually changed
+phase: observation
+inputs:
+  required:
+  - task_context
+  optional: []
+emits:
+- repository_truth_packet
+core_requirements:
+- owl
+- anchor
+context_budget: low
+exclusive_group: repository_state
+handoff: repository_truth_packet
+version: 1.1.0

@@ -1,0 +1,53 @@
+version: "1.1.0"
+initial_state: OBSERVED
+states:
+- OBSERVED
+- PLANNED
+- CHANGING
+- VERIFIED
+- RECOVERING
+- STABLE
+completion_states:
+- STABLE
+normal_path:
+- OBSERVED
+- PLANNED
+- CHANGING
+- VERIFIED
+- STABLE
+transitions:
+- from: OBSERVED
+  to: PLANNED
+  trigger: plan
+  required_evidence: [intent, risk]
+- from: PLANNED
+  to: CHANGING
+  trigger: mutate
+  required_evidence: [authority, rollback]
+  framework_requirements: [fuse, ward]
+- from: CHANGING
+  to: VERIFIED
+  trigger: validate
+  required_evidence: [repository_evidence]
+- from: CHANGING
+  to: RECOVERING
+  trigger: recover
+  required_evidence: [rollback_plan]
+- from: VERIFIED
+  to: RECOVERING
+  trigger: recover
+  required_evidence: [failed_verification]
+- from: VERIFIED
+  to: STABLE
+  trigger: stabilize
+  required_evidence: [repository_evidence]
+- from: VERIFIED
+  to: RECOVERING
+  trigger: invalidate
+  required_evidence: [invalidation]
+  path_class: invalidation
+- from: RECOVERING
+  to: OBSERVED
+  trigger: observe
+  required_evidence: [repository_evidence]
+  path_class: recovery

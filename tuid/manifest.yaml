@@ -1,0 +1,32 @@
+id: tuid
+name: tui'd
+entrypoint: tuid/SKILL.md
+triggers:
+- terminal interface
+- TUI
+- rendering
+- layout
+- focus
+- input
+- flicker
+- resize
+- terminal capabilities
+- terminal corruption
+phase: domain_state
+inputs:
+  required:
+  - task_context
+  optional: []
+emits:
+- tui_validation_packet
+core_requirements:
+- owl
+- anchor
+context_budget: medium
+exclusive_group: tui_state
+runtime:
+  specialists:
+    required: []
+    optional: []
+handoff: tui_validation_packet
+version: 1.1.0

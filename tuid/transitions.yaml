@@ -1,0 +1,107 @@
+version: "1.1.0"
+initial_state: UNKNOWN
+states:
+- UNKNOWN
+- OBSERVED
+- MODELED
+- DESIGNED
+- IMPLEMENTED
+- EXERCISABLE
+- VALIDATED
+- STABLE
+- DEFECTIVE
+- DEBUGGED
+- DEGRADED
+- RECOVERY
+- FALLBACK
+completion_states:
+- VALIDATED
+- STABLE
+normal_path:
+- UNKNOWN
+- OBSERVED
+- MODELED
+- DESIGNED
+- IMPLEMENTED
+- EXERCISABLE
+- VALIDATED
+transitions:
+- from: UNKNOWN
+  to: OBSERVED
+  trigger: discover
+  required_evidence: [rendered_observation]
+- from: OBSERVED
+  to: MODELED
+  trigger: model
+  required_evidence: [state_model]
+- from: MODELED
+  to: DESIGNED
+  trigger: design
+  required_evidence: [interaction_model]
+- from: DESIGNED
+  to: IMPLEMENTED
+  trigger: implement
+  required_evidence: [implementation]
+- from: IMPLEMENTED
+  to: EXERCISABLE
+  trigger: interact
+  required_evidence: [interaction_evidence]
+- from: EXERCISABLE
+  to: VALIDATED
+  trigger: validate
+  required_evidence: [validation_evidence]
+- from: VALIDATED
+  to: STABLE
+  trigger: operate
+  required_evidence: [operational_evidence]
+  path_class: normal
+- from: VALIDATED
+  to: DEGRADED
+  trigger: invalidate
+  required_evidence: [invalidation]
+  path_class: invalidation
+- from: STABLE
+  to: DEGRADED
+  trigger: invalidate
+  required_evidence: [invalidation]
+  path_class: invalidation
+- from: "*"
+  to: DEFECTIVE
+  trigger: invariant_violation
+  required_evidence: [violation]
+  path_class: failure
+- from: DEFECTIVE
+  to: DEBUGGED
+  trigger: debug
+  required_evidence: [debug_evidence]
+  path_class: recovery
+- from: DEFECTIVE
+  to: RECOVERY
+  trigger: recover
+  required_evidence: [recovery_plan]
+  path_class: recovery
+- from: DEGRADED
+  to: RECOVERY
+  trigger: recover
+  required_evidence: [recovery_plan]
+  path_class: recovery
+- from: RECOVERY
+  to: DEBUGGED
+  trigger: debug
+  required_evidence: [debug_evidence]
+  path_class: recovery
+- from: RECOVERY
+  to: FALLBACK
+  trigger: fallback
+  required_evidence: [fallback_plan]
+  path_class: recovery
+- from: FALLBACK
+  to: IMPLEMENTED
+  trigger: restore
+  required_evidence: [implementation, recovery_evidence]
+  path_class: recovery
+- from: DEBUGGED
+  to: EXERCISABLE
+  trigger: reexercise
+  required_evidence: [debug_evidence, interaction_evidence]
+  path_class: recovery

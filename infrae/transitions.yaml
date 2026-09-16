@@ -1,0 +1,109 @@
+version: "1.1.0"
+initial_state: UNKNOWN
+states:
+- UNKNOWN
+- OBSERVED
+- MODELED
+- ASSESSED
+- PLANNED
+- CHANGING
+- VERIFIED
+- STABLE
+- DEGRADED
+- INCIDENT
+- RECOVERING
+- BLOCKED
+- RETIRED
+completion_states:
+- STABLE
+- RETIRED
+normal_path:
+- UNKNOWN
+- OBSERVED
+- MODELED
+- ASSESSED
+- PLANNED
+- CHANGING
+- VERIFIED
+- STABLE
+transitions:
+- from: UNKNOWN
+  to: OBSERVED
+  trigger: discover
+  required_evidence: [discovery]
+- from: OBSERVED
+  to: MODELED
+  trigger: model
+  required_evidence: [observed_model]
+- from: MODELED
+  to: ASSESSED
+  trigger: assess
+  required_evidence: [assessment]
+- from: ASSESSED
+  to: PLANNED
+  trigger: design
+  required_evidence: [plan, invariants, rollback]
+- from: PLANNED
+  to: CHANGING
+  trigger: mutate
+  required_evidence: [change_gate, authority]
+- from: CHANGING
+  to: VERIFIED
+  trigger: validate
+  required_evidence: [effective_state, regression_check]
+- from: VERIFIED
+  to: STABLE
+  trigger: stabilize
+  required_evidence: [verified_invariants, operational_health]
+- from: VERIFIED
+  to: DEGRADED
+  trigger: invalidate
+  required_evidence: [invalidation]
+  path_class: invalidation
+- from: STABLE
+  to: DEGRADED
+  trigger: invalidate
+  required_evidence: [invalidation]
+  path_class: invalidation
+- from: CHANGING
+  to: DEGRADED
+  trigger: invariant_violation
+  required_evidence: [violation]
+  path_class: failure
+- from: DEGRADED
+  to: RECOVERING
+  trigger: recover
+  required_evidence: [recovery_plan]
+  path_class: recovery
+- from: INCIDENT
+  to: RECOVERING
+  trigger: recover
+  required_evidence: [recovery_plan]
+  path_class: recovery
+- from: RECOVERING
+  to: STABLE
+  trigger: stabilize
+  required_evidence: [service_restored, state_integrity, redundancy, monitoring]
+  path_class: recovery
+- from: ASSESSED
+  to: BLOCKED
+  trigger: block
+  required_evidence: [unknown_ownership]
+- from: ASSESSED
+  to: RETIRED
+  trigger: decommission
+  required_evidence: [decommission_checklist]
+- from: BLOCKED
+  to: RETIRED
+  trigger: decommission
+  required_evidence: [decommission_checklist]
+  path_class: failure
+- from: PLANNED
+  to: BLOCKED
+  trigger: block
+  required_evidence: [unacceptable_risk]
+- from: "*"
+  to: INCIDENT
+  trigger: incident
+  required_evidence: [catastrophic_failure]
+  path_class: external
