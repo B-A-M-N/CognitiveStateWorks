@@ -31,15 +31,30 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRIES = {
     "agents": Path.home() / ".agents" / "skills",
     "codex": Path.home() / ".codex" / "skills",
-    "harvardcodex": Path.home() / ".harvardcodex" / "skills",
 }
 
 
-def candidate_registries(targets):
-    for t in targets:
-        reg = REGISTRIES.get(t)
-        if reg is not None:
-            yield reg
+def registry_specs(targets: list[str] | None, custom: list[str]) -> list[tuple[str, Path]]:
+    selected = list(targets or [])
+    specs = [(name, REGISTRIES[name]) for name in selected]
+    for raw in custom:
+        if "=" in raw:
+            name, value = raw.split("=", 1)
+        else:
+            value = raw
+            name = Path(value).expanduser().name or "custom"
+        if not name or not value:
+            raise ValueError(f"invalid --registry {raw!r}; expected NAME=PATH")
+        specs.append((name, Path(value).expanduser()))
+    deduped: list[tuple[str, Path]] = []
+    seen: set[Path] = set()
+    for name, path in specs:
+        resolved = path.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        deduped.append((name, path))
+    return deduped
 
 
 def sha256(path: Path) -> str:
@@ -75,8 +90,10 @@ Emit the typed handoff packet in the common envelope before completion.
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--target", nargs="+", default=["agents", "codex", "harvardcodex"],
+    parser.add_argument("--target", nargs="+", default=None,
                         choices=list(REGISTRIES), help="registries to install into")
+    parser.add_argument("--registry", action="append", default=[], metavar="NAME=PATH",
+                        help="arbitrary host registry; repeatable")
     args = parser.parse_args()
 
     import yaml
@@ -87,11 +104,19 @@ def main() -> int:
     registry = load_yaml(registry_path)
     names = registry.get("stateworks", [])
 
+    selected_targets = args.target if args.target is not None else (
+        [] if args.registry else ["agents"])
+    try:
+        target_specs = registry_specs(selected_targets, args.registry)
+    except ValueError as exc:
+        parser.error(str(exc))
+
     installed_any = False
-    for target in args.target:
-        reg = REGISTRIES[target]
-        if not reg.is_dir():
-            print(f"[SKIP] {target}: registry {reg} does not exist (create it to install)")
+    for target, reg in target_specs:
+        try:
+            reg.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            print(f"[SKIP] {target}: cannot create registry {reg}: {exc}")
             continue
         if not os.access(reg, os.W_OK):
             print(f"[SKIP] {target}: registry {reg} is not writable")
