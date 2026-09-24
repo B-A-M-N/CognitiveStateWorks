@@ -142,7 +142,7 @@ class EvidenceStore:
     def __init__(self, records: Optional[Iterable[Mapping[str, Any]]] = ()) -> None:
         self._records: Dict[str, Dict[str, Any]] = {}
         for record in records or ():
-            self.put(record)
+            self.create(record)
 
     @staticmethod
     def _digest(record: Mapping[str, Any]) -> str:
@@ -156,28 +156,52 @@ class EvidenceStore:
     def _current_body(self, record: Mapping[str, Any]) -> Dict[str, Any]:
         return {key: value for key, value in dict(record).items() if key not in {"revisions", "invalidation_events"}}
 
-    def put(self, record: Mapping[str, Any]) -> str:
+    @staticmethod
+    def _validate_shape(record: Mapping[str, Any]) -> None:
         if not isinstance(record, Mapping):
             raise TransitionError("trusted evidence record must be a mapping")
         ref = record.get("ref")
         kind = record.get("kind")
         if not isinstance(ref, str) or not ref or not isinstance(kind, str) or not kind:
             raise TransitionError("trusted evidence requires ref and kind")
+
+    def create(self, record: Mapping[str, Any]) -> str:
+        """Create host-attested evidence; only this path may mint a digest."""
+        self._validate_shape(record)
         candidate = self._current_body(record)
-        candidate["invalidated"] = candidate.get("invalidated") is True
-        digest = self._digest(candidate)
-        candidate["attestation_digest"] = digest
-        prior = self._records.get(ref)
-        if prior is not None and self._digest(self._current_body(prior)) != digest:
-            raise TransitionError(f"evidence reference {ref!r} has conflicting trusted content")
+        supplied = record.get("attestation_digest")
+        expected = self._digest(candidate)
+        if supplied is not None and supplied != expected:
+            raise TransitionError("supplied evidence attestation digest does not match content")
+        candidate["attestation_digest"] = expected
+        prior = self._records.get(str(record["ref"]))
+        if prior is not None and self._digest(self._current_body(prior)) != expected:
+            raise TransitionError(f"evidence reference {record['ref']!r} has conflicting trusted content")
         if prior is None:
-            candidate["revisions"] = list(record.get("revisions") or [dict(candidate)])
+            candidate["revisions"] = [dict(candidate)]
             candidate["invalidation_events"] = list(record.get("invalidation_events") or [])
         else:
             candidate["revisions"] = list(prior.get("revisions") or [self._current_body(prior)])
             candidate["invalidation_events"] = list(prior.get("invalidation_events") or [])
-        self._records[ref] = candidate
-        return ref
+        self._records[str(record["ref"])] = candidate
+        return str(record["ref"])
+
+    def put(self, record: Mapping[str, Any]) -> str:
+        """Load already-attested evidence after verifying its persisted digest."""
+        self._validate_shape(record)
+        body = self._current_body(record)
+        supplied = body.get("attestation_digest")
+        if not isinstance(supplied, str) or self._digest(body) != supplied:
+            raise TransitionError(f"evidence reference {record.get('ref')!r} has an invalid attestation digest")
+        return self.create(record)
+
+    @classmethod
+    def load_attested(cls, records: Iterable[Mapping[str, Any]]) -> "EvidenceStore":
+        """Load persisted records only after verifying their original digest."""
+        store = cls()
+        for record in records:
+            store.put(record)
+        return store
 
     def resolve(self, refs: Iterable[str]) -> List[Dict[str, Any]]:
         out = []
@@ -215,30 +239,44 @@ class EvidenceStore:
             persisted = EvidenceStore()
             if path.exists():
                 try:
-                    for record in json.loads(path.read_text(encoding="utf-8")):
-                        persisted.put(record)
+                    persisted = EvidenceStore.load_attested(
+                        json.loads(path.read_text(encoding="utf-8")))
                 except (OSError, json.JSONDecodeError, TransitionError) as exc:
                     raise TransitionError("trusted evidence store is unreadable") from exc
             for ref, record in self._records.items():
                 if ref not in persisted._records:
                     persisted._records[ref] = dict(record)
-                else:
-                    left = persisted._records[ref]
-                    left_body = self._current_body(left)
-                    right_body = self._current_body(record)
-                    left_base = dict(left_body); right_base = dict(right_body)
-                    left_base["invalidated"] = False; right_base["invalidated"] = False
-                    if self._digest(left_base) == self._digest(right_base):
-                        left["invalidated"] = bool(left.get("invalidated") or record.get("invalidated"))
-                        left["invalidation_events"] = list(left.get("invalidation_events") or []) + list(record.get("invalidation_events") or [])
-                        left["revisions"] = list(left.get("revisions") or []) + list(record.get("revisions") or [])[-(len(record.get("revisions") or []) - len(left.get("revisions") or [])):]
-                        left["attestation_digest"] = self._digest(left)
-                    else:
-                        raise TransitionError(f"evidence reference {ref!r} conflicts during merge")
+                    continue
+                left = persisted._records[ref]
+                right = record
+                for item in (left, right):
+                    body = self._current_body(item)
+                    if self._digest(body) != item.get("attestation_digest"):
+                        raise TransitionError(f"evidence reference {ref!r} has an invalid merge revision")
+                left_base = self._current_body(left)
+                right_base = self._current_body(record)
+                left_base["invalidated"] = False
+                right_base["invalidated"] = False
+                if self._digest(left_base) != self._digest(right_base):
+                    raise TransitionError(f"evidence reference {ref!r} conflicts during merge")
+                left_revisions = list(left.get("revisions") or [])
+                for revision in list(right.get("revisions") or []):
+                    if revision not in left_revisions:
+                        left_revisions.append(dict(revision))
+                left_events = list(left.get("invalidation_events") or [])
+                event_keys = {json.dumps(item, sort_keys=True, default=str) for item in left_events}
+                for event in list(right.get("invalidation_events") or []):
+                    key = json.dumps(event, sort_keys=True, default=str)
+                    if key not in event_keys:
+                        left_events.append(dict(event)); event_keys.add(key)
+                left["revisions"] = left_revisions
+                left["invalidation_events"] = left_events
+                left["invalidated"] = bool(left.get("invalidated") or record.get("invalidated"))
+                left["attestation_digest"] = self._digest(left)
             fd, temporary = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
             try:
                 with os.fdopen(fd, "w", encoding="utf-8") as stream:
-                    json.dump(list(persisted._records.values()), stream, sort_keys=True, separators=(",", ":"))
+                    json.dump(list(persisted._records.values()), stream, sort_keys=True, separators=(",", ":"), default=str)
                     stream.write("\n"); stream.flush(); os.fsync(stream.fileno())
                 os.chmod(temporary, 0o600); os.replace(temporary, path)
             finally:
@@ -307,7 +345,8 @@ class SubjectStateStore:
             revision = int(expected_revision) + 1
             record = dict(identity); record.update({"state": new_state, "revision": revision, "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")})
             self._data["subjects"][key] = record
-            self._data["history"].append({"identity": dict(identity), "from_state": current.get("state"), "to_state": new_state, "revision": revision, "transition": dict(transition)})
+            recorded_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            self._data["history"].append({"identity": dict(identity), "from_state": current.get("state"), "to_state": new_state, "revision": revision, "recorded_at": recorded_at, "transition": dict(transition)})
             self._save()
             return record
 
@@ -573,6 +612,16 @@ class StandaloneStateWorkController:
             state_store.commit(identity, expected_revision=0, new_state=initial,
                                transition={"trigger": "controller_initialization",
                                            "to_state": initial})
+        current = state_store.get(identity)
+        for item in reversed(state_store._data.get("history") or []):
+            identity_key = state_store.key(identity)
+            if state_store.key(item.get("identity") or {}) != identity_key:
+                continue
+            state_name = str(item.get("to_state") or "")
+            recorded_at = str(item.get("recorded_at") or "")
+            if state_name and recorded_at:
+                self.entry_times[state_name] = recorded_at
+        self.entry_times[str(current.get("state") or initial)] = str(current.get("updated_at") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
     def inspect(self) -> Dict[str, Any]:
         return self.state_store.get(self.identity)
@@ -613,7 +662,8 @@ class StandaloneStateWorkController:
         self.state_store.commit(
             self.identity, expected_revision=expected_revision, new_state=to_state,
             transition=transition_record)
-        self.entry_times[from_state] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        committed = self.state_store.get(self.identity)
+        self.entry_times[to_state] = str(committed.get("updated_at") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
         return decision
 
 
@@ -810,7 +860,7 @@ class StandaloneHostInterface:
         return controller.inspect()
 
     def submit_attested_observation(self, record: Mapping[str, Any]) -> str:
-        ref = self.evidence_store.put(record)
+        ref = self.evidence_store.create(record)
         self.evidence_store.save(self.evidence_path)
         return ref
 

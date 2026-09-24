@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -145,6 +146,31 @@ def main() -> int:
         freshness_contract = {"initial_state": "UNKNOWN", "states": ["UNKNOWN", "CHANGING"], "transitions": [{"from": "UNKNOWN", "to": "CHANGING", "trigger": "mutate", "required_evidence": ["authority"], "evidence_freshness": {"mode": "after_state_entry", "max_age_seconds": 60}}]}
         fresh_controller = StandaloneStateWorkController(contract=freshness_contract, identity=identity, state_store=freshness_store, evidence_store=freshness_evidence, evidence_registry={"kinds": {"authority": {"authoritative": True, "allowed_issuers": ["host:authorization"], "validator": "host-authorization-v1", "schema": "authority-record-v1"}}})
         check("freshness rejects evidence predating state entry", not fresh_controller.request_transition(to_state="CHANGING", trigger="mutate", evidence_refs=["fresh-old"], expected_revision=fresh_controller.inspect()["revision"]).allowed)
+        with tempfile.TemporaryDirectory(prefix="statework-tamper-") as tamper_raw:
+            evidence_path = Path(tamper_raw) / "evidence.json"
+            trusted = EvidenceStore()
+            trusted.create({"ref": "attested", "kind": "authority", "subject_ref": "repo", "observed_at": "2026-01-01T00:00:00Z"})
+            trusted.save(evidence_path)
+            records = json.loads(evidence_path.read_text(encoding="utf-8"))
+            records[0]["subject_ref"] = "forged"
+            evidence_path.write_text(json.dumps(records), encoding="utf-8")
+            try:
+                EvidenceStore.load_attested(records)
+            except TransitionError:
+                pass
+            else:
+                raise AssertionError("altered persisted evidence was accepted")
+        cycle_state = SubjectStateStore(Path(raw) / "cycle-state.json")
+        cycle_evidence = EvidenceStore()
+        cycle_contract = {"initial_state": "A", "states": ["A", "B"], "transitions": [
+            {"from": "A", "to": "B", "trigger": "advance", "required_evidence": ["authority"], "evidence_freshness": {"mode": "after_state_entry"}},
+            {"from": "B", "to": "A", "trigger": "return", "required_evidence": ["authority"], "evidence_freshness": {"mode": "after_state_entry"}}]}
+        cycle = StandaloneStateWorkController(contract=cycle_contract, identity=identity, state_store=cycle_state, evidence_store=cycle_evidence, evidence_registry={"kinds": {}})
+        cycle_evidence.create({"ref": "after-initial-a", "kind": "authority", "subject_ref": "repo", "observed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "issuer": "host:test", "content_digest": "a"})
+        check("cycle A to B", cycle.request_transition(to_state="B", trigger="advance", evidence_refs=["after-initial-a"], expected_revision=cycle.inspect()["revision"]).allowed)
+        cycle_evidence.create({"ref": "after-b", "kind": "authority", "subject_ref": "repo", "observed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "issuer": "host:test", "content_digest": "b"})
+        check("cycle B to A", cycle.request_transition(to_state="A", trigger="return", evidence_refs=["after-b"], expected_revision=cycle.inspect()["revision"]).allowed)
+        check("second A uses latest entry freshness", not cycle.request_transition(to_state="B", trigger="advance", evidence_refs=["after-initial-a"], expected_revision=cycle.inspect()["revision"]).allowed)
 
     print("pass" if not failures else f"FAILED {failures}")
     return 1 if failures else 0
