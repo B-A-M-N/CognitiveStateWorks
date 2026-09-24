@@ -130,6 +130,16 @@ def main() -> int:
         check("host evidence survives interface restart", host2.evidence_store.resolve(["obs-1"])[0]["ref"] == "obs-1")
         host3 = StandaloneHostInterface(root=ROOT, state_path=Path(raw) / "host-state.json", evidence_path=host.evidence_path)
         check("host evidence remains idempotent after second restart", host3.evidence_store.resolve(["obs-1"])[0]["ref"] == "obs-1")
+        host.evidence_store.invalidate("obs-1")
+        host.evidence_store.save(host.evidence_path)
+        host4 = StandaloneHostInterface(root=ROOT, state_path=Path(raw) / "host-state.json", evidence_path=host.evidence_path)
+        invalidated = host4.evidence_store.resolve(["obs-1"])[0]
+        check("invalidation survives restart and remains auditable", invalidated["invalidated"] is True and bool(invalidated.get("attestation_digest")))
+        try:
+            host.start_or_resume(statework_id="infrae", identity=identity)
+            check("mismatched StateWork identity rejected", False)
+        except TransitionError:
+            check("mismatched StateWork identity rejected", True)
 
     print("pass" if not failures else f"FAILED {failures}")
     return 1 if failures else 0

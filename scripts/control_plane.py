@@ -138,14 +138,23 @@ FRESHNESS_VALIDATORS = {
 
 
 class EvidenceStore:
-    """Host-owned evidence authority. References are resolved here, never from
-    caller-supplied metadata. The in-memory implementation is useful for
-    standalone tests; a deployment can inject a durable trusted store.
-    """
+    """Trusted evidence authority with immutable revisions and locked merge."""
     def __init__(self, records: Optional[Iterable[Mapping[str, Any]]] = ()) -> None:
         self._records: Dict[str, Dict[str, Any]] = {}
         for record in records or ():
             self.put(record)
+
+    @staticmethod
+    def _digest(record: Mapping[str, Any]) -> str:
+        body = dict(record)
+        body.pop("attestation_digest", None)
+        body.pop("revisions", None)
+        body.pop("invalidation_events", None)
+        body["invalidated"] = body.get("invalidated") is True
+        return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
+
+    def _current_body(self, record: Mapping[str, Any]) -> Dict[str, Any]:
+        return {key: value for key, value in dict(record).items() if key not in {"revisions", "invalidation_events"}}
 
     def put(self, record: Mapping[str, Any]) -> str:
         if not isinstance(record, Mapping):
@@ -154,16 +163,19 @@ class EvidenceStore:
         kind = record.get("kind")
         if not isinstance(ref, str) or not ref or not isinstance(kind, str) or not kind:
             raise TransitionError("trusted evidence requires ref and kind")
-        candidate = dict(record)
-        existing_digest = candidate.pop("attestation_digest", None)
+        candidate = self._current_body(record)
         candidate["invalidated"] = candidate.get("invalidated") is True
-        digest = hashlib.sha256(json.dumps(candidate, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
-        if existing_digest is not None and existing_digest != digest:
-            raise TransitionError(f"persisted evidence reference {ref!r} has an invalid attestation digest")
+        digest = self._digest(candidate)
         candidate["attestation_digest"] = digest
         prior = self._records.get(ref)
-        if prior and prior.get("attestation_digest") != digest:
+        if prior is not None and self._digest(self._current_body(prior)) != digest:
             raise TransitionError(f"evidence reference {ref!r} has conflicting trusted content")
+        if prior is None:
+            candidate["revisions"] = list(record.get("revisions") or [dict(candidate)])
+            candidate["invalidation_events"] = list(record.get("invalidation_events") or [])
+        else:
+            candidate["revisions"] = list(prior.get("revisions") or [self._current_body(prior)])
+            candidate["invalidation_events"] = list(prior.get("invalidation_events") or [])
         self._records[ref] = candidate
         return ref
 
@@ -173,24 +185,64 @@ class EvidenceStore:
             record = self._records.get(str(ref))
             if record is None:
                 raise TransitionError(f"evidence reference {ref!r} is not present in the trusted store")
-            out.append(dict(record))
+            current = self._current_body(record)
+            if self._digest(current) != record.get("attestation_digest"):
+                raise TransitionError(f"evidence reference {ref!r} has an invalid attestation digest")
+            out.append(dict(current))
         return out
 
     def invalidate(self, ref: str) -> None:
         if ref not in self._records:
             raise TransitionError(f"cannot invalidate unknown evidence reference {ref!r}")
-        self._records[ref]["invalidated"] = True
+        record = self._records[ref]
+        if record.get("invalidated") is True:
+            return
+        original = self._current_body(record)
+        record["revisions"] = list(record.get("revisions") or []) + [dict(original)]
+        record["invalidation_events"] = list(record.get("invalidation_events") or []) + [{
+            "event": "invalidated", "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "previous_revision_digest": original.get("attestation_digest"),
+        }]
+        record["invalidated"] = True
+        record["attestation_digest"] = self._digest(record)
 
     def save(self, path: Path) -> None:
-        path = Path(path); path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
-        fd, temporary = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as stream:
-                json.dump(list(self._records.values()), stream, sort_keys=True, separators=(",", ":"))
-                stream.write("\n"); stream.flush(); os.fsync(stream.fileno())
-            os.chmod(temporary, 0o600); os.replace(temporary, path)
-        finally:
-            if os.path.exists(temporary): os.unlink(temporary)
+        path = Path(path)
+        path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+        lock_path = path.with_name(path.name + ".lock")
+        with lock_path.open("a+", encoding="utf-8") as lock:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            persisted = EvidenceStore()
+            if path.exists():
+                try:
+                    for record in json.loads(path.read_text(encoding="utf-8")):
+                        persisted.put(record)
+                except (OSError, json.JSONDecodeError, TransitionError) as exc:
+                    raise TransitionError("trusted evidence store is unreadable") from exc
+            for ref, record in self._records.items():
+                if ref not in persisted._records:
+                    persisted._records[ref] = dict(record)
+                else:
+                    left = persisted._records[ref]
+                    left_body = self._current_body(left)
+                    right_body = self._current_body(record)
+                    left_base = dict(left_body); right_base = dict(right_body)
+                    left_base["invalidated"] = False; right_base["invalidated"] = False
+                    if self._digest(left_base) == self._digest(right_base):
+                        left["invalidated"] = bool(left.get("invalidated") or record.get("invalidated"))
+                        left["invalidation_events"] = list(left.get("invalidation_events") or []) + list(record.get("invalidation_events") or [])
+                        left["revisions"] = list(left.get("revisions") or []) + list(record.get("revisions") or [])[-(len(record.get("revisions") or []) - len(left.get("revisions") or [])):]
+                        left["attestation_digest"] = self._digest(left)
+                    else:
+                        raise TransitionError(f"evidence reference {ref!r} conflicts during merge")
+            fd, temporary = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as stream:
+                    json.dump(list(persisted._records.values()), stream, sort_keys=True, separators=(",", ":"))
+                    stream.write("\n"); stream.flush(); os.fsync(stream.fileno())
+                os.chmod(temporary, 0o600); os.replace(temporary, path)
+            finally:
+                if os.path.exists(temporary): os.unlink(temporary)
 
 
 class SubjectStateStore:
@@ -512,6 +564,7 @@ class StandaloneStateWorkController:
         self.evidence_store = evidence_store
         self.engine = TransitionEngine(dict(contract), evidence_registry=evidence_registry,
                                        require_registered=False, evidence_store=evidence_store)
+        self.entry_times: Dict[str, str] = {}
         initial = contract.get("initial_state")
         if not isinstance(initial, str) or not initial:
             raise TransitionError("standalone StateWork contract requires initial_state")
@@ -533,6 +586,23 @@ class StandaloneStateWorkController:
                 f"found {snapshot.get('revision', 0)}; re-inspect required")
         from_state = str(snapshot.get("state"))
         resolved = self.evidence_store.resolve(list(evidence_refs))
+        edges = self.engine.matching_edges(from_state, to_state, trigger)
+        freshness = (edges[0].get("evidence_freshness") if len(edges) == 1 else {}) or {}
+        if freshness.get("mode") == "after_state_entry" and from_state in self.entry_times:
+            entry = self.entry_times[from_state]
+            for item in resolved:
+                if str(item.get("observed_at")) < str(entry):
+                    return TransitionDecision(False, "evidence predates current state entry", from_state, to_state, trigger, list(self.engine.matching_edges(from_state, to_state, trigger)[0].get("required_evidence", [])))
+        max_age = freshness.get("max_age_seconds")
+        if max_age is not None:
+            now = datetime.now(timezone.utc)
+            for item in resolved:
+                try:
+                    observed = datetime.fromisoformat(str(item.get("observed_at")).replace("Z", "+00:00"))
+                except ValueError:
+                    return TransitionDecision(False, "evidence has invalid observed_at", from_state, to_state, trigger)
+                if (now - observed).total_seconds() > int(max_age):
+                    return TransitionDecision(False, "evidence exceeds declared freshness", from_state, to_state, trigger)
         decision = self.engine.transition(
             str(self.identity["subject_ref"]), from_state, to_state,
             trigger=trigger, evidence_refs=resolved)
@@ -543,6 +613,7 @@ class StandaloneStateWorkController:
         self.state_store.commit(
             self.identity, expected_revision=expected_revision, new_state=to_state,
             transition=transition_record)
+        self.entry_times[from_state] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         return decision
 
 
@@ -697,6 +768,7 @@ class StandaloneHostInterface:
         self.state_store = SubjectStateStore(Path(state_path) if state_path else self.root / "state" / "subjects.json")
         self.evidence_store = EvidenceStore()
         self._controllers: Dict[str, StandaloneStateWorkController] = {}
+        self._controller_contract_hashes: Dict[str, str] = {}
         self._load_evidence()
 
     def _load_evidence(self) -> None:
@@ -720,23 +792,42 @@ class StandaloneHostInterface:
                 "contract": _load_yaml(base / "transitions.yaml")}
 
     def start_or_resume(self, *, statework_id: str, identity: Mapping[str, Any]) -> Dict[str, Any]:
+        if identity.get("statework_id") != statework_id:
+            raise TransitionError("requested StateWork does not match the subject identity")
         statework = self.resolve_statework(statework_id)
         contract = statework["contract"]
+        contract_hash = hashlib.sha256(json.dumps(contract, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
         key = SubjectStateStore.key(identity)
         controller = self._controllers.get(key)
-        if controller is None:
+        if controller is None or self._controller_contract_hashes.get(key) != contract_hash:
             registry = load_evidence_kind_registry(self.root / "schemas" / "evidence-kinds.yaml")
             controller = StandaloneStateWorkController(contract=contract, identity=identity,
                                                        state_store=self.state_store,
                                                        evidence_store=self.evidence_store,
                                                        evidence_registry=registry)
             self._controllers[key] = controller
+            self._controller_contract_hashes[key] = contract_hash
         return controller.inspect()
 
     def submit_attested_observation(self, record: Mapping[str, Any]) -> str:
         ref = self.evidence_store.put(record)
         self.evidence_store.save(self.evidence_path)
         return ref
+
+    def publish_packet(self, packet: Mapping[str, Any], *, storage_path: Optional[Path] = None) -> str:
+        """Publish a validated handoff packet through CSW's typed store."""
+        if not isinstance(packet, Mapping):
+            raise TransitionError("handoff packet must be a mapping")
+        store = PacketStore(packet_registry_path=self.root / "schemas" / "packet-registry.yaml",
+                            storage_path=storage_path)
+        return store.put(dict(packet))
+
+    def recover_from_invalidation(self, *, evidence_ref: str, identity: Mapping[str, Any],
+                                 statework_id: str) -> Dict[str, Any]:
+        """Record trusted invalidation and return the authoritative reinspection state."""
+        self.evidence_store.invalidate(evidence_ref)
+        self.evidence_store.save(self.evidence_path)
+        return self.start_or_resume(statework_id=statework_id, identity=identity)
 
     def request_transition(self, *, statework_id: str, identity: Mapping[str, Any],
                            to_state: str, trigger: str, evidence_refs: Iterable[str],
