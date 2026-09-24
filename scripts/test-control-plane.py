@@ -140,6 +140,11 @@ def main() -> int:
             check("mismatched StateWork identity rejected", False)
         except TransitionError:
             check("mismatched StateWork identity rejected", True)
+        freshness_store = SubjectStateStore(Path(raw) / "freshness-state.json")
+        freshness_evidence = EvidenceStore([{"ref": "fresh-old", "kind": "authority", "subject_ref": "repo", "observed_at": "2020-01-01T00:00:00Z", "issuer": "host:authorization", "validator": "host-authorization-v1", "schema": "authority-record-v1"}])
+        freshness_contract = {"initial_state": "UNKNOWN", "states": ["UNKNOWN", "CHANGING"], "transitions": [{"from": "UNKNOWN", "to": "CHANGING", "trigger": "mutate", "required_evidence": ["authority"], "evidence_freshness": {"mode": "after_state_entry", "max_age_seconds": 60}}]}
+        fresh_controller = StandaloneStateWorkController(contract=freshness_contract, identity=identity, state_store=freshness_store, evidence_store=freshness_evidence, evidence_registry={"kinds": {"authority": {"authoritative": True, "allowed_issuers": ["host:authorization"], "validator": "host-authorization-v1", "schema": "authority-record-v1"}}})
+        check("freshness rejects evidence predating state entry", not fresh_controller.request_transition(to_state="CHANGING", trigger="mutate", evidence_refs=["fresh-old"], expected_revision=fresh_controller.inspect()["revision"]).allowed)
 
     print("pass" if not failures else f"FAILED {failures}")
     return 1 if failures else 0

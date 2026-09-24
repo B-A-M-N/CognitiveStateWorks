@@ -588,8 +588,8 @@ class StandaloneStateWorkController:
         resolved = self.evidence_store.resolve(list(evidence_refs))
         edges = self.engine.matching_edges(from_state, to_state, trigger)
         freshness = (edges[0].get("evidence_freshness") if len(edges) == 1 else {}) or {}
-        if freshness.get("mode") == "after_state_entry" and from_state in self.entry_times:
-            entry = self.entry_times[from_state]
+        entry = self.entry_times.get(from_state) or snapshot.get("updated_at")
+        if freshness.get("mode") == "after_state_entry" and entry:
             for item in resolved:
                 if str(item.get("observed_at")) < str(entry):
                     return TransitionDecision(False, "evidence predates current state entry", from_state, to_state, trigger, list(self.engine.matching_edges(from_state, to_state, trigger)[0].get("required_evidence", [])))
