@@ -23,11 +23,13 @@ transitions:
 - from: PLANNED
   to: CHANGING
   trigger: mutate
+  consequential: true
   required_evidence: [authority, rollback]
   framework_requirements: [fuse, ward]
 - from: CHANGING
   to: VERIFIED
   trigger: validate
+  consequential: true
   required_evidence: [repository_evidence]
 - from: CHANGING
   to: RECOVERING
@@ -40,6 +42,7 @@ transitions:
 - from: VERIFIED
   to: STABLE
   trigger: stabilize
+  consequential: true
   required_evidence: [repository_evidence]
 - from: VERIFIED
   to: RECOVERING

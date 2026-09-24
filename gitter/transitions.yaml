@@ -13,6 +13,7 @@ transitions:
 - from: UNKNOWN
   to: OBSERVED
   trigger: observe
+  consequential: true
   required_evidence: [repository_truth]
 - from: OBSERVED
   to: STALE
@@ -22,5 +23,6 @@ transitions:
 - from: STALE
   to: UNKNOWN
   trigger: reobserve
+  consequential: true
   required_evidence: [reinspection]
   path_class: recovery

@@ -19,7 +19,8 @@ inputs:
 emits:
 - infrastructure_truth_packet
 - infrastructure_evidence_packet
-core_requirements:
+core_requirements: []
+framework_enhancements:
 - owl
 - anchor
 context_budget: medium

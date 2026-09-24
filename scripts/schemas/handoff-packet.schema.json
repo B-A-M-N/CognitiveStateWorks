@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitivestatework.dev/schemas/handoff-packet.schema.json",
+  "title": "StateWork typed handoff packet (common envelope)",
+  "description": "The single canonical envelope every StateWork handoff packet shares. Domain-specific data lives in payload. Packet-type schemas compose this schema via allOf; never re-declare the envelope.",
+  "type": "object",
+  "required": ["packet_id", "packet_type", "schema_version", "producer", "task_id", "subject_ref", "observed_at", "input_state", "output_state", "evidence_refs", "unknowns", "blockers", "authority", "invalidated_by", "recommended_next", "payload"],
+  "properties": {
+    "packet_id": { "type": "string", "minLength": 1 },
+    "packet_type": { "type": "string", "minLength": 1 },
+    "schema_version": { "type": "string", "minLength": 1 },
+    "producer": { "type": "string", "minLength": 1 },
+    "task_id": { "type": "string", "minLength": 1 },
+    "subject_ref": { "type": "string", "minLength": 1 },
+    "observed_at": { "type": "string", "format": "date-time" },
+    "input_state": { "type": ["string", "null"] },
+    "output_state": { "type": ["string", "null"] },
+    "evidence_refs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "maxItems": 256 },
+    "unknowns": { "type": "array", "items": { "type": "string", "maxLength": 512 }, "maxItems": 64 },
+    "blockers": { "type": "array", "items": { "type": "string", "maxLength": 512 }, "maxItems": 64 },
+    "authority": { "type": ["string", "null"], "maxLength": 512 },
+    "invalidated_by": { "type": ["string", "null"], "minLength": 1 },
+    "recommended_next": { "type": ["string", "null"], "maxLength": 256 },
+    "payload": { "type": "object", "maxProperties": 512 }
+  },
+  "additionalProperties": false
+}

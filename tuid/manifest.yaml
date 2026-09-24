@@ -19,7 +19,8 @@ inputs:
   optional: []
 emits:
 - tui_validation_packet
-core_requirements:
+core_requirements: []
+framework_enhancements:
 - owl
 - anchor
 context_budget: medium

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitivestatework.dev/schemas/infrastructure-truth-packet.schema.json",
+  "title": "Infrastructure truth packet",
+  "description": "State truth established by Infrae before infrastructure mutation.",
+  "allOf": [
+    { "$ref": "handoff-packet.schema.json" },
+    {
+      "properties": {
+        "packet_type": { "const": "infrastructure_truth_packet" },
+        "producer": { "const": "infrae" },
+        "schema_version": { "const": "1.1.0" },
+        "payload": {
+          "type": "object",
+          "required": ["scope", "state", "observed_at", "freshness_fingerprint", "invalidation_conditions"],
+          "properties": {
+            "scope": { "type": "string", "minLength": 1 },
+            "state": { "type": "object", "required": ["phase"], "properties": { "phase": { "type": "string", "minLength": 1 } }, "additionalProperties": true },
+            "observed_at": { "type": "string", "format": "date-time" },
+            "freshness_fingerprint": { "type": "string", "minLength": 1 },
+            "invalidation_conditions": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

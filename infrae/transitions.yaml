@@ -42,18 +42,22 @@ transitions:
 - from: ASSESSED
   to: PLANNED
   trigger: design
+  consequential: true
   required_evidence: [plan, invariants, rollback]
 - from: PLANNED
   to: CHANGING
   trigger: mutate
+  consequential: true
   required_evidence: [change_gate, authority]
 - from: CHANGING
   to: VERIFIED
   trigger: validate
+  consequential: true
   required_evidence: [effective_state, regression_check]
 - from: VERIFIED
   to: STABLE
   trigger: stabilize
+  consequential: true
   required_evidence: [verified_invariants, operational_health]
 - from: VERIFIED
   to: DEGRADED
@@ -83,6 +87,7 @@ transitions:
 - from: RECOVERING
   to: STABLE
   trigger: stabilize
+  consequential: true
   required_evidence: [service_restored, state_integrity, redundancy, monitoring]
   path_class: recovery
 - from: ASSESSED
@@ -92,10 +97,12 @@ transitions:
 - from: ASSESSED
   to: RETIRED
   trigger: decommission
+  consequential: true
   required_evidence: [decommission_checklist]
 - from: BLOCKED
   to: RETIRED
   trigger: decommission
+  consequential: true
   required_evidence: [decommission_checklist]
   path_class: failure
 - from: PLANNED

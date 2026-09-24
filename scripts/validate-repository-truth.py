@@ -23,31 +23,74 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import selectors
 import subprocess
 import sys
+import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+_HERE = Path(__file__).resolve().parent
+ROOT = _HERE if (_HERE / "schemas").is_dir() else _HERE.parents[1]
 SCHEMA = ROOT / "schemas" / "repository-truth-packet.schema.json"
 
-SIZE_LIMIT = 4 * 1024 * 1024  # 4 MiB fingerprint input cap
+RESOURCE_LIMIT_VERSION = "repository-fingerprint-limits-v1"
+SIZE_LIMIT = int(os.environ.get("STATEWORK_GIT_OUTPUT_LIMIT", 4 * 1024 * 1024))
+MAX_UNTRACKED_ENTRIES = int(os.environ.get("STATEWORK_MAX_UNTRACKED_ENTRIES", 10_000))
+MAX_UNTRACKED_FILE_BYTES = int(os.environ.get("STATEWORK_MAX_UNTRACKED_FILE_BYTES", 16 * 1024 * 1024))
+MAX_UNTRACKED_TOTAL_BYTES = int(os.environ.get("STATEWORK_MAX_UNTRACKED_TOTAL_BYTES", 64 * 1024 * 1024))
 
 
 class GitError(RuntimeError):
     pass
 
 
-def git(repo: Path, *args: str, check: bool = True, timeout: int = 30) -> str:
+class ResourceLimitError(GitError):
+    """Fingerprinting could not establish complete truth within its budget."""
+
+
+def _bounded_subprocess(command: list[str], *, output_limit: int,
+                        timeout: int) -> tuple[int, bytes, bytes]:
+    """Drain stdout/stderr concurrently with a hard output budget."""
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    selector = selectors.DefaultSelector()
+    assert process.stdout is not None and process.stderr is not None
+    selector.register(process.stdout, selectors.EVENT_READ, "stdout")
+    selector.register(process.stderr, selectors.EVENT_READ, "stderr")
+    output = {"stdout": bytearray(), "stderr": bytearray()}
+    deadline = time.monotonic() + timeout
     try:
-        result = subprocess.run(["git", "-C", str(repo), *args],
-                                capture_output=True, text=True, check=False,
-                                timeout=timeout)
-    except subprocess.TimeoutExpired as exc:
-        raise GitError(f"git {' '.join(args)} timed out") from exc
-    if check and result.returncode != 0:
-        raise GitError(f"git {' '.join(args)} failed (exit {result.returncode}): "
-                       f"{result.stderr.strip()[:300]}")
-    return result.stdout
+        while selector.get_map():
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                process.kill()
+                process.wait()
+                raise GitError(f"git {' '.join(command[3:])} timed out")
+            for key, _ in selector.select(min(remaining, 0.25)):
+                chunk = os.read(key.fileobj.fileno(), 65536)
+                if not chunk:
+                    selector.unregister(key.fileobj)
+                    continue
+                bucket = output[key.data]
+                bucket.extend(chunk)
+                if len(bucket) > output_limit:
+                    process.kill()
+                    process.wait()
+                    raise ResourceLimitError(
+                        f"git output exceeds {output_limit} byte limit")
+        return process.wait(), bytes(output["stdout"]), bytes(output["stderr"])
+    finally:
+        selector.close()
+
+
+def git(repo: Path, *args: str, check: bool = True, timeout: int = 30) -> str:
+    command = ["git", "-C", str(repo), *args]
+    code, stdout, stderr = _bounded_subprocess(command, output_limit=SIZE_LIMIT,
+                                               timeout=timeout)
+    if check and code != 0:
+        raise GitError(f"git {' '.join(args)} failed (exit {code}): "
+                       f"{stderr.decode('utf-8', 'replace').strip()[:300]}")
+    return stdout.decode("utf-8", "replace")
 
 
 def _sha256(data: bytes) -> str:
@@ -91,9 +134,14 @@ def worktree_fingerprint(repo: Path) -> str:
         out = git(repo, *args)
         if label == "untracked":
             entries: list[Dict[str, Any]] = []
+            if len(out.encode("utf-8")) > SIZE_LIMIT:
+                raise ResourceLimitError("untracked inventory exceeds output limit")
+            total_file_bytes = 0
             for item in out.split("\0"):
                 if not item:
                     continue
+                if len(entries) >= MAX_UNTRACKED_ENTRIES:
+                    raise ResourceLimitError("untracked entry count exceeds configured limit")
                 relative = Path(item)
                 absolute = repo / relative
                 try:
@@ -103,6 +151,13 @@ def worktree_fingerprint(repo: Path) -> str:
                             "content_hash": _sha256(str(absolute.readlink()).encode("utf-8")),
                         }
                     elif absolute.is_file():
+                        file_size = absolute.stat().st_size
+                        if file_size > MAX_UNTRACKED_FILE_BYTES:
+                            raise ResourceLimitError(
+                                f"untracked file exceeds per-file limit: {relative}")
+                        total_file_bytes += file_size
+                        if total_file_bytes > MAX_UNTRACKED_TOTAL_BYTES:
+                            raise ResourceLimitError("untracked file bytes exceed cumulative limit")
                         digest = hashlib.sha256()
                         with absolute.open("rb") as source:
                             while chunk := source.read(1024 * 1024):
@@ -146,11 +201,12 @@ def active_worktrees(repo: Path) -> str:
 def remote_fingerprint(repo: Path, remote: str = "origin") -> str | None:
     """Remote state. Unreachable remote -> None (truth unknown), which the
     caller treats as fail-closed for operations depending on remote state."""
-    result = subprocess.run(["git", "-C", str(repo), "ls-remote", "--exit-code", remote],
-                            capture_output=True, text=True, check=False, timeout=30)
-    if result.returncode != 0:
+    code, stdout, _stderr = _bounded_subprocess(
+        ["git", "-C", str(repo), "ls-remote", "--exit-code", remote],
+        output_limit=SIZE_LIMIT, timeout=30)
+    if code != 0:
         return None
-    return _sha256(_bounded_text(result.stdout).encode("utf-8"))
+    return _sha256(_bounded_text(stdout.decode("utf-8", "replace")).encode("utf-8"))
 
 
 def load_packet_schema() -> "Draft202012Validator":
@@ -220,6 +276,13 @@ def validate_repository_truth_packet(packet: dict, repo: Path) -> dict:
         if wt != cur_wt:
             invalid_fields.append("working_tree_fingerprint")
             required.append("working_tree_fingerprint")
+    except ResourceLimitError as exc:
+        return {
+            "valid": False, "truth_unknown": "resource_limit",
+            "resource_limit": RESOURCE_LIMIT_VERSION,
+            "resource_limit_detail": str(exc), "invalid_fields": [],
+            "required_reobservations": ["working_tree_fingerprint"],
+        }
     except GitError as exc:
         invalid_fields.append("working_tree_fingerprint")
         required.append(f"working_tree_fingerprint unavailable: {exc}")
@@ -249,6 +312,7 @@ def validate_repository_truth_packet(packet: dict, repo: Path) -> dict:
 
     return {
         "valid": not invalid_fields,
+        "resource_limit": RESOURCE_LIMIT_VERSION,
         "invalid_fields": invalid_fields,
         "required_reobservations": sorted(set(required)),
         "triggered_invalidations": sorted(set(invalid_fields)),

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitive-statework.local/evidence-kinds.schema.json",
+  "type": "object",
+  "required": ["version", "kinds"],
+  "properties": {
+    "version": {"type": "string", "minLength": 1},
+    "kinds": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["authoritative", "allowed_issuers", "validator", "schema"],
+        "properties": {
+          "authoritative": {"const": true},
+          "allowed_issuers": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "validator": {"type": "string", "minLength": 1},
+          "schema": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

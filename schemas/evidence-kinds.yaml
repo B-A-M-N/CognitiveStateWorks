@@ -1,0 +1,29 @@
+# Versioned evidence provenance registry.  Names in this registry are
+# semantic authority and may not be minted by the generic observation API.
+version: 1.0.0
+kinds:
+  repository_truth:
+    authoritative: true
+    allowed_issuers: ["validator:repository-truth-v1"]
+    validator: repository-truth-v1
+    schema: repository-truth-packet.schema.json
+  authority:
+    authoritative: true
+    allowed_issuers: ["host:authorization"]
+    validator: host-authorization-v1
+    schema: authority-record-v1
+  repository_evidence:
+    authoritative: true
+    allowed_issuers: ["validator:repository-evidence-v1"]
+    validator: repository-evidence-v1
+    schema: repository-evidence-packet.schema.json
+  rollback:
+    authoritative: true
+    allowed_issuers: ["host:rollback"]
+    validator: rollback-v1
+    schema: rollback-record-v1
+  rollback_plan:
+    authoritative: true
+    allowed_issuers: ["host:rollback-plan"]
+    validator: rollback-plan-v1
+    schema: rollback-plan-v1

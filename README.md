@@ -206,3 +206,9 @@ Digital Psychology
 ```
 
 CFW made recurring behavioral errors governable. CognitiveStateWork extends that idea to recurring **workflow errors** by making operational state explicit. Together with Digital Psychology, those state models become observable and testable rather than static instructions.
+
+## FreeInference attribution
+
+This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
+
+These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects genuinely useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.

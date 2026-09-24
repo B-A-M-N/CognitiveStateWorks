@@ -176,6 +176,12 @@ def main() -> int:
 
     # machine-readable transition contracts
     from scripts.control_plane import TransitionEngine
+    from scripts.control_plane import load_evidence_kind_registry
+    try:
+        evidence_registry = load_evidence_kind_registry()
+    except Exception as exc:
+        problems.append(f"evidence-kind registry invalid: {exc}")
+        evidence_registry = {"kinds": {}}
     for name in names:
         contract = load_transition_contract(name)
         if not contract:
@@ -183,7 +189,9 @@ def main() -> int:
             continue
         try:
             jsonschema.validate(instance=contract, schema=transition_schema)
-            TransitionEngine(contract)
+            # Ordinary StateWork observations remain extensible; semantic
+            # authority names are still registry-validated by TransitionEngine.
+            TransitionEngine(contract, evidence_registry=evidence_registry, require_registered=False)
         except Exception as exc:
             problems.append(f"{name}: invalid transition contract: {exc}")
             continue
