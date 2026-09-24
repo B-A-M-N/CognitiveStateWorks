@@ -3,7 +3,7 @@
 > **State-aware workflow control for AI agents.**
 > Encode what state the work is actually in, what transitions are legal next, and what evidence is required before the agent can move forward.
 
-CognitiveStateWork (CSW) is the **operational state layer** of a larger closed-loop architecture for reliable AI agents.
+CognitiveStateWorks (CSW) is the **operational state layer** of a larger closed-loop architecture for reliable AI agents.
 
 It emerged from a problem that behavioral instructions alone could not solve. CognitiveFrameWorks improved how agents reasoned, verified, recovered, and acted, but agents could still mutate a repository before establishing its state, treat deployment as proof of infrastructure health, declare a UI fixed without exercising the defect, or jump from activity directly to completion.
 
@@ -18,8 +18,8 @@ CSW exists to answer that question.
 | System | Primary question |
 | --- | --- |
 | **CognitiveFrameWorks** | **How should the agent behave?** |
-| **CognitiveStateWork** | **What behavior and transitions are appropriate now?** |
-| **Digital Psychology** | **Why is the agent behaving this way under these conditions?** |
+| **CognitiveStateWorks** | **What behavior and transitions are appropriate now?** |
+| **DigitalPsychology** | **Why is the agent behaving this way under these conditions?** |
 
 ```text
              CognitiveFrameWorks
@@ -29,7 +29,7 @@ CSW exists to answer that question.
 Task ───────→ effective runtime policy
                     │
                     ▼
-             CognitiveStateWork
+             CognitiveStateWorks
              operational state
                     │
              legal transitions
@@ -42,11 +42,11 @@ Task ───────→ effective runtime policy
                     ▼
              state observations
                     │
-                    └─────────────→ Digital Psychology
+                    └─────────────→ DigitalPsychology
                                       behavioral analysis
 ```
 
-CFW provides general behavioral discipline. CSW provides **domain-specific operational structure**. Digital Psychology measures whether either system actually improves behavior.
+CFW provides general behavioral discipline. CSW provides **domain-specific operational structure**. DigitalPsychology measures whether either system actually improves behavior.
 
 ## A StateWork is an executable workflow model
 
@@ -127,7 +127,7 @@ domain/subject state
 
 A repository, deployment, infrastructure resource, interface, or pull request may persist across many agent sessions. Its operational state cannot be blindly scoped to one chat. Conversely, telemetry from independent sessions must not be merged simply because both operated on the same subject.
 
-CSW owns **durable operational state**. CFW owns the **runtime execution session**. Digital Psychology uses session/attempt identity to reconstruct behavior without corrupting the domain state model.
+CSW owns **durable operational state**. CFW owns the **runtime execution session**. DigitalPsychology uses session/attempt identity to reconstruct behavior without corrupting the domain state model.
 
 ## Handoffs
 
@@ -157,14 +157,14 @@ Recovery must be modeled explicitly. A new observation can invalidate an earlier
 CognitiveFrameWorks
     decides how work should be conducted
 
-CognitiveStateWork
+CognitiveStateWorks
     decides what domain state exists
     and which transitions are legal
 ```
 
 For example, CFW/FUSE may require verification to exercise the changed infrastructure boundary; Infrae declares the evidence required for `CHANGING → VERIFIED`. CFW/WARD may require authority for a mutation; Infrae declares that `PLANNED → CHANGING` is not legal until its transition requirements are met.
 
-Digital Psychology observes agents traversing StateWorks and can ask whether they skip `MODELED`, create unnecessary recovery loops, misuse specialists, declare completion immediately after `VERIFIED`, or incur more correction cycles in one flow than another.
+DigitalPsychology observes agents traversing StateWorks and can ask whether they skip `MODELED`, create unnecessary recovery loops, misuse specialists, declare completion immediately after `VERIFIED`, or incur more correction cycles in one flow than another.
 
 DP may influence future optional composition, but it cannot rewrite StateWork invariants or declare `CHANGING → STABLE` legal because the verification phase is inconvenient.
 
@@ -192,23 +192,52 @@ A StateWork should be treated as executable policy, not descriptive documentatio
 
 **Registration is cheap; activation is selective.** Large StateWork libraries should not become large agent contexts.
 
-## The role of CognitiveStateWork
+## The role of CognitiveStateWorks
 
 ```text
 CognitiveFrameWorks
     HOW should the agent behave?
 
-CognitiveStateWork
+CognitiveStateWorks
     WHAT behavior and transitions are appropriate NOW?
 
-Digital Psychology
+DigitalPsychology
     WHY does this behavior recur under THESE CONDITIONS?
 ```
 
-CFW made recurring behavioral errors governable. CognitiveStateWork extends that idea to recurring **workflow errors** by making operational state explicit. Together with Digital Psychology, those state models become observable and testable rather than static instructions.
+CFW made recurring behavioral errors governable. CognitiveStateWorks extends that idea to recurring **workflow errors** by making operational state explicit. Together with DigitalPsychology, those state models become observable and testable rather than static instructions.
+
+## Current implementation
+
+CognitiveStateWorks provides both an advisory installation and an enforcing standalone installation.
+
+The enforcing runtime includes:
+
+- `StandaloneHostInterface` for resolving StateWorks, starting or resuming subjects, submitting attested observations, requesting transitions, and recovering from invalidation.
+- `SubjectStateStore` for durable state keyed by namespace, application, subject, StateWork, and contract version.
+- Revision compare-and-swap updates and append-only transition history so stale writers re-inspect instead of overwriting newer state.
+- `EvidenceStore` for trusted evidence references, attestation integrity, persistence, and restart recovery.
+- Explicit consequential transition markers and registered provenance for authorization, mutation, verification, and terminal-state transitions.
+- Flow-selection metadata, transition contracts, packet schemas, evidence-kind registry, and repository-truth validation in the enforcing product.
+
+Use the advisory product for documentation and workflow guidance:
+
+```bash
+python3 scripts/install-stateworks.py --registry example-host="$HOME/.example/skills"
+```
+
+Use the enforcing product for standalone state authority:
+
+```bash
+python3 scripts/install-stateworks.py \
+  --registry example-host="$HOME/.example/skills" \
+  --enforcing-runtime
+```
+
+The `validate-stateworks.py`, `test-control-plane.py`, and `test-concurrent-state.py` suites cover registration integrity, transition legality, provenance, restart recovery, and concurrent state safety.
+
 
 ## FreeInference attribution
-
 This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
 
 These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects genuinely useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.
