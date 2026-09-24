@@ -1,4 +1,4 @@
-# CognitiveStateWork
+# CognitiveStateWorks
 
 > **State-aware workflow control for AI agents.**
 > Encode what state the work is actually in, what transitions are legal next, and what evidence is required before the agent can move forward.
