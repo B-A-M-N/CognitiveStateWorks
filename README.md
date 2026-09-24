@@ -13,6 +13,72 @@ Those were not merely behavioral failures. They were **state-model failures**. T
 
 CSW exists to answer that question.
 
+## Current implementation
+
+CognitiveStateWorks provides both an advisory installation and an enforcing standalone installation.
+
+The enforcing runtime includes:
+
+- `StandaloneHostInterface` for resolving StateWorks, starting or resuming subjects, submitting attested observations, requesting transitions, and recovering from invalidation.
+- `SubjectStateStore` for durable state keyed by namespace, application, subject, StateWork, and contract version.
+- Revision compare-and-swap updates and append-only transition history so stale writers re-inspect instead of overwriting newer state.
+- `EvidenceStore` for trusted evidence references, attestation integrity, persistence, and restart recovery.
+- Explicit consequential transition markers and registered provenance for authorization, mutation, verification, and terminal-state transitions.
+- Flow-selection metadata, transition contracts, packet schemas, evidence-kind registry, and repository-truth validation in the enforcing product.
+
+Use the advisory product for documentation and workflow guidance:
+
+```bash
+python3 scripts/install-stateworks.py --registry example-host="$HOME/.example/skills"
+```
+
+Use the enforcing product for standalone state authority:
+
+```bash
+python3 scripts/install-stateworks.py \
+  --registry example-host="$HOME/.example/skills" \
+  --enforcing-runtime
+```
+
+The `validate-stateworks.py`, `test-control-plane.py`, and `test-concurrent-state.py` suites cover registration integrity, transition legality, provenance, restart recovery, and concurrent state safety.
+
+## Five-minute standalone quick start
+
+CSW can own state and evidence without CFW or DP. From this repository, run the enforcing runtime example:
+
+```bash
+python3 scripts/quickstart-standalone.py
+```
+
+Expected output:
+
+```text
+initial: UNKNOWN revision 1
+transition without evidence allowed: False
+transition with trusted evidence allowed: True
+after restart: OBSERVED revision 2
+```
+
+The example uses the Gitter transition contract, initializes a subject through `StandaloneHostInterface`, rejects a transition without trusted evidence, accepts a repository-truth reference, and proves that state survives a new interface instance.
+
+For a deployable enforcing installation:
+
+```bash
+python3 scripts/install-stateworks.py \
+  --registry demo="$HOME/.demo-csw" \
+  --enforcing-runtime
+```
+
+That product contains the controller, schemas, transition contracts, evidence registry, StateWorks, flows, and repository-truth validator. The ordinary installation remains an advisory skill product.
+
+## Optional integrations
+
+- **CSW alone:** use `StandaloneHostInterface` and the enforcing installation; CFW and DP are not required.
+- **CSW + CFW:** CFW may compose StateWork flow eligibility and framework enhancements, but CSW retains state and evidence authority.
+- **CSW + DP:** DP may recommend a legal future flow preference. It cannot create flow eligibility, weaken a transition contract, or rewrite an active subject state.
+
+The top-level architecture diagram is a combined deployment view, not a statement that CFW is required for CSW execution. The standalone quickstart above is the canonical CSW entry point.
+
 ## The larger architecture
 
 | System | Primary question |
@@ -207,35 +273,23 @@ DigitalPsychology
 
 CFW made recurring behavioral errors governable. CognitiveStateWorks extends that idea to recurring **workflow errors** by making operational state explicit. Together with DigitalPsychology, those state models become observable and testable rather than static instructions.
 
-## Current implementation
+## Tests, limitations, and release status
 
-CognitiveStateWorks provides both an advisory installation and an enforcing standalone installation.
-
-The enforcing runtime includes:
-
-- `StandaloneHostInterface` for resolving StateWorks, starting or resuming subjects, submitting attested observations, requesting transitions, and recovering from invalidation.
-- `SubjectStateStore` for durable state keyed by namespace, application, subject, StateWork, and contract version.
-- Revision compare-and-swap updates and append-only transition history so stale writers re-inspect instead of overwriting newer state.
-- `EvidenceStore` for trusted evidence references, attestation integrity, persistence, and restart recovery.
-- Explicit consequential transition markers and registered provenance for authorization, mutation, verification, and terminal-state transitions.
-- Flow-selection metadata, transition contracts, packet schemas, evidence-kind registry, and repository-truth validation in the enforcing product.
-
-Use the advisory product for documentation and workflow guidance:
+Run the focused standalone checks:
 
 ```bash
-python3 scripts/install-stateworks.py --registry example-host="$HOME/.example/skills"
+python3 scripts/validate-stateworks.py
+python3 scripts/test-control-plane.py
+python3 scripts/test-concurrent-state.py
 ```
 
-Use the enforcing product for standalone state authority:
+They verify registry integrity, transition legality, evidence provenance, durable state, restart recovery, and concurrent revision safety. The enforcing package is tested by `install-stateworks.py --enforcing-runtime`.
 
-```bash
-python3 scripts/install-stateworks.py \
-  --registry example-host="$HOME/.example/skills" \
-  --enforcing-runtime
-```
+CSW is a domain-state runtime, not a general database or policy language. Trusted hosts must provide evidence validators and deployment-specific freshness context. The automated three-project release gate is in the sibling CFW repository; real-agent reasoning claims require CFW's external-agent qualification harness.
 
-The `validate-stateworks.py`, `test-control-plane.py`, and `test-concurrent-state.py` suites cover registration integrity, transition legality, provenance, restart recovery, and concurrent state safety.
+## License and contribution
 
+These projects are released under the [MIT License](LICENSE). Contributions are welcome through repository issues and pull requests. Please include a focused regression or acceptance check for behavior changes, keep authority boundaries explicit, and do not claim model-performance improvements without the corresponding qualification evidence.
 
 ## FreeInference attribution
 This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
