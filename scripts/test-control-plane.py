@@ -126,6 +126,10 @@ def main() -> int:
         host = StandaloneHostInterface(root=ROOT, state_path=Path(raw) / "host-state.json", evidence_path=Path(raw) / "host-evidence.json")
         check("host interface resolves installed StateWork", host.resolve_statework("gitter")["id"] == "gitter")
         check("host interface starts durable subject", host.start_or_resume(statework_id="gitter", identity=identity)["state"] == "UNKNOWN")
+        packet = json.loads((ROOT / "fixtures" / "fixtures-valid.ndjson").read_text().splitlines()[0])
+        check("host publishes durable packet", host.publish_packet(packet) == packet["packet_id"])
+        restarted_host = StandaloneHostInterface(root=ROOT, state_path=Path(raw) / "host-state.json", evidence_path=host.evidence_path)
+        check("durable packet survives host restart", packet["packet_id"] in restarted_host.packet_store._packets)
         host.submit_attested_observation({"ref": "obs-1", "kind": "discovery", "subject_ref": "repo", "observed_at": "2026-01-01T00:00:00Z"})
         host2 = StandaloneHostInterface(root=ROOT, state_path=Path(raw) / "host-state.json", evidence_path=host.evidence_path)
         check("host evidence survives interface restart", host2.evidence_store.resolve(["obs-1"])[0]["ref"] == "obs-1")
@@ -160,6 +164,14 @@ def main() -> int:
                 pass
             else:
                 raise AssertionError("altered persisted evidence was accepted")
+            records[0]["subject_ref"] = "repo"
+            records[0]["invalidation_events"].append({"event": "forged"})
+            try:
+                EvidenceStore.load_attested(records)
+            except TransitionError:
+                pass
+            else:
+                raise AssertionError("forged evidence history was accepted")
         cycle_state = SubjectStateStore(Path(raw) / "cycle-state.json")
         cycle_evidence = EvidenceStore()
         cycle_contract = {"initial_state": "A", "states": ["A", "B"], "transitions": [

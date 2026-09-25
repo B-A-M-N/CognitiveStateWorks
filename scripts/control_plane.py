@@ -146,10 +146,9 @@ class EvidenceStore:
 
     @staticmethod
     def _digest(record: Mapping[str, Any]) -> str:
-        body = dict(record)
-        body.pop("attestation_digest", None)
-        body.pop("revisions", None)
-        body.pop("invalidation_events", None)
+        # The attestation covers the complete revision and invalidation history.
+        body = {key: value for key, value in dict(record).items()
+                if key != "attestation_digest"}
         body["invalidated"] = body.get("invalidated") is True
         return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
 
@@ -173,7 +172,6 @@ class EvidenceStore:
         expected = self._digest(candidate)
         if supplied is not None and supplied != expected:
             raise TransitionError("supplied evidence attestation digest does not match content")
-        candidate["attestation_digest"] = expected
         prior = self._records.get(str(record["ref"]))
         if prior is not None and self._digest(self._current_body(prior)) != expected:
             raise TransitionError(f"evidence reference {record['ref']!r} has conflicting trusted content")
@@ -183,17 +181,22 @@ class EvidenceStore:
         else:
             candidate["revisions"] = list(prior.get("revisions") or [self._current_body(prior)])
             candidate["invalidation_events"] = list(prior.get("invalidation_events") or [])
+        candidate["attestation_digest"] = self._digest(candidate)
         self._records[str(record["ref"])] = candidate
         return str(record["ref"])
 
     def put(self, record: Mapping[str, Any]) -> str:
         """Load already-attested evidence after verifying its persisted digest."""
         self._validate_shape(record)
-        body = self._current_body(record)
-        supplied = body.get("attestation_digest")
-        if not isinstance(supplied, str) or self._digest(body) != supplied:
+        supplied = record.get("attestation_digest")
+        if not isinstance(supplied, str) or self._digest(record) != supplied:
             raise TransitionError(f"evidence reference {record.get('ref')!r} has an invalid attestation digest")
-        return self.create(record)
+        stored = self._records.get(str(record.get("ref") or ""))
+        if stored is not None and stored.get("attestation_digest") != supplied:
+            raise TransitionError("persisted evidence revision conflicts with trusted history")
+        if stored is None:
+            self._records[str(record["ref"])] = dict(record)
+        return str(record["ref"])
 
     @classmethod
     def load_attested(cls, records: Iterable[Mapping[str, Any]]) -> "EvidenceStore":
@@ -210,7 +213,7 @@ class EvidenceStore:
             if record is None:
                 raise TransitionError(f"evidence reference {ref!r} is not present in the trusted store")
             current = self._current_body(record)
-            if self._digest(current) != record.get("attestation_digest"):
+            if self._digest(record) != record.get("attestation_digest"):
                 raise TransitionError(f"evidence reference {ref!r} has an invalid attestation digest")
             out.append(dict(current))
         return out
@@ -251,7 +254,7 @@ class EvidenceStore:
                 right = record
                 for item in (left, right):
                     body = self._current_body(item)
-                    if self._digest(body) != item.get("attestation_digest"):
+                    if self._digest(item) != item.get("attestation_digest"):
                         raise TransitionError(f"evidence reference {ref!r} has an invalid merge revision")
                 left_base = self._current_body(left)
                 right_base = self._current_body(record)
@@ -831,6 +834,9 @@ class StandaloneHostInterface:
         self.evidence_path = Path(evidence_path) if evidence_path else self.root / "state" / "evidence.json"
         self.state_store = SubjectStateStore(Path(state_path) if state_path else self.root / "state" / "subjects.json")
         self.evidence_store = EvidenceStore()
+        self.packet_store = PacketStore(
+            packet_registry_path=self.root / "schemas" / "packet-registry.yaml",
+            storage_path=self.root / "state" / "packets.json")
         self._controllers: Dict[str, StandaloneStateWorkController] = {}
         self._controller_contract_hashes: Dict[str, str] = {}
         self._load_evidence()
@@ -882,8 +888,12 @@ class StandaloneHostInterface:
         """Publish a validated handoff packet through CSW's typed store."""
         if not isinstance(packet, Mapping):
             raise TransitionError("handoff packet must be a mapping")
-        store = PacketStore(packet_registry_path=self.root / "schemas" / "packet-registry.yaml",
-                            storage_path=storage_path)
+        if storage_path is not None:
+            store = PacketStore(
+                packet_registry_path=self.root / "schemas" / "packet-registry.yaml",
+                storage_path=storage_path)
+        else:
+            store = self.packet_store
         return store.put(dict(packet))
 
     def recover_from_invalidation(self, *, evidence_ref: str, identity: Mapping[str, Any],
