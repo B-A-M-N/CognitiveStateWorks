@@ -98,7 +98,7 @@ def main() -> int:
     import tempfile
     with tempfile.TemporaryDirectory(prefix="statework-subject-") as raw:
         store = SubjectStateStore(Path(raw) / "subjects.json")
-        identity = {"namespace_id": "ns", "application_id": "app", "subject_ref": "repo", "statework_id": "gitter", "contract_version": "1.1.0"}
+        identity = {"namespace_id": "ns", "application_id": "app", "application_instance_id": "instance", "workflow_id": "workflow", "subject_ref": "repo", "statework_id": "gitter", "contract_version": "1.1.0"}
         check("subject state starts absent", store.get(identity)["state"] is None)
         first = store.commit(identity, expected_revision=0, new_state="UNKNOWN", transition={"trigger": "bootstrap"})
         check("subject state commits with revision", first["revision"] == 1 and first["state"] == "UNKNOWN")

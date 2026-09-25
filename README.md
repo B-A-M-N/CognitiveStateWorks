@@ -295,3 +295,9 @@ These projects are released under the [MIT License](LICENSE). Contributions are 
 This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
 
 These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects genuinely useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.
+
+## Subject and workflow isolation
+
+A durable subject key now includes namespace, application, application instance, explicit workflow ID, subject reference, StateWork ID, and contract version. Matching local task, session, or interaction IDs are therefore not sufficient to share state.
+
+CFW supplies an agent-private workflow key by default. Two processes may share a subject only through a pinned, authorized workflow membership. Initial-state races reconcile to the already-initialized snapshot; later writes use compare-and-swap revisions and stale writers must re-inspect.

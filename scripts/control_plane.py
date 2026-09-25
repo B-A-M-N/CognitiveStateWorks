@@ -320,10 +320,17 @@ class SubjectStateStore:
 
     @staticmethod
     def key(identity: Mapping[str, Any]) -> str:
-        fields = [identity.get(name) for name in ("namespace_id", "application_id", "subject_ref", "statework_id", "contract_version")]
+        fields = [identity.get(name) for name in (
+            "namespace_id", "application_id", "application_instance_id",
+            "workflow_id", "subject_ref", "statework_id", "contract_version")]
         if any(not isinstance(value, str) or not value for value in fields):
-            raise TransitionError("subject state identity requires namespace, application, subject, StateWork, and contract version")
-        return json.dumps(dict(zip(("namespace_id", "application_id", "subject_ref", "statework_id", "contract_version"), fields)), sort_keys=True, separators=(",", ":"))
+            raise TransitionError(
+                "subject state identity requires namespace, application, application instance, "
+                "workflow, subject, StateWork, and contract version")
+        return json.dumps(dict(zip((
+            "namespace_id", "application_id", "application_instance_id",
+            "workflow_id", "subject_ref", "statework_id", "contract_version"), fields)),
+            sort_keys=True, separators=(",", ":"))
 
     def _refresh(self) -> None:
         if self.path.exists():
@@ -609,9 +616,16 @@ class StandaloneStateWorkController:
             raise TransitionError("standalone StateWork contract requires initial_state")
         snapshot = state_store.get(identity)
         if snapshot.get("state") is None:
-            state_store.commit(identity, expected_revision=0, new_state=initial,
-                               transition={"trigger": "controller_initialization",
-                                           "to_state": initial})
+            try:
+                state_store.commit(identity, expected_revision=0, new_state=initial,
+                                   transition={"trigger": "controller_initialization",
+                                               "to_state": initial})
+            except TransitionError as exc:
+                if "revision conflict" not in str(exc):
+                    raise
+                snapshot = state_store.get(identity)
+                if snapshot.get("state") is None:
+                    raise
         current = state_store.get(identity)
         for item in reversed(state_store._data.get("history") or []):
             identity_key = state_store.key(identity)
