@@ -182,6 +182,35 @@ def main() -> int:
         check("cycle A to B", cycle.request_transition(to_state="B", trigger="advance", evidence_refs=["after-initial-a"], expected_revision=cycle.inspect()["revision"]).allowed)
         cycle_evidence.create({"ref": "after-b", "kind": "authority", "subject_ref": "repo", "observed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "issuer": "host:test", "content_digest": "b"})
         check("cycle B to A", cycle.request_transition(to_state="A", trigger="return", evidence_refs=["after-b"], expected_revision=cycle.inspect()["revision"]).allowed)
+        # Progress metadata: a recovery hop must not be reported as forward
+        # progress, or CFW would silently reset its no-progress budget.
+        progress_contract = {"initial_state": "PLANNED", "states": ["PLANNED", "CHANGING", "VERIFIED", "RECOVERY", "PLANNED2"],
+            "completion_states": ["VERIFIED"],
+            "normal_path": ["PLANNED", "CHANGING", "VERIFIED"],
+            "transitions": [
+                {"from": "PLANNED", "to": "CHANGING", "trigger": "start", "required_evidence": ["authority"]},
+                {"from": "CHANGING", "to": "VERIFIED", "trigger": "verify", "required_evidence": ["authority"]},
+                {"from": "CHANGING", "to": "RECOVERY", "trigger": "fail", "required_evidence": ["authority"], "path_class": "recovery"},
+                {"from": "RECOVERY", "to": "PLANNED2", "trigger": "replan", "required_evidence": ["authority"], "path_class": "recovery"}]}
+        progress_kinds = {"kinds": {"authority": {"authoritative": True,
+            "allowed_issuers": ["host:authorization"],
+            "validator": "host-authorization-v1", "schema": "authority-record-v1"}}}
+        progress_store = EvidenceStore([
+            {"ref": f"pa-{n}", "kind": "authority", "subject_ref": "repo",
+             "observed_at": "2026-01-01T00:00:00Z", "issuer": "host:authorization",
+             "validator": "host-authorization-v1", "schema": "authority-record-v1",
+             "content_digest": str(n)} for n in range(1, 9)])
+        progress_engine = TransitionEngine(progress_contract,
+            evidence_registry=progress_kinds, evidence_store=progress_store)
+        forward = progress_engine.transition("repo", "PLANNED", "CHANGING", trigger="start",
+                                            evidence_refs=["pa-1"])
+        terminal = progress_engine.transition("repo", "CHANGING", "VERIFIED", trigger="verify",
+                                             evidence_refs=["pa-2"])
+        recovery = progress_engine.transition("repo", "CHANGING", "RECOVERY", trigger="fail",
+                                             evidence_refs=["pa-3"])
+        check("forward transition reports FORWARD_PROGRESS", forward.progress_class == "FORWARD_PROGRESS" and forward.is_forward_progress(), forward.progress_class)
+        check("reaching completion state is forward progress", terminal.progress_class == "FORWARD_PROGRESS" and terminal.is_forward_progress(), terminal.progress_class)
+        check("recovery hop is not forward progress", recovery.progress_class == "RECOVERY" and not recovery.is_forward_progress(), recovery.progress_class)
         check("second A uses latest entry freshness", not cycle.request_transition(to_state="B", trigger="advance", evidence_refs=["after-initial-a"], expected_revision=cycle.inspect()["revision"]).allowed)
 
     print("pass" if not failures else f"FAILED {failures}")

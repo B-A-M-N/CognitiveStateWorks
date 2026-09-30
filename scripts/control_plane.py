@@ -675,13 +675,20 @@ class StandaloneStateWorkController:
         if not decision.allowed:
             return decision
         transition_record = {"trigger": trigger, "evidence_refs": list(evidence_refs),
-                             "decision_reason": decision.reason}
+                             "decision_reason": decision.reason,
+                             "progress": decision.progress_facts()}
         self.state_store.commit(
             self.identity, expected_revision=expected_revision, new_state=to_state,
             transition=transition_record)
         committed = self.state_store.get(self.identity)
         self.entry_times[to_state] = str(committed.get("updated_at") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
         return decision
+
+
+PROGRESS_CLASSES = {
+    "FORWARD_PROGRESS", "LATERAL", "RECOVERY", "INVALIDATION", "REGRESSION",
+    "TERMINAL",
+}
 
 
 @dataclass
@@ -693,6 +700,29 @@ class TransitionDecision:
     trigger: Optional[str] = None
     required_evidence: List[str] = field(default_factory=list)
     evidence_freshness: Dict[str, Any] = field(default_factory=dict)
+    # Progress metadata. CFW uses this to distinguish real forward progress
+    # from a recovery cycle that merely moved the state machine, so a
+    # recovery hop does not silently reset the task's no-progress budget.
+    edge_id: Optional[str] = None
+    path_class: Optional[str] = None
+    progress_class: str = "LATERAL"
+    normal_path_rank_before: Optional[int] = None
+    normal_path_rank_after: Optional[int] = None
+
+    def progress_facts(self) -> Dict[str, Any]:
+        return {"edge_id": self.edge_id, "path_class": self.path_class,
+                "progress_class": self.progress_class,
+                "normal_path_rank_before": self.normal_path_rank_before,
+                "normal_path_rank_after": self.normal_path_rank_after}
+
+    def is_forward_progress(self) -> bool:
+        if self.progress_class == "FORWARD_PROGRESS":
+            return True
+        before = self.normal_path_rank_before
+        after = self.normal_path_rank_after
+        if before is None or after is None:
+            return False
+        return int(after) > int(before)
 
 
 class TransitionEngine:
@@ -714,6 +744,10 @@ class TransitionEngine:
         self.states = set(states)
         self.transitions = transitions
         self.completion_states = set(contract.get("completion_states") or [])
+        self.normal_path = list(contract.get("normal_path") or [])
+        self._normal_rank = {state: index for index, state in enumerate(self.normal_path)}
+        self.failure_states = {"DEFECTIVE", "DEGRADED", "RECOVERY", "FALLBACK"}
+
         registry = evidence_registry
         if registry is None:
             try:
@@ -740,6 +774,35 @@ class TransitionEngine:
                 if missing:
                     raise TransitionError(
                         f"transition {origin!r} -> {destination!r} uses unregistered evidence kinds: {missing}")
+
+    def _progress_facts(self, edge: Mapping[str, Any], from_state: str,
+                        to_state: str) -> Dict[str, Any]:
+        """Classify a transition so CFW can bound recovery loops."""
+        before = self._normal_rank.get(from_state)
+        after = self._normal_rank.get(to_state)
+        path_class = str(edge.get("path_class") or ("normal" if after is not None else "unranked"))
+        if path_class == "failure":
+            progress_class = "INVALIDATION"
+        elif path_class == "recovery":
+            progress_class = "RECOVERY"
+        elif to_state in self.failure_states:
+            progress_class = "INVALIDATION"
+        elif before is not None and after is not None:
+            if after > before:
+                progress_class = "FORWARD_PROGRESS"
+            elif after == before:
+                progress_class = "LATERAL"
+            else:
+                progress_class = "REGRESSION"
+        elif to_state in self.completion_states:
+            progress_class = "TERMINAL"
+        else:
+            progress_class = "LATERAL"
+        return {"edge_id": edge.get("id"),
+                "path_class": path_class,
+                "progress_class": progress_class,
+                "normal_path_rank_before": before,
+                "normal_path_rank_after": after}
 
     def _is_consequential(self, edge: Mapping[str, Any], to_state: str) -> bool:
         if edge.get("consequential") is not None:
@@ -807,7 +870,8 @@ class TransitionEngine:
                     False, f"missing evidence kinds: {', '.join(missing)}", from_state,
                     to_state, trigger, required, dict(edge.get("evidence_freshness") or {}))
             return TransitionDecision(True, "allowed", from_state, to_state, trigger,
-                                      required, dict(edge.get("evidence_freshness") or {}))
+                                      required, dict(edge.get("evidence_freshness") or {}),
+                                      **self._progress_facts(edge, from_state, to_state))
         return TransitionDecision(False, "transition not declared", from_state, to_state, trigger, [])
 
     def matching_edges(self, from_state: str, to_state: str,
