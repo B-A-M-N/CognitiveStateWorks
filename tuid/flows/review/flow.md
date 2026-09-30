@@ -1,5 +1,10 @@
 ---
 flow: review
+operations: [review, audit]
+triggers: [review_requested, audit_requested]
+states:
+  from: [IMPLEMENTED, EXERCISABLE, VALIDATED, STABLE]
+  through: [VALIDATED]
 required_specialists: []
 optional_specialists: []
 ---

@@ -1,5 +1,11 @@
 ---
 flow: assess
+operations: [assess, diagnose]
+triggers: [assessment_requested]
+states:
+  from: [MODELED, ASSESSED]
+  through: [ASSESSED]
+fallback: true
 required_specialists: []
 optional_specialists: []
 ---

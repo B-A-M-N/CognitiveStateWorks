@@ -1,5 +1,10 @@
 ---
 flow: decommission
+operations: [decommission, retire]
+triggers: [decommission_requested]
+states:
+  from: [ASSESSED, BLOCKED]
+  through: [RETIRED]
 required_specialists: []
 optional_specialists: []
 ---

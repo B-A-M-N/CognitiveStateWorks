@@ -1,5 +1,10 @@
 ---
 flow: redesign
+operations: [redesign]
+triggers: [redesign_requested]
+states:
+  from: [OBSERVED, MODELED, DESIGNED, IMPLEMENTED, VALIDATED, STABLE]
+  through: [DESIGNED]
 required_specialists: []
 optional_specialists: []
 ---

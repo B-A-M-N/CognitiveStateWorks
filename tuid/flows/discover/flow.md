@@ -1,5 +1,11 @@
 ---
 flow: discover
+operations: [discover, inspect]
+triggers: [discovery_requested, unknown_state]
+states:
+  from: [UNKNOWN]
+  through: [OBSERVED]
+fallback: true
 required_specialists: ['../../aspects/terminal-capabilities/aspect.md']
 optional_specialists: []
 ---

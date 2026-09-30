@@ -1,5 +1,10 @@
 ---
 flow: recover
+operations: [recover]
+triggers: [failure_detected, recovery_requested]
+states:
+  from: [DEFECTIVE, DEGRADED, RECOVERY]
+  through: [STABLE]
 required_specialists: []
 optional_specialists: []
 ---

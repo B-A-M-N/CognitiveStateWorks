@@ -1,5 +1,10 @@
 ---
 flow: scale
+operations: [scale, capacity]
+triggers: [scale_requested, capacity_pressure]
+states:
+  from: [OBSERVED, VERIFIED, STABLE]
+  through: [CHANGING, VERIFIED]
 required_specialists: []
 optional_specialists: []
 ---

@@ -1,5 +1,10 @@
 ---
 flow: design
+operations: [design, plan]
+triggers: [design_requested, planning_requested]
+states:
+  from: [ASSESSED]
+  through: [PLANNED]
 required_specialists: []
 optional_specialists: []
 ---

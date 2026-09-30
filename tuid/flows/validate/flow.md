@@ -1,5 +1,17 @@
 ---
 flow: validate
+operations: [validate, verify]
+triggers: [validation_requested, behavior_claim]
+states:
+  from: [IMPLEMENTED, EXERCISABLE, VALIDATED]
+  through: [VALIDATED]
+completion:
+  claim_classes:
+    static_visual: {minimum_state: IMPLEMENTED, evidence_kinds: [rendered_observation]}
+    responsive_layout: {minimum_state: EXERCISABLE, evidence_kinds: [rendered_viewport_matrix]}
+    interaction: {minimum_state: VALIDATED, evidence_kinds: [interaction_validation]}
+    terminal_lifecycle: {minimum_state: VALIDATED, evidence_kinds: [pty_validation]}
+    legibility: {minimum_state: IMPLEMENTED, evidence_kinds: [rendered_observation]}
 required_specialists: []
 optional_specialists: []
 ---

@@ -34,6 +34,14 @@
       },
       "minItems": 1
     },
+    "match": {
+      "type": "object",
+      "properties": {
+        "required_any": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "secondary": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
     "phase": {
       "enum": [
         "observation",

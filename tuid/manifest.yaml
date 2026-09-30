@@ -4,14 +4,11 @@ entrypoint: tuid/SKILL.md
 triggers:
 - terminal interface
 - TUI
-- rendering
-- layout
-- focus
-- input
-- flicker
-- resize
-- terminal capabilities
-- terminal corruption
+- terminal UI
+- terminal
+match:
+  required_any: [terminal interface, tui, terminal ui, terminal]
+  secondary: [rendering, layout, focus, input, flicker, resize, terminal capabilities, terminal corruption]
 phase: domain_state
 inputs:
   required:

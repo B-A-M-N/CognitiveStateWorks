@@ -1,5 +1,10 @@
 ---
 flow: incident
+operations: [incident, recover]
+triggers: [incident_detected, catastrophic_failure]
+states:
+  from: [UNKNOWN, OBSERVED, MODELED, ASSESSED, PLANNED, CHANGING, VERIFIED, STABLE, DEGRADED, INCIDENT, RECOVERING, BLOCKED]
+  through: [INCIDENT, RECOVERING]
 required_specialists: []
 optional_specialists: []
 ---

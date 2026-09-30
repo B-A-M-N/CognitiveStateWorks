@@ -9,6 +9,7 @@
     "triggers": { "type": "array", "items": { "type": "string" } },
     "task_shapes": { "type": "array", "items": { "type": "string" } },
     "domain_tags": { "type": "array", "items": { "type": "string" } },
+    "fallback": { "type": "boolean" },
     "states": {
       "type": "object",
       "required": ["from", "through"],
@@ -18,9 +19,38 @@
       },
       "additionalProperties": false
     },
+    "completion": {
+      "type": "object",
+      "properties": {
+        "claim_classes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["minimum_state", "evidence_kinds"],
+            "properties": {
+              "minimum_state": { "type": "string", "minLength": 1 },
+              "evidence_kinds": {
+                "type": "array", "items": { "type": "string", "minLength": 1 },
+                "minItems": 1, "uniqueItems": true
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "framework_requirements": { "type": "array", "items": { "type": "string" } },
     "required_specialists": { "type": "array", "items": { "type": "string" } },
     "optional_specialists": { "type": "array", "items": { "type": "string" } }
   },
+  "anyOf": [
+    { "properties": { "operations": { "minItems": 1 } }, "required": ["operations"] },
+    { "properties": { "triggers": { "minItems": 1 } }, "required": ["triggers"] },
+    { "properties": { "task_shapes": { "minItems": 1 } }, "required": ["task_shapes"] },
+    { "properties": { "domain_tags": { "minItems": 1 } }, "required": ["domain_tags"] },
+    { "properties": { "states": { "properties": { "from": { "minItems": 1 } }, "required": ["from"] } }, "required": ["states"] },
+    { "properties": { "fallback": { "const": true } }, "required": ["fallback"] }
+  ],
   "additionalProperties": false
 }

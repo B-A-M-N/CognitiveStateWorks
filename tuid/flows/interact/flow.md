@@ -1,5 +1,10 @@
 ---
 flow: interact
+operations: [interact, exercise]
+triggers: [interaction_requested, behavior_claim]
+states:
+  from: [IMPLEMENTED, EXERCISABLE]
+  through: [EXERCISABLE]
 required_specialists: []
 optional_specialists: []
 ---

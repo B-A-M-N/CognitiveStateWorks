@@ -1,5 +1,10 @@
 ---
 flow: model
+operations: [model, inspect]
+triggers: [model_requested, system_observed]
+states:
+  from: [OBSERVED, MODELED]
+  through: [MODELED]
 required_specialists: []
 optional_specialists: []
 ---

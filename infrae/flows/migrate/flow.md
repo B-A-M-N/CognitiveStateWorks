@@ -1,5 +1,10 @@
 ---
 flow: migrate
+operations: [migrate, migration]
+triggers: [migration_requested]
+states:
+  from: [ASSESSED, PLANNED, STABLE, VERIFIED]
+  through: [CHANGING, VERIFIED]
 required_specialists: []
 optional_specialists: []
 ---

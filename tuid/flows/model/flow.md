@@ -1,5 +1,10 @@
 ---
 flow: model
+operations: [model, analyze]
+triggers: [model_requested, state_model_needed]
+states:
+  from: [OBSERVED, MODELED]
+  through: [MODELED]
 required_specialists: ['../../aspects/application-state/aspect.md']
 optional_specialists: []
 ---

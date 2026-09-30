@@ -4,8 +4,10 @@ Terminal UI engineering discipline. Owns rendering, layout, focus, input,
 flicker, resize, terminal capabilities, corruption handling.
 
 ## State vocabulary
-- UNKNOWN → OBSERVED → DESIGNED → IMPLEMENTED → VALIDATED
-- VALIDATED → REOPENED on new terminal-capability or rendering evidence
+Use only states and transitions declared in transitions.yaml. The runtime
+resolver pins that contract; this capsule does not define a second state
+machine. Normal path: UNKNOWN → OBSERVED → MODELED → DESIGNED → IMPLEMENTED
+→ EXERCISABLE → VALIDATED → STABLE.
 
 ## Flow router
 Pick one active flow from flows/ (debug, design, discover, implement,
