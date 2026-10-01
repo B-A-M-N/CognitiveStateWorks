@@ -1,13 +1,32 @@
 ---
 flow: change
-operations: [deploy, configuration_change, rotate_secret, node_replacement, upgrade, scale, migrate]
-triggers: [mutation, change]
 states:
-  from: [PLANNED, CHANGING]
-  through: [CHANGING]
-framework_requirements: [fuse, ward]
+  through:
+  - CHANGING
+framework_requirements:
+- fuse
+- ward
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - deploy
+    - configuration_change
+    - rotate_secret
+    - node_replacement
+    - upgrade
+    - scale
+    - migrate
+  - field: trigger
+    in:
+    - mutation
+    - change
+  - field: current_state
+    in:
+    - PLANNED
+    - CHANGING
 ---
 # Flow: Change (PLANNED → CHANGING → VERIFIED)
 

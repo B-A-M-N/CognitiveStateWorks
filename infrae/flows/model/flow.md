@@ -1,12 +1,24 @@
 ---
 flow: model
-operations: [model, inspect]
-triggers: [model_requested, system_observed]
 states:
-  from: [OBSERVED, MODELED]
-  through: [MODELED]
+  through:
+  - MODELED
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - model
+    - inspect
+  - field: trigger
+    in:
+    - model_requested
+    - system_observed
+  - field: current_state
+    in:
+    - OBSERVED
+    - MODELED
 ---
 # Flow: Model (OBSERVED → MODELED)
 

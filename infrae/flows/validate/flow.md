@@ -1,13 +1,27 @@
 ---
 flow: validate
-operations: [validate, verify]
-triggers: [validation, validate]
 states:
-  from: [CHANGING, VERIFIED]
-  through: [VERIFIED]
-framework_requirements: [owl, anchor]
+  through:
+  - VERIFIED
+framework_requirements:
+- owl
+- anchor
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - validate
+    - verify
+  - field: trigger
+    in:
+    - validation
+    - validate
+  - field: current_state
+    in:
+    - CHANGING
+    - VERIFIED
 ---
 # Flow: Validate (CHANGING → VERIFIED)
 

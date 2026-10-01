@@ -1,12 +1,26 @@
 ---
 flow: review
-operations: [review, audit]
-triggers: [review_requested, audit_requested]
 states:
-  from: [IMPLEMENTED, EXERCISABLE, VALIDATED, STABLE]
-  through: [VALIDATED]
+  through:
+  - VALIDATED
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - review
+    - audit
+  - field: trigger
+    in:
+    - review_requested
+    - audit_requested
+  - field: current_state
+    in:
+    - IMPLEMENTED
+    - EXERCISABLE
+    - VALIDATED
+    - STABLE
 ---
 # Flow: Review (audit an existing TUI)
 

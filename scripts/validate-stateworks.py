@@ -24,8 +24,10 @@ def load_yaml(path: Path) -> Any:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def load_transition_contract(name: str) -> Dict[str, Any]:
-    path = ROOT / name / "transitions.yaml"
+def load_transition_contract(name: str, bundle_roots: Dict[str, Path],
+                             manifests: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    engine = manifests[name].get("engine") or {}
+    path = bundle_roots[name] / str(engine.get("contract") or "transitions.yaml")
     if not path.exists():
         return {}
     import yaml as yaml_module
@@ -64,9 +66,23 @@ def main() -> int:
         print("Missing registry.yaml")
         return 1
     registry = load_yaml(registry_path)
-    names = registry.get("stateworks", [])
+    try:
+        from scripts.control_plane import load_compiled_registry
+        compiled = load_compiled_registry(ROOT)
+        compiled_entries = {
+            str(entry["id"]): entry for entry in compiled.get("stateworks") or ()}
+    except Exception as exc:
+        problems.append(f"compiled registry invalid: {exc}")
+        compiled = {}
+        compiled_entries = {}
+    names = list(compiled_entries) or registry.get("stateworks", [])
     if not names or len(names) != len(set(names)):
-        problems.append("registry stateworks missing or duplicated")
+        problems.append("compiled StateWork registry missing or duplicated")
+    bundle_roots = {
+        name: Path(str(compiled_entries[name]["bundle_root"]))
+        if name in compiled_entries else ROOT / name
+        for name in names
+    }
 
     # manifest schema
     schema_path = ROOT / "schemas" / "statework-manifest.schema.json"
@@ -79,7 +95,8 @@ def main() -> int:
     import jsonschema
     manifests: Dict[str, Dict[str, Any]] = {}
     for name in names:
-        manifest_path = ROOT / name / "manifest.yaml"
+        owner = bundle_roots.get(name, ROOT / name)
+        manifest_path = owner / "manifest.yaml"
         if not manifest_path.exists():
             problems.append(f"{name}: missing manifest.yaml")
             continue
@@ -97,7 +114,7 @@ def main() -> int:
                 problems.append(f"{name}/manifest.yaml schema violation: {exc.message}")
         # entrypoint exists
         entry = data.get("entrypoint")
-        if entry and not (ROOT / entry).exists():
+        if entry and not (owner / entry).exists() and not (ROOT / entry).exists():
             problems.append(f"{name}: entrypoint {entry!r} does not exist")
         # core requirements recognized
         bad_reqs = [r for r in data.get("core_requirements", []) if r not in FRAMEWORK_STAGES]
@@ -122,7 +139,8 @@ def main() -> int:
     for name, data in manifests.items():
         budget = data.get("context_budget", "medium")
         limit = {"low": 1, "medium": 2, "high": 3}.get(budget, 2)
-        flows_dir = ROOT / name / "flows"
+        owner = bundle_roots.get(name, ROOT / name)
+        flows_dir = owner / "flows"
         if not flows_dir.is_dir():
             continue
         for flow_md in flows_dir.glob("*/flow.md"):
@@ -142,10 +160,15 @@ def main() -> int:
                     problems.append(f"{name}: flow metadata name {fdata.get('flow')!r} does not match directory {flow_md.parent.name!r}")
                 flow_states = fdata.get("states") or {}
                 if flow_states:
-                    contract_states = set(
-                        (load_transition_contract(name) or {}).get("states") or [])
-                    referenced = set(flow_states.get("from") or []) | set(
-                        flow_states.get("through") or [])
+                    if str((data.get("engine") or {}).get("kind") or "") != "state_machine":
+                        problems.append(
+                            f"{name}: non-state-machine flow {flow_md.parent.name} declares states")
+                        contract_states = set()
+                    else:
+                        contract_states = set(
+                            (load_transition_contract(name, bundle_roots, manifests) or {}).get(
+                                "states") or [])
+                    referenced = set(flow_states.get("through") or [])
                     if not referenced.issubset(contract_states):
                         problems.append(
                             f"{name}: flow {flow_md.parent.name} references undeclared states "
@@ -176,16 +199,35 @@ def main() -> int:
 
     # machine-readable transition contracts
     from scripts.control_plane import TransitionEngine
-    from scripts.control_plane import load_evidence_kind_registry
-    try:
-        evidence_registry = load_evidence_kind_registry()
-    except Exception as exc:
-        problems.append(f"evidence-kind registry invalid: {exc}")
-        evidence_registry = {"kinds": {}}
+    from scripts.workflow_engines import MilestoneWorkflowEngine
+    evidence_registry = compiled.get("evidence_registry") or {"kinds": {}}
     for name in names:
-        contract = load_transition_contract(name)
-        if not contract:
-            problems.append(f"{name}: missing transitions.yaml machine contract")
+        entry = compiled_entries.get(name) or {}
+        manifest = manifests.get(name) or {}
+        owner = bundle_roots.get(name, ROOT / name)
+        engine = manifest.get("engine") or {}
+        contract_path = owner / str(engine.get("contract") or "transitions.yaml")
+        if not contract_path.is_file():
+            problems.append(f"{name}: missing workflow contract {contract_path.name}")
+            continue
+        try:
+            contract = load_yaml(contract_path) or {}
+        except Exception as exc:
+            problems.append(f"{name}: workflow contract is invalid YAML: {exc}")
+            continue
+        engine_kind = str(engine.get("kind") or "state_machine")
+        if engine_kind == "milestone":
+            try:
+                MilestoneWorkflowEngine().validate_contract(contract)
+            except Exception as exc:
+                problems.append(f"{name}: invalid milestone contract: {exc}")
+            continue
+        if engine_kind != "state_machine":
+            # Registry compilation has already verified an explicitly trusted
+            # custom engine and its contract. This validator does not import
+            # arbitrary extension code a second time.
+            if not entry:
+                problems.append(f"{name}: custom workflow engine is not compiled")
             continue
         try:
             jsonschema.validate(instance=contract, schema=transition_schema)
@@ -270,7 +312,8 @@ def main() -> int:
         problems.append("Missing schemas/packet-registry.yaml")
         packets = {}
     else:
-        packets = load_yaml(packet_reg_path).get("packets", {})
+        packets = (compiled.get("packet_registry") or {}).get(
+            "packets", load_yaml(packet_reg_path).get("packets", {}))
 
     for name, data in manifests.items():
         for packet in data.get("emits", []):

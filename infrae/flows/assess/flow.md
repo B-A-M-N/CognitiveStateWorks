@@ -1,13 +1,24 @@
 ---
 flow: assess
-operations: [assess, diagnose]
-triggers: [assessment_requested]
 states:
-  from: [MODELED, ASSESSED]
-  through: [ASSESSED]
+  through:
+  - ASSESSED
 fallback: true
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - assess
+    - diagnose
+  - field: trigger
+    in:
+    - assessment_requested
+  - field: current_state
+    in:
+    - MODELED
+    - ASSESSED
 ---
 # Flow: Assess (MODELED → ASSESSED)
 

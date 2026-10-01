@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitivestatework.dev/schemas/tui-validation-packet.schema.json",
+  "title": "Tui validation packet",
+  "description": "Validation packet emitted by tuid after exercising terminal UI rendering/behavior.",
+  "allOf": [
+    { "$ref": "handoff-packet.schema.json" },
+    {
+      "properties": {
+        "packet_type": { "const": "tui_validation_packet" },
+        "producer": { "const": "tuid" },
+        "schema_version": { "const": "1.1.0" },
+        "payload": {
+          "type": "object",
+          "required": ["component", "checks", "result", "freshness_fingerprint"],
+          "properties": {
+            "component": { "type": "string", "minLength": 1 },
+            "checks": { "type": "array", "items": { "type": "object", "required": ["name", "passed"], "properties": { "name": { "type": "string", "minLength": 1 }, "passed": { "type": "boolean" } }, "additionalProperties": false } },
+            "result": { "type": "string", "enum": ["pass", "fail", "partial"] },
+            "freshness_fingerprint": { "type": "string", "minLength": 1 },
+            "terminals": { "type": "array", "items": { "type": "string" } },
+            "notes": { "type": ["string", "null"] }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

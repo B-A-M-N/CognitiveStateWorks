@@ -16,7 +16,26 @@
           "producer": { "type": "string", "minLength": 1 },
           "consumers": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
           "freshness_validator": { "type": "string", "minLength": 1 },
-          "freshness": { "const": "immutable" },
+          "freshness": {
+            "oneOf": [
+              { "const": "immutable" },
+              {
+                "type": "object",
+                "required": ["strategy"],
+                "properties": {
+                  "strategy": { "enum": ["trusted_validator", "exact_context", "vector_match", "max_age", "all"] },
+                  "validator_id": { "type": "string", "minLength": 1 },
+                  "packet_path": { "type": "string", "minLength": 1 },
+                  "context_path": { "type": "string", "minLength": 1 },
+                  "fields": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "maxItems": 32, "uniqueItems": true },
+                  "timestamp_path": { "type": "string", "minLength": 1 },
+                  "seconds": { "type": "number", "minimum": 0 },
+                  "rules": { "type": "array", "minItems": 1, "maxItems": 16, "items": { "type": "object" } }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
           "required_context": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
           "required_any_context": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
         },

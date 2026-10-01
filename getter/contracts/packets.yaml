@@ -1,0 +1,20 @@
+version: 1.0.0
+packets:
+  repository_evidence_packet:
+    schema: contracts/schemas/repository-evidence-packet.schema.json
+    schema_version: 1.1.0
+    producer: getter
+    consumers: []
+    freshness: immutable
+  repository_truth_packet:
+    schema: contracts/schemas/repository-truth-packet.schema.json
+    schema_version: 1.1.0
+    producer: gitter
+    consumers:
+    - getter
+    freshness:
+      strategy: trusted_validator
+      validator_id: repository_truth_v1
+    required_any_context:
+    - repository_path
+    - repository_freshness

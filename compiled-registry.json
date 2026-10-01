@@ -1,0 +1,2400 @@
+{
+  "builtin_engine_hashes": {
+    "flow_selector": "33f50a692126cfc2ca8237fb40d5cb4c9998afa0e30ee53d2b03c91881ba33d1",
+    "milestone": "3ba2eed288d98881ccc9930dac82d6b504ef0cec35f4590527e7568c88a66eef",
+    "state_machine": "901f974476f74a26ce61f95760a610149fe2b4b6916e53f50efb317fff644d13"
+  },
+  "evidence_registry": {
+    "kinds": {
+      "authority": {
+        "allowed_issuers": [
+          "host:authorization"
+        ],
+        "authoritative": true,
+        "schema": "authority-record-v1",
+        "validator": "host-authorization-v1"
+      },
+      "change_gate": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "decommission_checklist": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "effective_state": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "getter.authority": {
+        "allowed_issuers": [
+          "host:authorization"
+        ],
+        "authoritative": true,
+        "schema": "authority-record-v1",
+        "validator": "host-authorization-v1"
+      },
+      "getter.repository_evidence": {
+        "allowed_issuers": [
+          "validator:repository-evidence-v1"
+        ],
+        "authoritative": true,
+        "schema": "repository-evidence-packet.schema.json",
+        "validator": "repository-evidence-v1"
+      },
+      "getter.rollback": {
+        "allowed_issuers": [
+          "host:rollback"
+        ],
+        "authoritative": true,
+        "schema": "rollback-record-v1",
+        "validator": "rollback-v1"
+      },
+      "getter.rollback_plan": {
+        "allowed_issuers": [
+          "host:rollback-plan"
+        ],
+        "authoritative": true,
+        "schema": "rollback-plan-v1",
+        "validator": "rollback-plan-v1"
+      },
+      "gitter.reinspection": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "gitter.repository_truth": {
+        "allowed_issuers": [
+          "validator:repository-truth-v1"
+        ],
+        "authoritative": true,
+        "schema": "repository-truth-packet.schema.json",
+        "validator": "repository-truth-v1"
+      },
+      "implementation": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.authority": {
+        "allowed_issuers": [
+          "host:authorization"
+        ],
+        "authoritative": true,
+        "schema": "authority-record-v1",
+        "validator": "host-authorization-v1"
+      },
+      "infrae.change_gate": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.decommission_checklist": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.effective_state": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.invariants": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.monitoring": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.operational_health": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.plan": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.redundancy": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.regression_check": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.rollback": {
+        "allowed_issuers": [
+          "host:rollback"
+        ],
+        "authoritative": true,
+        "schema": "rollback-record-v1",
+        "validator": "rollback-v1"
+      },
+      "infrae.service_restored": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.state_integrity": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "infrae.verified_invariants": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "interaction_evidence": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "invariants": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "monitoring": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "operational_evidence": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "operational_health": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "plan": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "recovery_evidence": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "redundancy": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "regression_check": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "reinspection": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "repository_evidence": {
+        "allowed_issuers": [
+          "validator:repository-evidence-v1"
+        ],
+        "authoritative": true,
+        "schema": "repository-evidence-packet.schema.json",
+        "validator": "repository-evidence-v1"
+      },
+      "repository_truth": {
+        "allowed_issuers": [
+          "validator:repository-truth-v1"
+        ],
+        "authoritative": true,
+        "schema": "repository-truth-packet.schema.json",
+        "validator": "repository-truth-v1"
+      },
+      "rollback": {
+        "allowed_issuers": [
+          "host:rollback"
+        ],
+        "authoritative": true,
+        "schema": "rollback-record-v1",
+        "validator": "rollback-v1"
+      },
+      "rollback_plan": {
+        "allowed_issuers": [
+          "host:rollback-plan"
+        ],
+        "authoritative": true,
+        "schema": "rollback-plan-v1",
+        "validator": "rollback-plan-v1"
+      },
+      "service_restored": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "state_integrity": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "tuid.implementation": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "tuid.interaction_evidence": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "tuid.operational_evidence": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "tuid.recovery_evidence": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "tuid.validation_evidence": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "validation_evidence": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "verified_invariants": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      }
+    },
+    "version": "1.0.0"
+  },
+  "freshness_validator_hashes": {
+    "infrastructure_truth_v1": "a3d631137ab7bf65ecfa5a9d3b3b204c62697b54a87cc2b9b78a9be52edb0a28",
+    "repository_truth_v1": "83a3e03172a328bfab6c4f4d082556fae580bf3dbd6c1699e7a7307bc1de3027",
+    "tui_validation_v1": "6cd20a92ee7a86b87d6de7cb16ad7a4305c15a4e07d74287d22d16d572c5f7c7"
+  },
+  "packet_registry": {
+    "packets": {
+      "infrastructure_evidence_packet": {
+        "consumers": [],
+        "freshness": "immutable",
+        "producer": "infrae",
+        "schema": "contracts/schemas/infrastructure-evidence-packet.schema.json",
+        "schema_version": "1.1.0"
+      },
+      "infrastructure_truth_packet": {
+        "consumers": [
+          "infrae"
+        ],
+        "freshness": {
+          "context_path": "infrastructure_fingerprint",
+          "packet_path": "payload.freshness_fingerprint",
+          "strategy": "exact_context"
+        },
+        "producer": "infrae",
+        "required_context": [
+          "infrastructure_fingerprint"
+        ],
+        "schema": "contracts/schemas/infrastructure-truth-packet.schema.json",
+        "schema_version": "1.1.0"
+      },
+      "repository_evidence_packet": {
+        "consumers": [],
+        "freshness": "immutable",
+        "producer": "getter",
+        "schema": "contracts/schemas/repository-evidence-packet.schema.json",
+        "schema_version": "1.1.0"
+      },
+      "repository_truth_packet": {
+        "consumers": [
+          "getter"
+        ],
+        "freshness": {
+          "strategy": "trusted_validator",
+          "validator_id": "repository_truth_v1"
+        },
+        "producer": "gitter",
+        "required_any_context": [
+          "repository_path",
+          "repository_freshness"
+        ],
+        "schema": "contracts/schemas/repository-truth-packet.schema.json",
+        "schema_version": "1.1.0"
+      },
+      "tui_validation_packet": {
+        "consumers": [],
+        "freshness": {
+          "context_path": "validation_fingerprint",
+          "packet_path": "payload.freshness_fingerprint",
+          "strategy": "exact_context"
+        },
+        "producer": "tuid",
+        "required_context": [
+          "validation_fingerprint"
+        ],
+        "schema": "contracts/schemas/tui-validation-packet.schema.json",
+        "schema_version": "1.1.0"
+      }
+    },
+    "version": "2.0.0"
+  },
+  "packet_schemas": {
+    "infrastructure_evidence_packet": {
+      "$id": "https://cognitivestatework.dev/schemas/infrastructure-evidence-packet.schema.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "allOf": [
+        {
+          "$ref": "handoff-packet.schema.json"
+        },
+        {
+          "properties": {
+            "packet_type": {
+              "const": "infrastructure_evidence_packet"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "evidence": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "notes": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "result": {
+                  "enum": [
+                    "success",
+                    "failure",
+                    "partial",
+                    "aborted"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action",
+                "result",
+                "evidence"
+              ],
+              "type": "object"
+            },
+            "producer": {
+              "const": "infrae"
+            },
+            "schema_version": {
+              "const": "1.1.0"
+            }
+          }
+        }
+      ],
+      "description": "Evidence produced by Infrae actions (rollback results, capacity tests, deployment verification).",
+      "title": "Infrastructure evidence packet"
+    },
+    "infrastructure_truth_packet": {
+      "$id": "https://cognitivestatework.dev/schemas/infrastructure-truth-packet.schema.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "allOf": [
+        {
+          "$ref": "handoff-packet.schema.json"
+        },
+        {
+          "properties": {
+            "packet_type": {
+              "const": "infrastructure_truth_packet"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "properties": {
+                "freshness_fingerprint": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "invalidation_conditions": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "observed_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "scope": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "state": {
+                  "additionalProperties": true,
+                  "properties": {
+                    "phase": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "phase"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "scope",
+                "state",
+                "observed_at",
+                "freshness_fingerprint",
+                "invalidation_conditions"
+              ],
+              "type": "object"
+            },
+            "producer": {
+              "const": "infrae"
+            },
+            "schema_version": {
+              "const": "1.1.0"
+            }
+          }
+        }
+      ],
+      "description": "State truth established by Infrae before infrastructure mutation.",
+      "title": "Infrastructure truth packet"
+    },
+    "repository_evidence_packet": {
+      "$id": "https://cognitivestatework.dev/schemas/repository-evidence-packet.schema.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "allOf": [
+        {
+          "$ref": "handoff-packet.schema.json"
+        },
+        {
+          "properties": {
+            "packet_type": {
+              "const": "repository_evidence_packet"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "properties": {
+                "evidence": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "notes": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "observed_head": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "operation": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "result": {
+                  "enum": [
+                    "success",
+                    "failure",
+                    "partial",
+                    "aborted"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "operation",
+                "result",
+                "observed_head",
+                "evidence"
+              ],
+              "type": "object"
+            },
+            "producer": {
+              "const": "getter"
+            },
+            "schema_version": {
+              "const": "1.1.0"
+            }
+          }
+        }
+      ],
+      "description": "Evidence produced by Getter while mutating repository state (merge/rebase/reset/revert results, integrity checks).",
+      "title": "Repository evidence packet"
+    },
+    "repository_truth_packet": {
+      "$id": "https://cognitivestatework.dev/schemas/repository-truth-packet.schema.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "allOf": [
+        {
+          "$ref": "handoff-packet.schema.json"
+        },
+        {
+          "properties": {
+            "packet_type": {
+              "const": "repository_truth_packet"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "properties": {
+                "assessment": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "disposition": {
+                      "enum": [
+                        "safe",
+                        "unsafe",
+                        "uncertain"
+                      ],
+                      "type": "string"
+                    },
+                    "standard_assessment": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "standard_assessment"
+                  ],
+                  "type": "object"
+                },
+                "change": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "branch_owner": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "branch_purpose": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "concurrent_workers": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "integration_risk": {
+                      "enum": [
+                        "none",
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "type": "string"
+                    },
+                    "intended_task": {
+                      "type": "string"
+                    },
+                    "logical_change_units": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "rewrite_risk": {
+                      "enum": [
+                        "none",
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "type": "string"
+                    },
+                    "unexpected_commits": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "unrelated_changes": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "intended_task",
+                    "branch_purpose",
+                    "integration_risk"
+                  ],
+                  "type": "object"
+                },
+                "freshness": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "active_worktree_snapshot": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "invalidation_conditions": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "observed_head": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "remote_state_fingerprint": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "repo_identity": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "working_tree_fingerprint": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "repo_identity",
+                    "observed_head",
+                    "working_tree_fingerprint",
+                    "active_worktree_snapshot",
+                    "invalidation_conditions"
+                  ],
+                  "type": "object"
+                },
+                "repository": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "active_worktrees": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "ahead": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "behind": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "current_branch": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "head_sha": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "local_only_commits": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "merge_base": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "operation_in_progress": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "remote_only_commits": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "remote_visibility": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "root": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "staged_changes": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "target_base": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "target_base_sha": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "tracking_branch": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "unstaged_changes": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "untracked_files": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "working_tree": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "root",
+                    "current_branch",
+                    "head_sha",
+                    "working_tree",
+                    "untracked_files",
+                    "active_worktrees",
+                    "remote_visibility"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "repository",
+                "change",
+                "assessment",
+                "freshness"
+              ],
+              "type": "object"
+            },
+            "producer": {
+              "const": "gitter"
+            },
+            "schema_version": {
+              "const": "1.1.0"
+            }
+          }
+        }
+      ],
+      "description": "Freshness-carrying truth packet for the Gitter \u2192 Getter handoff. Composes the common handoff envelope; domain data lives in the nested payload (repository / change / assessment / freshness).",
+      "title": "Gitter repository truth packet"
+    },
+    "tui_validation_packet": {
+      "$id": "https://cognitivestatework.dev/schemas/tui-validation-packet.schema.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "allOf": [
+        {
+          "$ref": "handoff-packet.schema.json"
+        },
+        {
+          "properties": {
+            "packet_type": {
+              "const": "tui_validation_packet"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "properties": {
+                "checks": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "passed": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "passed"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "component": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "freshness_fingerprint": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "notes": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "result": {
+                  "enum": [
+                    "pass",
+                    "fail",
+                    "partial"
+                  ],
+                  "type": "string"
+                },
+                "terminals": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "component",
+                "checks",
+                "result",
+                "freshness_fingerprint"
+              ],
+              "type": "object"
+            },
+            "producer": {
+              "const": "tuid"
+            },
+            "schema_version": {
+              "const": "1.1.0"
+            }
+          }
+        }
+      ],
+      "description": "Validation packet emitted by tuid after exercising terminal UI rendering/behavior.",
+      "title": "Tui validation packet"
+    }
+  },
+  "registry_config_hash": "d4efe61d7c37394e7e4d7fd0406b5d83c94e2b0941cf56f7c2e57a881693ef85",
+  "registry_hash": "6476ed5605338c08614d082aa266ca3d9a736af81912116c63c38cfddb38109c",
+  "registry_version": "2.0.0",
+  "stateworks": [
+    {
+      "bundle_hash": "c5d37edd7dc80dc168196a36e418a0cb7021ef4cd3ea455a18c693b1a3f4c3f3",
+      "bundle_ref": "infrae",
+      "contracts": {
+        "evidence": [
+          "infrae.authority",
+          "authority",
+          "infrae.change_gate",
+          "change_gate",
+          "infrae.decommission_checklist",
+          "decommission_checklist",
+          "infrae.effective_state",
+          "effective_state",
+          "infrae.invariants",
+          "invariants",
+          "infrae.monitoring",
+          "monitoring",
+          "infrae.operational_health",
+          "operational_health",
+          "infrae.plan",
+          "plan",
+          "infrae.redundancy",
+          "redundancy",
+          "infrae.regression_check",
+          "regression_check",
+          "infrae.rollback",
+          "rollback",
+          "infrae.service_restored",
+          "service_restored",
+          "infrae.state_integrity",
+          "state_integrity",
+          "infrae.verified_invariants",
+          "verified_invariants"
+        ],
+        "packets": [
+          "infrastructure_evidence_packet",
+          "infrastructure_truth_packet"
+        ]
+      },
+      "engine": {
+        "contract": {
+          "completion_states": [
+            "STABLE",
+            "RETIRED"
+          ],
+          "initial_state": "UNKNOWN",
+          "normal_path": [
+            "UNKNOWN",
+            "OBSERVED",
+            "MODELED",
+            "ASSESSED",
+            "PLANNED",
+            "CHANGING",
+            "VERIFIED",
+            "STABLE"
+          ],
+          "states": [
+            "UNKNOWN",
+            "OBSERVED",
+            "MODELED",
+            "ASSESSED",
+            "PLANNED",
+            "CHANGING",
+            "VERIFIED",
+            "STABLE",
+            "DEGRADED",
+            "INCIDENT",
+            "RECOVERING",
+            "BLOCKED",
+            "RETIRED"
+          ],
+          "transitions": [
+            {
+              "domain_effect": "capture_infrastructure_state",
+              "from": "UNKNOWN",
+              "id": "infrae.unknown.discover.observed",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "discovery"
+              ],
+              "to": "OBSERVED",
+              "trigger": "discover",
+              "work_class": "observation"
+            },
+            {
+              "domain_effect": "model_infrastructure_topology",
+              "from": "OBSERVED",
+              "id": "infrae.observed.model.modeled",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "observed_model"
+              ],
+              "to": "MODELED",
+              "trigger": "model",
+              "work_class": "modeling"
+            },
+            {
+              "domain_effect": "assess_infrastructure_risk",
+              "from": "MODELED",
+              "id": "infrae.modeled.assess.assessed",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "assessment"
+              ],
+              "to": "ASSESSED",
+              "trigger": "assess",
+              "work_class": "assessment"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "record_infrastructure_change_plan",
+              "from": "ASSESSED",
+              "id": "infrae.assessed.design.planned",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "plan",
+                "invariants",
+                "rollback"
+              ],
+              "to": "PLANNED",
+              "trigger": "design",
+              "work_class": "planning"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "apply_infrastructure_change",
+              "from": "PLANNED",
+              "id": "infrae.planned.mutate.changing",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "change_gate",
+                "authority"
+              ],
+              "to": "CHANGING",
+              "trigger": "mutate",
+              "work_class": "mutation"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "verify_infrastructure_change",
+              "from": "CHANGING",
+              "id": "infrae.changing.validate.verified",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "effective_state",
+                "regression_check"
+              ],
+              "to": "VERIFIED",
+              "trigger": "validate",
+              "work_class": "validation"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "confirm_operational_stability",
+              "from": "VERIFIED",
+              "id": "infrae.verified.stabilize.stable",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "verified_invariants",
+                "operational_health"
+              ],
+              "to": "STABLE",
+              "trigger": "stabilize",
+              "work_class": "validation"
+            },
+            {
+              "domain_effect": "invalidate_operational_stability",
+              "from": "VERIFIED",
+              "id": "infrae.verified.invalidate.degraded",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "invalidation"
+              ],
+              "to": "DEGRADED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "invalidate_operational_stability",
+              "from": "STABLE",
+              "id": "infrae.stable.invalidate.degraded",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "invalidation"
+              ],
+              "to": "DEGRADED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "invalidate_operational_stability",
+              "from": "CHANGING",
+              "id": "infrae.changing.invariant_violation.degraded",
+              "path_class": "failure",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "violation"
+              ],
+              "to": "DEGRADED",
+              "trigger": "invariant_violation",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "begin_infrastructure_recovery",
+              "from": "DEGRADED",
+              "id": "infrae.degraded.recover.recovering",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "recovery_plan"
+              ],
+              "to": "RECOVERING",
+              "trigger": "recover",
+              "work_class": "recovery"
+            },
+            {
+              "domain_effect": "begin_infrastructure_recovery",
+              "from": "INCIDENT",
+              "id": "infrae.incident.recover.recovering",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "recovery_plan"
+              ],
+              "to": "RECOVERING",
+              "trigger": "recover",
+              "work_class": "recovery"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "confirm_operational_stability",
+              "from": "RECOVERING",
+              "id": "infrae.recovering.stabilize.stable",
+              "path_class": "recovery",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "service_restored",
+                "state_integrity",
+                "redundancy",
+                "monitoring"
+              ],
+              "to": "STABLE",
+              "trigger": "stabilize",
+              "work_class": "validation"
+            },
+            {
+              "domain_effect": "block_unsafe_infrastructure_work",
+              "from": "ASSESSED",
+              "id": "infrae.assessed.block.blocked",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "unknown_ownership"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "blocking"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "retire_infrastructure_resource",
+              "from": "ASSESSED",
+              "id": "infrae.assessed.decommission.retired",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "decommission_checklist"
+              ],
+              "to": "RETIRED",
+              "trigger": "decommission",
+              "work_class": "retirement"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "retire_infrastructure_resource",
+              "from": "BLOCKED",
+              "id": "infrae.blocked.decommission.retired",
+              "path_class": "failure",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "decommission_checklist"
+              ],
+              "to": "RETIRED",
+              "trigger": "decommission",
+              "work_class": "retirement"
+            },
+            {
+              "domain_effect": "block_unsafe_infrastructure_work",
+              "from": "PLANNED",
+              "id": "infrae.planned.block.blocked",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "unacceptable_risk"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "blocking"
+            },
+            {
+              "domain_effect": "record_infrastructure_incident",
+              "from": "*",
+              "id": "infrae.any.incident.incident",
+              "path_class": "external",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "catastrophic_failure"
+              ],
+              "to": "INCIDENT",
+              "trigger": "incident",
+              "work_class": "incident"
+            }
+          ],
+          "version": "1.1.0"
+        },
+        "contract_hash": "7d6934b702fdfcd88c42b938c707b23a58153d003d821261639534aad507bc72",
+        "contract_path": "transitions.yaml",
+        "contract_version": "state-machine/v1",
+        "kind": "state_machine"
+      },
+      "file_hashes": {
+        "STATEWORK.md": "010953bb5fce1a16780ecc45521084dc0b0995cfce9f49cd2c4109c59720dae3",
+        "contracts/evidence-kinds.yaml": "cd1a4a85ad5198c0a6e43b20bc7631976ea845617ac718cd137adcd27e21176d",
+        "contracts/packets.yaml": "1974dfbb52491e27c13e415ecb91ffc9be2995fbe955f4dc59be45ca7e1c8340",
+        "contracts/schemas/infrastructure-evidence-packet.schema.json": "7daa5769f2f121323f9ee92867bdfd6e3508ecc432a791a0c2bfc15572ca2679",
+        "contracts/schemas/infrastructure-truth-packet.schema.json": "a25d245a02293f2e5e9c9fa98934c0e3fd72f802b5aa749a1f1fb9462cd1b1dd",
+        "domains/capacity/domain.md": "692dc2f8e5e669c4b77114abf7fcde56089c76e129e7e825fb150d8c24fa0ce1",
+        "domains/compute/domain.md": "017df92dadcb591618d3d66241b1177aee36aea04060ae79e06165a9263f93cd",
+        "domains/identity/domain.md": "ed4cc469658b14471e2d3666c36deca9cb7efbbd55fd24044c5d0e54d3886883",
+        "domains/network/domain.md": "b104ff1733fedad650440ff65cdce4d2e5e63de9941aff32231a3975a79a4dad",
+        "domains/observability/domain.md": "6ea3a9ca0df05b4b749a45883eb18a246bd30584787851c745f6310015f308b5",
+        "domains/orchestration/domain.md": "81e89925329bf056f0829e8e638d010ae602aaeef931adb211484c2929e09689",
+        "domains/reliability/domain.md": "6e9ab691cc80aceaeef8a5e90847ef1508a43beba4f10adb9057ef7291382a98",
+        "domains/security/domain.md": "8d5cb5e8f7d38f1bb2dddd79694b6f4e0fcd651a28992dac295a8f697a3e4cf3",
+        "domains/storage/domain.md": "1bf2c628450bf4bb8f40af6743d9f007106248dc697a3599b971eb5a6cba1c57",
+        "flows/assess/flow.md": "8316cb94f8e505175856324616af7e224abf6c8bbac92633521f0485827a74a9",
+        "flows/change/flow.md": "a27156debe8efe1cad25acf331aa1d296fddd1a7db8d4dcaf4086d0ab891750b",
+        "flows/decommission/flow.md": "f0fe1432a4a6dde366008b5375504bb280e71d685ef075f9741a3006292df73a",
+        "flows/design/flow.md": "315d2464e04103093cb52d15482a1e2ae6e57658b3fa57dc39a68a333683d712",
+        "flows/discover/flow.md": "aa1e30754a13e06c0dea3b1565aa0f6989357c97b0cf61a7547507bd2367f2ec",
+        "flows/incident/flow.md": "3dbbf79728cecfb0e7d8a7db23583eae29240992f1ba4a6f064896a701f42f55",
+        "flows/migrate/flow.md": "81105e7f8520500edcb174753a656ea8e81bf95bf8c51c9630ef888ceae03dff",
+        "flows/model/flow.md": "9c3ba2ec71f4a30dcdf93d8d943ecdc6e1660707fbd3d3ab2774943b3c08e901",
+        "flows/recover/flow.md": "d39b54220e323cc25cbdc96f18904ad1b8f274c5d4b09a577872d99431dbaa04",
+        "flows/scale/flow.md": "81e4ecd1945403d0dda28dac6731f12de5a8eac790ee58ed19920a18cd0f14dd",
+        "flows/validate/flow.md": "ed76add890d510e17fbb2a0a220b2ffe010d47bc0215510496fe5c9b3ccdb447",
+        "manifest.yaml": "f6a18987ccdc1b0ff78aebfddb867369f4a81ac080a362d8940dcd0f981a4f92",
+        "policies/concurrency/README.md": "4eb0b4c369eb79d439a0c357799f059792b2901f25b4069433ef0ba4b7e6998b",
+        "policies/destructive-change/README.md": "478803fe1c0045d6e3ca2e9861750a27645faf5bfc0c552ac86dc76e20e9a7fb",
+        "policies/evidence-thresholds/README.md": "3c866f7cf8a37712b458802be17fa48cb9232a48c41bff29568285c4528619d4",
+        "policies/mutation-gates/README.md": "e99d61bdae6d92f63b62298fcea8f1d68ba4681097f30356f9305c53a047533b",
+        "policies/production-safety/README.md": "2004d2733e7473543bcfec0fcbc9b701027236d2bb33f682bf6e70c5232ac595",
+        "primitives/blast-radius/README.md": "b9a200fb229cacbcb7ca945dd9be49005a8d58eb5975982aa7d1ad5ed53e3498",
+        "primitives/dependency-graph/README.md": "3381e03b47d6ccbcb9c40f7b6e594f5435f5005865b2785331a926636dca3759",
+        "primitives/evidence/README.md": "9d3c0d9aa0e7c86f7ac625b597ea60051ca1ec9c063fd3704b6b002e950cf292",
+        "primitives/failure-domain/README.md": "b2c571f264467340bcc7b394d03c34e68b45cf1db91465c704f0b87fad86abbc",
+        "primitives/health-model/README.md": "d49d1161cff1fddb1cbd6a2291b0c3ee1032b875844b03df93c8783976ea6c01",
+        "primitives/invariants/README.md": "de946e78b97ede1ed89812cf256dc92fdeae1195e2e5a4526520652cc74ef720",
+        "primitives/rollback/README.md": "7f52d127f045b28fb4daee3778aef6acd82b3ccd881c5bc15869f8efd156ae82",
+        "primitives/state-ownership/README.md": "10b0d00a89dcacff38e0fa3911e59eb5c36516499912c7b3c765ad7b46da0e2d",
+        "primitives/topology/README.md": "35b751b031acc537a926a7d47706aba274073b1ce45e5397efabc8eb30980b76",
+        "runtime.md": "5368f2c02ba9960683f3a6649be36ceaf3e819f520cb4cda21558735d0facdba",
+        "transitions.yaml": "c13cee78f99d5e1dca2fb054fa8a09b665c62d79614615ae4371f650d006bc70"
+      },
+      "id": "infrae",
+      "manifest": {
+        "bundle_schema_version": 2,
+        "composition": {
+          "conflicts": [],
+          "group": "infrastructure_state",
+          "mode": "exclusive",
+          "requires": []
+        },
+        "context_budget": "medium",
+        "contracts": {
+          "evidence": "contracts/evidence-kinds.yaml",
+          "packets": "contracts/packets.yaml",
+          "schemas": [
+            "contracts/schemas/infrastructure-evidence-packet.schema.json",
+            "contracts/schemas/infrastructure-truth-packet.schema.json"
+          ]
+        },
+        "core_requirements": [],
+        "domain": "infrastructure_state",
+        "emits": [
+          "infrastructure_truth_packet",
+          "infrastructure_evidence_packet"
+        ],
+        "engine": {
+          "contract": "transitions.yaml",
+          "contract_version": "state-machine/v1",
+          "kind": "state_machine"
+        },
+        "entrypoint": "infrae/STATEWORK.md",
+        "exclusive_group": "infrastructure_state",
+        "flow_selection": {
+          "ambiguity": "error",
+          "fallback": "required",
+          "no_match": "blocked"
+        },
+        "framework_enhancements": [
+          "owl",
+          "anchor"
+        ],
+        "handoff": "infrastructure_truth_packet",
+        "id": "infrae",
+        "inputs": {
+          "optional": [
+            "infrastructure_truth_packet"
+          ],
+          "required": [
+            "task_context"
+          ]
+        },
+        "integrations": {
+          "cognitiveframeworks": {
+            "enhancements": [
+              "owl",
+              "anchor"
+            ],
+            "required": []
+          }
+        },
+        "name": "Infrae",
+        "phase": "domain_state",
+        "purpose": "Model and control infrastructure changes using bounded evidence and recovery paths.",
+        "triggers": [
+          "infrastructure",
+          "topology",
+          "capacity",
+          "deployment",
+          "incident",
+          "migration",
+          "recovery",
+          "observability"
+        ],
+        "version": "1.1.0"
+      },
+      "root_ref": ".",
+      "source_root": "."
+    },
+    {
+      "bundle_hash": "6c6ea5c4a8becf4aba5b3e7e615590fe81240115239efee28512cf68f42901ba",
+      "bundle_ref": "gitter",
+      "contracts": {
+        "evidence": [
+          "gitter.reinspection",
+          "reinspection",
+          "gitter.repository_truth",
+          "repository_truth"
+        ],
+        "packets": [
+          "repository_truth_packet"
+        ]
+      },
+      "engine": {
+        "contract": {
+          "completion_states": [
+            "OBSERVED"
+          ],
+          "initial_state": "UNKNOWN",
+          "normal_path": [
+            "UNKNOWN",
+            "OBSERVED"
+          ],
+          "states": [
+            "UNKNOWN",
+            "OBSERVED",
+            "STALE"
+          ],
+          "transitions": [
+            {
+              "consequential": true,
+              "domain_effect": "establish_repository_truth",
+              "from": "UNKNOWN",
+              "id": "gitter.unknown.observe.observed",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "repository_truth"
+              ],
+              "to": "OBSERVED",
+              "trigger": "observe",
+              "work_class": "observation"
+            },
+            {
+              "domain_effect": "invalidate_repository_truth",
+              "from": "OBSERVED",
+              "id": "gitter.observed.invalidate.stale",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "invalidation"
+              ],
+              "to": "STALE",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "invalidate_repository_observation",
+              "from": "STALE",
+              "id": "gitter.stale.reobserve.unknown",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "reinspection"
+              ],
+              "to": "UNKNOWN",
+              "trigger": "reobserve",
+              "work_class": "recovery"
+            }
+          ],
+          "version": "1.1.0"
+        },
+        "contract_hash": "a848f7d7e2fe903f805ae1d047aed32f048f9c303035e78a92d10dcbc1b137d4",
+        "contract_path": "transitions.yaml",
+        "contract_version": "state-machine/v1",
+        "kind": "state_machine"
+      },
+      "file_hashes": {
+        "SKILL.md": "a76b8ba869d9a627ef0554f83520f1a779a2759bf0254426c16cac245a70b977",
+        "contracts/evidence-kinds.yaml": "cf2eda40054573c778ea341ffbad6e382bb5d397cec4fd3e691b6852e3da5503",
+        "contracts/packets.yaml": "fcc9787d417c11a98e9d1df88179bf12a241ae90b8bb308fa6a0b7ea55bef957",
+        "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
+        "manifest.yaml": "2187686dacc14227071c63447f455787c47d80312d1ee8bf7cd9e0268a6b7df7",
+        "runtime.md": "43b5a0f6068ed5f9a4b26ffb4e1a58370819ad5d8a179a2caccf370ebc9dbc61",
+        "transitions.yaml": "4d89a2ae88062b30d2ecda41b016d05616efaae8cddbcc1ca520452c257b8088"
+      },
+      "id": "gitter",
+      "manifest": {
+        "bundle_schema_version": 2,
+        "composition": {
+          "conflicts": [],
+          "group": "repository_state",
+          "mode": "exclusive",
+          "requires": []
+        },
+        "context_budget": "low",
+        "contracts": {
+          "evidence": "contracts/evidence-kinds.yaml",
+          "packets": "contracts/packets.yaml",
+          "schemas": [
+            "contracts/schemas/repository-truth-packet.schema.json"
+          ]
+        },
+        "core_requirements": [],
+        "domain": "repository_state",
+        "emits": [
+          "repository_truth_packet"
+        ],
+        "engine": {
+          "contract": "transitions.yaml",
+          "contract_version": "state-machine/v1",
+          "kind": "state_machine"
+        },
+        "entrypoint": "gitter/SKILL.md",
+        "exclusive_group": "repository_state",
+        "flow_selection": {
+          "ambiguity": "error",
+          "fallback": "forbidden",
+          "no_match": "inactive"
+        },
+        "framework_enhancements": [
+          "owl",
+          "anchor"
+        ],
+        "handoff": "repository_truth_packet",
+        "id": "gitter",
+        "inputs": {
+          "optional": [],
+          "required": [
+            "task_context"
+          ]
+        },
+        "integrations": {
+          "cognitiveframeworks": {
+            "enhancements": [
+              "owl",
+              "anchor"
+            ],
+            "required": []
+          }
+        },
+        "name": "Gitter",
+        "phase": "observation",
+        "purpose": "Establish the current repository state from scoped, inspectable evidence.",
+        "triggers": [
+          "repository state",
+          "branch",
+          "commit",
+          "worktree",
+          "HEAD",
+          "ownership",
+          "divergence",
+          "what actually changed"
+        ],
+        "version": "1.1.0"
+      },
+      "root_ref": ".",
+      "source_root": "."
+    },
+    {
+      "bundle_hash": "68db1117b92101526c4df57f4ddb4b8e0737a86abca2aef4674620138fb524d0",
+      "bundle_ref": "getter",
+      "contracts": {
+        "evidence": [
+          "getter.authority",
+          "authority",
+          "getter.repository_evidence",
+          "repository_evidence",
+          "getter.rollback",
+          "rollback",
+          "getter.rollback_plan",
+          "rollback_plan"
+        ],
+        "packets": [
+          "repository_evidence_packet",
+          "repository_truth_packet"
+        ]
+      },
+      "engine": {
+        "contract": {
+          "completion_states": [
+            "STABLE"
+          ],
+          "initial_state": "OBSERVED",
+          "normal_path": [
+            "OBSERVED",
+            "PLANNED",
+            "CHANGING",
+            "VERIFIED",
+            "STABLE"
+          ],
+          "states": [
+            "OBSERVED",
+            "PLANNED",
+            "CHANGING",
+            "VERIFIED",
+            "RECOVERING",
+            "STABLE"
+          ],
+          "transitions": [
+            {
+              "domain_effect": "authorize_repository_change_plan",
+              "from": "OBSERVED",
+              "id": "getter.observed.plan.planned",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "intent",
+                "risk"
+              ],
+              "to": "PLANNED",
+              "trigger": "plan",
+              "work_class": "planning"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "begin_repository_change",
+              "framework_requirements": [
+                "fuse",
+                "ward"
+              ],
+              "from": "PLANNED",
+              "id": "getter.planned.mutate.changing",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "authority",
+                "rollback"
+              ],
+              "to": "CHANGING",
+              "trigger": "mutate",
+              "work_class": "mutation"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "verify_repository_change",
+              "from": "CHANGING",
+              "id": "getter.changing.validate.verified",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "repository_evidence"
+              ],
+              "to": "VERIFIED",
+              "trigger": "validate",
+              "work_class": "validation"
+            },
+            {
+              "domain_effect": "enter_repository_recovery",
+              "from": "CHANGING",
+              "id": "getter.changing.recover.recovering",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "rollback_plan"
+              ],
+              "to": "RECOVERING",
+              "trigger": "recover",
+              "work_class": "recovery"
+            },
+            {
+              "domain_effect": "enter_repository_recovery",
+              "from": "VERIFIED",
+              "id": "getter.verified.recover.recovering",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "failed_verification"
+              ],
+              "to": "RECOVERING",
+              "trigger": "recover",
+              "work_class": "recovery"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "stabilize_repository_state",
+              "from": "VERIFIED",
+              "id": "getter.verified.stabilize.stable",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "repository_evidence"
+              ],
+              "to": "STABLE",
+              "trigger": "stabilize",
+              "work_class": "validation"
+            },
+            {
+              "domain_effect": "enter_repository_recovery",
+              "from": "VERIFIED",
+              "id": "getter.verified.invalidate.recovering",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "invalidation"
+              ],
+              "to": "RECOVERING",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "refresh_repository_observation",
+              "from": "RECOVERING",
+              "id": "getter.recovering.observe.observed",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "repository_evidence"
+              ],
+              "to": "OBSERVED",
+              "trigger": "observe",
+              "work_class": "observation"
+            }
+          ],
+          "version": "1.1.0"
+        },
+        "contract_hash": "e8557b7770e2f57a19fd05b3dba20e4187b09f7f2cea2db9c6a2506dc7f1adea",
+        "contract_path": "transitions.yaml",
+        "contract_version": "state-machine/v1",
+        "kind": "state_machine"
+      },
+      "file_hashes": {
+        "SKILL.md": "672b2ed98164f5836afa02a021a6610916dfbf2824bd924c701f9c455ea5b3b9",
+        "contracts/evidence-kinds.yaml": "f3afd1081c68073cc7d8739d47c5d8b3bc2dfbaa5b3562103d832994668a79f3",
+        "contracts/packets.yaml": "19db12dfb5fef646a4e9db5cf9ece1a78e97a8c6c53d83af5218d2f24eab08f8",
+        "contracts/schemas/repository-evidence-packet.schema.json": "5508e285ebbcbb525819b8c344e56af6c94a06e081af0e9a7f173aa4b62e27ba",
+        "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
+        "manifest.yaml": "43986ad6f905005dd71728380df77efd5b1b02a25e1374eb73aab7c5dd424610",
+        "runtime.md": "e75f62fa7dfe1ade1adbb6c2408adab234c3022b7f968c646fb589f157603e0e",
+        "transitions.yaml": "9e1d0d549ca77679a4f2b9a0751eefcab6eee087786e8b9063f07672db0de008"
+      },
+      "id": "getter",
+      "manifest": {
+        "bundle_schema_version": 2,
+        "composition": {
+          "conflicts": [],
+          "group": "repository_state",
+          "mode": "exclusive",
+          "requires": [
+            "gitter"
+          ]
+        },
+        "context_budget": "low",
+        "contracts": {
+          "evidence": "contracts/evidence-kinds.yaml",
+          "packets": "contracts/packets.yaml",
+          "schemas": [
+            "contracts/schemas/repository-evidence-packet.schema.json",
+            "contracts/schemas/repository-truth-packet.schema.json"
+          ]
+        },
+        "core_requirements": [],
+        "domain": "repository_state",
+        "emits": [
+          "repository_evidence_packet"
+        ],
+        "engine": {
+          "contract": "transitions.yaml",
+          "contract_version": "state-machine/v1",
+          "kind": "state_machine"
+        },
+        "entrypoint": "getter/SKILL.md",
+        "exclusive_group": "repository_state",
+        "flow_selection": {
+          "ambiguity": "error",
+          "fallback": "forbidden",
+          "no_match": "inactive"
+        },
+        "framework_enhancements": [
+          "owl",
+          "anchor",
+          "ward"
+        ],
+        "handoff": "repository_evidence_packet",
+        "id": "getter",
+        "inputs": {
+          "optional": [],
+          "required": [
+            "repository_truth_packet"
+          ]
+        },
+        "integrations": {
+          "cognitiveframeworks": {
+            "enhancements": [
+              "owl",
+              "anchor"
+            ],
+            "required": []
+          }
+        },
+        "name": "Getter",
+        "phase": "mutation",
+        "purpose": "Safely change Git repository state under evidence-backed authorization.",
+        "triggers": [
+          "merge",
+          "rebase",
+          "squash",
+          "revert",
+          "cherry-pick",
+          "force push",
+          "reset",
+          "conflict resolution",
+          "repository recovery"
+        ],
+        "version": "1.1.0"
+      },
+      "root_ref": ".",
+      "source_root": "."
+    },
+    {
+      "bundle_hash": "8892f83e00d6cccce7ff339b47745d5695195448e284de0738a135eccbcd457e",
+      "bundle_ref": "tuid",
+      "contracts": {
+        "evidence": [
+          "tuid.implementation",
+          "implementation",
+          "tuid.interaction_evidence",
+          "interaction_evidence",
+          "tuid.operational_evidence",
+          "operational_evidence",
+          "tuid.recovery_evidence",
+          "recovery_evidence",
+          "tuid.validation_evidence",
+          "validation_evidence"
+        ],
+        "packets": [
+          "tui_validation_packet"
+        ]
+      },
+      "engine": {
+        "contract": {
+          "completion_states": [
+            "VALIDATED",
+            "STABLE"
+          ],
+          "initial_state": "UNKNOWN",
+          "normal_path": [
+            "UNKNOWN",
+            "OBSERVED",
+            "MODELED",
+            "DESIGNED",
+            "IMPLEMENTED",
+            "EXERCISABLE",
+            "VALIDATED"
+          ],
+          "states": [
+            "UNKNOWN",
+            "OBSERVED",
+            "MODELED",
+            "DESIGNED",
+            "IMPLEMENTED",
+            "EXERCISABLE",
+            "VALIDATED",
+            "STABLE",
+            "DEFECTIVE",
+            "DEBUGGED",
+            "DEGRADED",
+            "RECOVERY",
+            "FALLBACK"
+          ],
+          "transitions": [
+            {
+              "domain_effect": "capture_rendered_state",
+              "from": "UNKNOWN",
+              "id": "tuid.unknown.discover.observed",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "rendered_observation"
+              ],
+              "to": "OBSERVED",
+              "trigger": "discover",
+              "work_class": "observation"
+            },
+            {
+              "domain_effect": "record_terminal_state_model",
+              "from": "OBSERVED",
+              "id": "tuid.observed.model.modeled",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "state_model"
+              ],
+              "to": "MODELED",
+              "trigger": "model",
+              "work_class": "modeling"
+            },
+            {
+              "domain_effect": "record_terminal_interaction_design",
+              "from": "MODELED",
+              "id": "tuid.modeled.design.designed",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "interaction_model"
+              ],
+              "to": "DESIGNED",
+              "trigger": "design",
+              "work_class": "planning"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "apply_terminal_implementation",
+              "from": "DESIGNED",
+              "id": "tuid.designed.implement.implemented",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "implementation"
+              ],
+              "to": "IMPLEMENTED",
+              "trigger": "implement",
+              "work_class": "mutation"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "record_terminal_interaction",
+              "from": "IMPLEMENTED",
+              "id": "tuid.implemented.interact.exercisable",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "interaction_evidence"
+              ],
+              "to": "EXERCISABLE",
+              "trigger": "interact",
+              "work_class": "interaction"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "validate_terminal_behavior",
+              "from": "EXERCISABLE",
+              "id": "tuid.exercisable.validate.validated",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "validation_evidence"
+              ],
+              "to": "VALIDATED",
+              "trigger": "validate",
+              "work_class": "validation"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "operate_validated_terminal_ui",
+              "from": "VALIDATED",
+              "id": "tuid.validated.operate.stable",
+              "path_class": "normal",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "operational_evidence"
+              ],
+              "to": "STABLE",
+              "trigger": "operate",
+              "work_class": "operation"
+            },
+            {
+              "domain_effect": "invalidate_terminal_behavior",
+              "from": "VALIDATED",
+              "id": "tuid.validated.invalidate.degraded",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "invalidation"
+              ],
+              "to": "DEGRADED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "invalidate_terminal_behavior",
+              "from": "STABLE",
+              "id": "tuid.stable.invalidate.degraded",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "invalidation"
+              ],
+              "to": "DEGRADED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "record_terminal_invariant_violation",
+              "from": "*",
+              "id": "tuid.any.invariant_violation.defective",
+              "path_class": "failure",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "violation"
+              ],
+              "to": "DEFECTIVE",
+              "trigger": "invariant_violation",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "record_terminal_debug_result",
+              "from": "DEFECTIVE",
+              "id": "tuid.defective.debug.debugged",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "debug_evidence"
+              ],
+              "to": "DEBUGGED",
+              "trigger": "debug",
+              "work_class": "recovery"
+            },
+            {
+              "domain_effect": "begin_terminal_recovery",
+              "from": "DEFECTIVE",
+              "id": "tuid.defective.recover.recovery",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "recovery_plan"
+              ],
+              "to": "RECOVERY",
+              "trigger": "recover",
+              "work_class": "recovery"
+            },
+            {
+              "domain_effect": "begin_terminal_recovery",
+              "from": "DEGRADED",
+              "id": "tuid.degraded.recover.recovery",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "recovery_plan"
+              ],
+              "to": "RECOVERY",
+              "trigger": "recover",
+              "work_class": "recovery"
+            },
+            {
+              "domain_effect": "record_terminal_debug_result",
+              "from": "RECOVERY",
+              "id": "tuid.recovery.debug.debugged",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "debug_evidence"
+              ],
+              "to": "DEBUGGED",
+              "trigger": "debug",
+              "work_class": "recovery"
+            },
+            {
+              "domain_effect": "activate_terminal_fallback",
+              "from": "RECOVERY",
+              "id": "tuid.recovery.fallback.fallback",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "fallback_plan"
+              ],
+              "to": "FALLBACK",
+              "trigger": "fallback",
+              "work_class": "recovery"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "apply_terminal_implementation",
+              "from": "FALLBACK",
+              "id": "tuid.fallback.restore.implemented",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "implementation",
+                "recovery_evidence"
+              ],
+              "to": "IMPLEMENTED",
+              "trigger": "restore",
+              "work_class": "recovery"
+            },
+            {
+              "domain_effect": "record_terminal_interaction",
+              "from": "DEBUGGED",
+              "id": "tuid.debugged.reexercise.exercisable",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "debug_evidence",
+                "interaction_evidence"
+              ],
+              "to": "EXERCISABLE",
+              "trigger": "reexercise",
+              "work_class": "validation"
+            }
+          ],
+          "version": "1.1.0"
+        },
+        "contract_hash": "71797509e3bfc46ece8d9ca3118da071235a2e2d716e837f764693c830373edd",
+        "contract_path": "transitions.yaml",
+        "contract_version": "state-machine/v1",
+        "kind": "state_machine"
+      },
+      "file_hashes": {
+        "SKILL.md": "83aa188a4928c4c51e43ae47bb5e3bdc14dd097f5530f27aecc11a3133d80f46",
+        "aspects/accessibility/aspect.md": "af9267987ee06d223fda61aad6eb58ce9cd67371673306ff9a60a8da4758dced",
+        "aspects/application-state/aspect.md": "50ffc34ba899af1fe8a3b283b4fd95db1844889e9d523d8e6e78696a6dd589a1",
+        "aspects/architecture/aspect.md": "4687060a73c6d10a6cd7be2d8c22165e6d8ba1122ba75393befa069c525c1a04",
+        "aspects/async-behavior/aspect.md": "0bbb144a35f2896cdf07ad496a8c7210dcd83248eb0612349aca11be2c74fd71",
+        "aspects/color-theme/aspect.md": "3b04de4320631bb98a4b37caf94d3af8d3029a0a2472a9065f8ceb9c3809f57d",
+        "aspects/components/aspect.md": "ee922c0098920433ad720c0175158f1261fb14d1d28f24bb84d88fddb3ed050d",
+        "aspects/feedback-states/aspect.md": "b9b28a89055a1d5a3eb39acfe19d644ba2445bfbbdfa01b5901340c5dac4e99e",
+        "aspects/focus/aspect.md": "5923bdfa5fdd68c17f259e6bab31a817e170a3cc2f4ede8aa6358036fef1af3b",
+        "aspects/keyboard/aspect.md": "040b610c757e3326b97bb3df7f35c87bcaefd917da4a6b798962a039b7d57027",
+        "aspects/layout/aspect.md": "50e5263cb04e3aed617b29966d328056a9bf44544220105f0da37084e7171f8f",
+        "aspects/mouse/aspect.md": "cbd24942e502043c2f235e0f37524035a9f50200781c6a12ceb511ea94d3e05e",
+        "aspects/navigation/aspect.md": "302a2aaae829efe7c8d9900d81a13ef2fb04b1fd4ddcd6f77c8a9be26544cecf",
+        "aspects/observability/aspect.md": "58e17803265910d4ece250cbaa3fb8cd8e66cf92dd63a217acbea5ed0849bbdb",
+        "aspects/overlays/aspect.md": "6a99e4481055b48e9adc635837321e5980a25e158c32b689ede25bd8356e1f03",
+        "aspects/performance/aspect.md": "70f78ca938b9ed741e5680eaad96d4158387ccd985181592d510f431b3740445",
+        "aspects/rendering/aspect.md": "bef4d1d4c51ff3a58eaa3ca2613876a9f30436f2e5385360c1ba4f4c94d7a85e",
+        "aspects/responsive/aspect.md": "e0299ab3264e47c94ae71448d146e28201ebb7e1ec45faf68f9245f934cdb227",
+        "aspects/robustness/aspect.md": "4632eef6c1da97773515be6de18ba73fcaa3d643e1391e068f4e3ac43493552b",
+        "aspects/scrolling/aspect.md": "94d815ed15e64d0ef661a84fde4fa16c16c8f170df1d0dd9f3e1d4f1a5b33d91",
+        "aspects/terminal-capabilities/aspect.md": "fd51344d7f3520acaeac0a5b039bf9500db853b1be5a714eaef27290eb88afde",
+        "aspects/terminal-lifecycle/aspect.md": "8827fb58de146722c20982a66c81c202fc768810dbc703c8353403b01ae67f23",
+        "aspects/text-input/aspect.md": "cfafc72f1ab135b7da4ed3ef28500ddfb9c3260e5f2c7db27bb46c3feea85768",
+        "aspects/text-unicode/aspect.md": "6bfe39137df9c323b11693f4caa32c3ab2aafb19d50ecd697b886ebd4bc18c44",
+        "aspects/visual-hierarchy/aspect.md": "33a2162b8367e98ff25f7ea9a85e8408fe42145d889c307c8905714a0e0d572b",
+        "components/command-palette/component.md": "9ef6fa9f6581ab4e61ecd4241427d33cf2ad0ecaf2dc18a3dc1eaa3f39edd005",
+        "components/drawer/component.md": "17a54a67271e75ae30c7685331677a109869ddeac6b2801625397de296027d25",
+        "components/form/component.md": "7a97baf8cad6fa12c26a0ccc20b7d4baeb9b795c748dbe1383273ac2c49a427b",
+        "components/help-bar/component.md": "cea31158cfd8dd32c8e669e08b7bb3265a9d97a8e1b052542393e01c3b0d8e48",
+        "components/input/component.md": "20a76bde0449d78e4635611545b5cefba87330f7bc5cf7d7dc2d1661a39b5a65",
+        "components/inspector/component.md": "258cba3660518b35f3792338a50b16404cb6aea00066d94502536197a1bc973b",
+        "components/list/component.md": "e0d054ea2add938f3620ec3edbce70f7c17145c0758b8654d52daf1f4c6d7c00",
+        "components/logs/component.md": "f63fe44693c8c2370e9c6045ffab24eed5fe04fe9b9d0fa2d2880f5806b906e2",
+        "components/menu/component.md": "aa57949e01800b9c5e3a8f17e5625c6b9ac643f2e3fa1bb4df4cd7ac37045bc9",
+        "components/modal/component.md": "99d839cf87eb0ef8f4a452c1731d035d18b9d4179fc3a7a978d541b0b70eb030",
+        "components/notification/component.md": "93267d0b6c8e58c822295938a011ac7e20c16d908c19158f3dfe859b0fa67350",
+        "components/progress/component.md": "d7f12c83aab5b4710628fc97281d70458f77afc05a1331cebee1b74dd909b343",
+        "components/status-bar/component.md": "211b6cbf26bc84c6078c2e21e67d9cc7608c6ae60144c832e3c528e6d650f410",
+        "components/table/component.md": "35129d32218821329aad6bdee8ae63ad03cdfb2085800746e8899b3d83ce1c43",
+        "components/tabs/component.md": "b1579ee4601b4bf5a2d350289f171aaa3fb89f4ac4088bdc3bdeaa0e769e4c0e",
+        "components/text/component.md": "6590ff3ffffaba4593bef180ae6feccbe93664d57ca75ba5c8ab0e552a4a2d5d",
+        "components/textarea/component.md": "62543384acfcf9f273e6e3a24b6b4a2d3f13fad58ebc3e63bb9b3652672d9d62",
+        "components/tree/component.md": "2e83f8e47e8e989d356c5b17a66a058d16ea2259f47f9faf03403d86e33e6a20",
+        "components/viewport/component.md": "c7d7858b975732d8917fad8eb789b338526dbd31a7cbdce71be09556aed54964",
+        "contracts/evidence-kinds.yaml": "8f7ff71cde882e85d233d8ce4434353fb8b28a53193941eb09a17d7a02640188",
+        "contracts/packets.yaml": "7aedd198322d5e0c21826c3f79c67340b7be07cef6e387cd2262b098b385b115",
+        "contracts/schemas/tui-validation-packet.schema.json": "b4d591799f40ddbd0bd955a7b51bd8b38f89c975ab4ff5f5dcf29c50d1537625",
+        "flows/debug/flow.md": "37dc0d48b12b63c081947662f3943a7f4f126f37f6cb4d6721b6ace5471ffb46",
+        "flows/design/flow.md": "edea7ac28d8d5ce0301ee1a317e475d9afa9ef2ee3f8aba210fe5cc2f91bacc1",
+        "flows/discover/flow.md": "8b5d93b3a2819e43c67b0f05468775c42c46f4b4bb00df4b80e500b624bc12bd",
+        "flows/implement/flow.md": "242e6ecd97c5e7d5a3bcdacaf9e45c3fa9403467b77a69ac9231b56bbefb0175",
+        "flows/interact/flow.md": "351962345fa85b8960037b172f791e3097f58510d20b1472a3f392ce5b29a661",
+        "flows/model/flow.md": "3612bd85a08869aaaeb7fbbb45539861e013c4322d2c5fe474b816b2d871b3ef",
+        "flows/recover/flow.md": "845c9267fac88f59779341de1d57dd9e6e2731b71034ee5172bf1832dee43d25",
+        "flows/redesign/flow.md": "7830ab694159549385f4b62b04a992d6b63ff8d3f67ac0bfe639e55588e791bb",
+        "flows/review/flow.md": "8462a153678e0cc965ef84bca3a351d32314cead9ec1034fff78e1aedee9385f",
+        "flows/test/flow.md": "bafe58321c6b8be7f534120aab66f593899ed5037b815b2914af0c56ac8fa4c3",
+        "flows/validate/flow.md": "1de19b0f8cd06b2a904985e9834046f7ced97bbc71730e2823ecbafc21671496",
+        "frameworks/bubbletea-go/framework.md": "d58be173058779e3a57c0604e584f3faa89ba8f22d535c5d3b000d63dda83502",
+        "frameworks/framework-selection/framework.md": "0e22490ea4c7e236bf9729ad7179bb9fd9b74e3ff85cbc76dcfdd13e66720d45",
+        "frameworks/ink-typescript/framework.md": "1dc4662124c72ada4810f16b209a93f5d841a9cff8cd6a333d720f78dcf494b4",
+        "frameworks/ratatui-rust/framework.md": "a6470e80eb124ac1e439be5e12fff2d1c19f1d1866e22ccae49e3ff428b493f0",
+        "frameworks/textual-python/framework.md": "4bfdcc3fcdd332c7d975e45356c71e918e4b37928cdf48312013b011907b84cc",
+        "manifest.yaml": "ce5b192b2cd8ee2fab8f77707089bbc46878289b695461b123dc8cfb3bcea2ca",
+        "patterns/command-center/pattern.md": "d96757a3047ee87d26be92f1d55701000d6cee8fb8256758a4e2332b691fe2ce",
+        "patterns/dashboard/pattern.md": "9914c4ea67ff944d53e230c9a17878b3870f53e4a160e292869e5e8524bfb89a",
+        "patterns/data-browser/pattern.md": "0471747940677b8e66c7a045a9d8acdfa2b759a72c6567f84baaf64d3b0928dd",
+        "patterns/file-browser/pattern.md": "e5d704741cd4147b8a1ff33e7805968ed90e437e7075d5be98322abd51b89388",
+        "patterns/form-workflow/pattern.md": "0ec20dfc7e9c276a2575a91717eed4268a9db93ba34e7791a641d15d9b038d64",
+        "patterns/inspector/pattern.md": "e5e06aabe500810a2e8d2338630c113a9a7fb2a4dc7c9e7d23aaad75e5dff7d8",
+        "patterns/log-viewer/pattern.md": "266e9545977c7f3429b6ca62bb89c8adf0c429ba30284a1532b71f95f215aa00",
+        "patterns/picker/pattern.md": "dd4252ccef00a77f2743e206169e6a383deba988dd2c9c2c14fe53ea9ecb6269",
+        "patterns/split-pane/pattern.md": "4b58a08515b5e129fe534338a85546cf7bb1084eb1b2367a2f7429de00fd2ce0",
+        "patterns/terminal-workspace/pattern.md": "3dc5e0113095e105f01b0fdbab6866ecba2a6aae1509b7cfbbaf06ecf94b9875",
+        "patterns/wizard/pattern.md": "d1aca4e774644d269bc5a8132d425a53ef126f1a969b1f6e657ce8e4b3516aec",
+        "primitives/component/primitive.md": "0e319524489bd5f6dc2158cbfa41a12dcaebe1af54b5f6e7ffb7a358ac1e2e24",
+        "primitives/evidence/primitive.md": "91f008c1d76190343bb711844902331e736af4628166c2bc066d3048123be7c9",
+        "primitives/focus-target/primitive.md": "ce2fae2422d5824ce9eb3e112914c3d75a213b4894833776aee2f71863f58130",
+        "primitives/interaction/primitive.md": "7071a75210bce9657d1e8522dc5c64afb2aa6746fbc7cd724cde908817d5ee6d",
+        "primitives/invariant/primitive.md": "ee190ae583db837143f2c373de983e9fac1cd9cc5e1d1b38052c8b227300b139",
+        "primitives/region/primitive.md": "ed9cb14f887e90aeef5a7b85a5b7c7e81d9fdb4f6e456162b9dd90a6572b9c24",
+        "primitives/render-frame/primitive.md": "fcde41fefff513d57c79e693435012b7033bc4d7fab5a1c0d56c5936ece3fd80",
+        "primitives/terminal-profile/primitive.md": "bf11c270e6bccf1c32733601c8e0b2589873f9b8190bb27af3180e50b1a08f79",
+        "primitives/ui-state/primitive.md": "4d79a82e325d66b378bdafb30b4a329ebc94cef7d8503ba835bc7a7a9a1de572",
+        "primitives/viewport/primitive.md": "78a8fa8aa53973a7ff1f4507b6811f0553fd0dd63b476304f099750232fec819",
+        "primitives/visual-token/primitive.md": "897a5c0bea23e3aabd2fcdbf7de4537d0bef387ac5760701e809eec74712aa4f",
+        "protocols/ansi-vt/protocol.md": "49b18510c908218cacbc4117c3b9bc8bb41a779866a5aef40d2a973506fb54ed",
+        "protocols/bracketed-paste/protocol.md": "5c0a0a55493425ed6a7bd8b2010202139256af6aa33de77e2908134d7dfb4a45",
+        "protocols/clipboard/protocol.md": "94027e0c9c13fac4fce377e6891ef4f43b730ff8960ed1c9ccd6c385a0583b24",
+        "protocols/color-capabilities/protocol.md": "b6edb1edbc1bbc99a55c7d274d1f77ddf9e0f2ee7d455156c203b5bcd994bb4c",
+        "protocols/focus-reporting/protocol.md": "70f86210a08a09f08dffc1f38e69bf8bcb3da3575f90fc703fd3b98231669625",
+        "protocols/graphics/protocol.md": "1211ac974f913741f91c00765565390df9d5c98aced220d8a93efc665f1cc71a",
+        "protocols/hyperlinks/protocol.md": "eb945422df65d50875cd3f44f86101915c93e927595e78c7b97cd0c6b350275d",
+        "protocols/keyboard/protocol.md": "367109cf7c4e5214d23a90242f1b7f830e18d40cbb15c11d79670cd694949059",
+        "protocols/mouse/protocol.md": "51e61793a426e10ba04e2a48abdf0fd5b19940412ebbe41d511ba6115507bc14",
+        "runtime.md": "df8fff0145f79dfe6485784bfaa688f0901ef4addd0c051893f98cb4027cf060",
+        "testing/component-tests/testing.md": "498740401bb123c05dcb32d7fc6f6b044b882cc125b8a978559b86db71225f81",
+        "testing/interaction-tests/testing.md": "9bb69d09610da97e1dce19a60aefa15e54a27352d840f04ea6cca328fbec4d27",
+        "testing/layout-tests/testing.md": "1b4470a4d917f7e2eadc22e9c54102dfb2106e51d4aa39621ad01e5fcefadb52",
+        "testing/pty-tests/testing.md": "04a638ee00889890f1b69e9cdaeee1e7464f05899e1b02e1683e87116bfc85b0",
+        "testing/snapshot-tests/testing.md": "985777adbceecb5ebab9dcede10c61fba9194e0fa174ac1c1ed9e654fc3756ac",
+        "testing/state-tests/testing.md": "0f5ae531048dc0efe5cf2344c712cd6ccc4fd8f0d4e253de3e797e5abe3c344b",
+        "testing/terminal-profile-tests/testing.md": "440998ec8c8b10869c1a5b89b985bbca4cd6bb00b076bbaa0ab0eed9a45f0fda",
+        "testing/visual-review/testing.md": "8217f8fb074f6bd853a9fe2ee98e2f708e5183af06f034e8737f5845d5fd9bb7",
+        "transitions.yaml": "2e764f2fc45702708d82e222c22188d868c89673c40131bd363619cd426343e4"
+      },
+      "id": "tuid",
+      "manifest": {
+        "bundle_schema_version": 2,
+        "composition": {
+          "conflicts": [],
+          "group": "tui_state",
+          "mode": "exclusive",
+          "requires": []
+        },
+        "context_budget": "medium",
+        "contracts": {
+          "evidence": "contracts/evidence-kinds.yaml",
+          "packets": "contracts/packets.yaml",
+          "schemas": [
+            "contracts/schemas/tui-validation-packet.schema.json"
+          ]
+        },
+        "core_requirements": [],
+        "domain": "terminal_interface_state",
+        "emits": [
+          "tui_validation_packet"
+        ],
+        "engine": {
+          "contract": "transitions.yaml",
+          "contract_version": "state-machine/v1",
+          "kind": "state_machine"
+        },
+        "entrypoint": "tuid/SKILL.md",
+        "exclusive_group": "tui_state",
+        "flow_selection": {
+          "ambiguity": "error",
+          "fallback": "required",
+          "no_match": "blocked"
+        },
+        "framework_enhancements": [
+          "owl",
+          "anchor"
+        ],
+        "handoff": "tui_validation_packet",
+        "id": "tuid",
+        "inputs": {
+          "optional": [],
+          "required": [
+            "task_context"
+          ]
+        },
+        "integrations": {
+          "cognitiveframeworks": {
+            "enhancements": [
+              "owl",
+              "anchor"
+            ],
+            "required": []
+          }
+        },
+        "match": {
+          "required_any": [
+            "terminal interface",
+            "tui",
+            "terminal ui",
+            "terminal"
+          ],
+          "secondary": [
+            "rendering",
+            "layout",
+            "focus",
+            "input",
+            "flicker",
+            "resize",
+            "terminal capabilities",
+            "terminal corruption"
+          ]
+        },
+        "name": "tui'd",
+        "phase": "domain_state",
+        "purpose": "Model, implement, exercise, and validate terminal interface behavior.",
+        "runtime": {
+          "specialists": {
+            "optional": [],
+            "required": []
+          }
+        },
+        "triggers": [
+          "terminal interface",
+          "TUI",
+          "terminal UI",
+          "terminal"
+        ],
+        "version": "1.1.0"
+      },
+      "root_ref": ".",
+      "source_root": "."
+    }
+  ],
+  "workflow_engine_hashes": {}
+}

@@ -1,0 +1,13 @@
+version: 1.0.0
+packets:
+  tui_validation_packet:
+    schema: contracts/schemas/tui-validation-packet.schema.json
+    schema_version: 1.1.0
+    producer: tuid
+    consumers: []
+    freshness:
+      strategy: exact_context
+      packet_path: payload.freshness_fingerprint
+      context_path: validation_fingerprint
+    required_context:
+    - validation_fingerprint

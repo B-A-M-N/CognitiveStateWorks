@@ -27,3 +27,28 @@ context_budget: low
 exclusive_group: repository_state
 handoff: repository_truth_packet
 version: 1.1.0
+bundle_schema_version: 2
+engine:
+  kind: state_machine
+  contract: transitions.yaml
+  contract_version: state-machine/v1
+composition:
+  group: repository_state
+  mode: exclusive
+  requires: []
+  conflicts: []
+contracts:
+  packets: contracts/packets.yaml
+  evidence: contracts/evidence-kinds.yaml
+  schemas:
+  - contracts/schemas/repository-truth-packet.schema.json
+integrations:
+  cognitiveframeworks:
+    required: []
+    enhancements:
+    - owl
+    - anchor
+flow_selection:
+  fallback: forbidden
+  ambiguity: error
+  no_match: inactive

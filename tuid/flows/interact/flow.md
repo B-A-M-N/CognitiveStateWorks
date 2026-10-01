@@ -1,12 +1,24 @@
 ---
 flow: interact
-operations: [interact, exercise]
-triggers: [interaction_requested, behavior_claim]
 states:
-  from: [IMPLEMENTED, EXERCISABLE]
-  through: [EXERCISABLE]
+  through:
+  - EXERCISABLE
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - interact
+    - exercise
+  - field: trigger
+    in:
+    - interaction_requested
+    - behavior_claim
+  - field: current_state
+    in:
+    - IMPLEMENTED
+    - EXERCISABLE
 ---
 # Flow: Interact (IMPLEMENTED → EXERCISABLE)
 

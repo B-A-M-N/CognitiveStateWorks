@@ -1,12 +1,25 @@
 ---
 flow: model
-operations: [model, analyze]
-triggers: [model_requested, state_model_needed]
 states:
-  from: [OBSERVED, MODELED]
-  through: [MODELED]
-required_specialists: ['../../aspects/application-state/aspect.md']
+  through:
+  - MODELED
+required_specialists:
+- ../../aspects/application-state/aspect.md
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - model
+    - analyze
+  - field: trigger
+    in:
+    - model_requested
+    - state_model_needed
+  - field: current_state
+    in:
+    - OBSERVED
+    - MODELED
 ---
 # Flow: Model (OBSERVED → MODELED)
 

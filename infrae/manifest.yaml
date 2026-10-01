@@ -1,6 +1,7 @@
 id: infrae
 domain: infrastructure_state
-purpose: Model and control infrastructure changes using bounded evidence and recovery paths.
+purpose: Model and control infrastructure changes using bounded evidence and recovery
+  paths.
 name: Infrae
 entrypoint: infrae/STATEWORK.md
 triggers:
@@ -29,3 +30,29 @@ context_budget: medium
 exclusive_group: infrastructure_state
 handoff: infrastructure_truth_packet
 version: 1.1.0
+bundle_schema_version: 2
+engine:
+  kind: state_machine
+  contract: transitions.yaml
+  contract_version: state-machine/v1
+composition:
+  group: infrastructure_state
+  mode: exclusive
+  requires: []
+  conflicts: []
+contracts:
+  packets: contracts/packets.yaml
+  evidence: contracts/evidence-kinds.yaml
+  schemas:
+  - contracts/schemas/infrastructure-evidence-packet.schema.json
+  - contracts/schemas/infrastructure-truth-packet.schema.json
+integrations:
+  cognitiveframeworks:
+    required: []
+    enhancements:
+    - owl
+    - anchor
+flow_selection:
+  fallback: required
+  ambiguity: error
+  no_match: blocked

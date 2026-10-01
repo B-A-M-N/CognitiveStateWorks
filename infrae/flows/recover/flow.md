@@ -1,13 +1,31 @@
 ---
 flow: recover
-operations: [recover, rollback, restore]
-triggers: [recovery, recover]
 states:
-  from: [DEGRADED, INCIDENT, RECOVERING]
-  through: [RECOVERING, STABLE]
-framework_requirements: [owl, anchor, ward]
+  through:
+  - RECOVERING
+  - STABLE
+framework_requirements:
+- owl
+- anchor
+- ward
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - recover
+    - rollback
+    - restore
+  - field: trigger
+    in:
+    - recovery
+    - recover
+  - field: current_state
+    in:
+    - DEGRADED
+    - INCIDENT
+    - RECOVERING
 ---
 # Flow: Recover (DEGRADED / INCIDENT → STABLE)
 

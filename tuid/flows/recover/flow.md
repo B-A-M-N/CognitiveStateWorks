@@ -1,12 +1,24 @@
 ---
 flow: recover
-operations: [recover]
-triggers: [failure_detected, recovery_requested]
 states:
-  from: [DEFECTIVE, DEGRADED, RECOVERY]
-  through: [STABLE]
+  through:
+  - STABLE
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - recover
+  - field: trigger
+    in:
+    - failure_detected
+    - recovery_requested
+  - field: current_state
+    in:
+    - DEFECTIVE
+    - DEGRADED
+    - RECOVERY
 ---
 # Flow: Recover (RECOVERY / DEFECTIVE → STABLE)
 

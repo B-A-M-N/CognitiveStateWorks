@@ -1,12 +1,23 @@
 ---
 flow: decommission
-operations: [decommission, retire]
-triggers: [decommission_requested]
 states:
-  from: [ASSESSED, BLOCKED]
-  through: [RETIRED]
+  through:
+  - RETIRED
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - decommission
+    - retire
+  - field: trigger
+    in:
+    - decommission_requested
+  - field: current_state
+    in:
+    - ASSESSED
+    - BLOCKED
 ---
 # Flow: Decommission (any state → RETIRED)
 

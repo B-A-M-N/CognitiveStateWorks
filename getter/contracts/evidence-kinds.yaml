@@ -1,0 +1,30 @@
+version: 1.0.0
+kinds:
+  getter.authority: &id001
+    authoritative: true
+    allowed_issuers:
+    - host:authorization
+    validator: host-authorization-v1
+    schema: authority-record-v1
+  authority: *id001
+  getter.repository_evidence: &id002
+    authoritative: true
+    allowed_issuers:
+    - validator:repository-evidence-v1
+    validator: repository-evidence-v1
+    schema: repository-evidence-packet.schema.json
+  repository_evidence: *id002
+  getter.rollback: &id003
+    authoritative: true
+    allowed_issuers:
+    - host:rollback
+    validator: rollback-v1
+    schema: rollback-record-v1
+  rollback: *id003
+  getter.rollback_plan: &id004
+    authoritative: true
+    allowed_issuers:
+    - host:rollback-plan
+    validator: rollback-plan-v1
+    schema: rollback-plan-v1
+  rollback_plan: *id004

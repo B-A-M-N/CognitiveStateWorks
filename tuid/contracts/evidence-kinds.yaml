@@ -1,0 +1,42 @@
+version: 1.0.0
+kinds:
+  tuid.implementation: &id001
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  implementation: *id001
+  tuid.interaction_evidence: &id002
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  interaction_evidence: *id002
+  tuid.operational_evidence: &id003
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  operational_evidence: *id003
+  tuid.recovery_evidence: &id004
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  recovery_evidence: *id004
+  tuid.validation_evidence: &id005
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  validation_evidence: *id005

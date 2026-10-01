@@ -1,0 +1,112 @@
+version: 1.0.0
+kinds:
+  infrae.authority: &id001
+    authoritative: true
+    allowed_issuers:
+    - host:authorization
+    validator: host-authorization-v1
+    schema: authority-record-v1
+  authority: *id001
+  infrae.change_gate: &id002
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  change_gate: *id002
+  infrae.decommission_checklist: &id003
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  decommission_checklist: *id003
+  infrae.effective_state: &id004
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  effective_state: *id004
+  infrae.invariants: &id005
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  invariants: *id005
+  infrae.monitoring: &id006
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  monitoring: *id006
+  infrae.operational_health: &id007
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  operational_health: *id007
+  infrae.plan: &id008
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  plan: *id008
+  infrae.redundancy: &id009
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  redundancy: *id009
+  infrae.regression_check: &id010
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  regression_check: *id010
+  infrae.rollback: &id011
+    authoritative: true
+    allowed_issuers:
+    - host:rollback
+    validator: rollback-v1
+    schema: rollback-record-v1
+  rollback: *id011
+  infrae.service_restored: &id012
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  service_restored: *id012
+  infrae.state_integrity: &id013
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  state_integrity: *id013
+  infrae.verified_invariants: &id014
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  verified_invariants: *id014

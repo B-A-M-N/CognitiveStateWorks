@@ -1,13 +1,28 @@
 ---
 flow: debug
-operations: [debug, diagnose, inspect]
-triggers: [observation, contradiction]
 states:
-  from: [IMPLEMENTED, DEFECTIVE]
-  through: [DEBUGGED]
-framework_requirements: [owl, anchor]
+  through:
+  - DEBUGGED
+framework_requirements:
+- owl
+- anchor
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - debug
+    - diagnose
+    - inspect
+  - field: trigger
+    in:
+    - observation
+    - contradiction
+  - field: current_state
+    in:
+    - IMPLEMENTED
+    - DEFECTIVE
 ---
 # Flow: Debug (any state, by layer attribution)
 

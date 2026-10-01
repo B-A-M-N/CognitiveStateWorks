@@ -1,0 +1,17 @@
+version: 1.0.0
+kinds:
+  gitter.reinspection: &id001
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  reinspection: *id001
+  gitter.repository_truth: &id002
+    authoritative: true
+    allowed_issuers:
+    - validator:repository-truth-v1
+    validator: repository-truth-v1
+    schema: repository-truth-packet.schema.json
+  repository_truth: *id002

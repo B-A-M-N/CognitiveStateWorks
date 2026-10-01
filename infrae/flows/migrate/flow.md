@@ -1,12 +1,26 @@
 ---
 flow: migrate
-operations: [migrate, migration]
-triggers: [migration_requested]
 states:
-  from: [ASSESSED, PLANNED, STABLE, VERIFIED]
-  through: [CHANGING, VERIFIED]
+  through:
+  - CHANGING
+  - VERIFIED
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - migrate
+    - migration
+  - field: trigger
+    in:
+    - migration_requested
+  - field: current_state
+    in:
+    - ASSESSED
+    - PLANNED
+    - STABLE
+    - VERIFIED
 ---
 # Flow: Migrate (dual-state transitions)
 

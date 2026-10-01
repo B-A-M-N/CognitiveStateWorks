@@ -1,12 +1,35 @@
 ---
 flow: incident
-operations: [incident, recover]
-triggers: [incident_detected, catastrophic_failure]
 states:
-  from: [UNKNOWN, OBSERVED, MODELED, ASSESSED, PLANNED, CHANGING, VERIFIED, STABLE, DEGRADED, INCIDENT, RECOVERING, BLOCKED]
-  through: [INCIDENT, RECOVERING]
+  through:
+  - INCIDENT
+  - RECOVERING
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - incident
+    - recover
+  - field: trigger
+    in:
+    - incident_detected
+    - catastrophic_failure
+  - field: current_state
+    in:
+    - UNKNOWN
+    - OBSERVED
+    - MODELED
+    - ASSESSED
+    - PLANNED
+    - CHANGING
+    - VERIFIED
+    - STABLE
+    - DEGRADED
+    - INCIDENT
+    - RECOVERING
+    - BLOCKED
 ---
 # Flow: Incident (any state → INCIDENT → RECOVERING)
 

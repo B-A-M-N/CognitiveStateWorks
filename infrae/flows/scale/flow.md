@@ -1,12 +1,26 @@
 ---
 flow: scale
-operations: [scale, capacity]
-triggers: [scale_requested, capacity_pressure]
 states:
-  from: [OBSERVED, VERIFIED, STABLE]
-  through: [CHANGING, VERIFIED]
+  through:
+  - CHANGING
+  - VERIFIED
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - scale
+    - capacity
+  - field: trigger
+    in:
+    - scale_requested
+    - capacity_pressure
+  - field: current_state
+    in:
+    - OBSERVED
+    - VERIFIED
+    - STABLE
 ---
 # Flow: Scale (capacity transitions)
 

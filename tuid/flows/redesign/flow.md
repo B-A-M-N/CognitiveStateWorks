@@ -1,12 +1,26 @@
 ---
 flow: redesign
-operations: [redesign]
-triggers: [redesign_requested]
 states:
-  from: [OBSERVED, MODELED, DESIGNED, IMPLEMENTED, VALIDATED, STABLE]
-  through: [DESIGNED]
+  through:
+  - DESIGNED
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - redesign
+  - field: trigger
+    in:
+    - redesign_requested
+  - field: current_state
+    in:
+    - OBSERVED
+    - MODELED
+    - DESIGNED
+    - IMPLEMENTED
+    - VALIDATED
+    - STABLE
 ---
 # Flow: Redesign (any state → DESIGNED)
 

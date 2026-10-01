@@ -1,19 +1,48 @@
 ---
 flow: test
-operations: [test, verify, validate]
-triggers: [validation_requested, test_requested]
 states:
-  from: [IMPLEMENTED, EXERCISABLE, VALIDATED]
-  through: [VALIDATED]
+  through:
+  - VALIDATED
 completion:
   claim_classes:
-    static_visual: {minimum_state: IMPLEMENTED, evidence_kinds: [rendered_observation]}
-    responsive_layout: {minimum_state: EXERCISABLE, evidence_kinds: [rendered_viewport_matrix]}
-    interaction: {minimum_state: VALIDATED, evidence_kinds: [interaction_validation]}
-    terminal_lifecycle: {minimum_state: VALIDATED, evidence_kinds: [pty_validation]}
-    legibility: {minimum_state: IMPLEMENTED, evidence_kinds: [rendered_observation]}
+    static_visual:
+      minimum_state: IMPLEMENTED
+      evidence_kinds:
+      - rendered_observation
+    responsive_layout:
+      minimum_state: EXERCISABLE
+      evidence_kinds:
+      - rendered_viewport_matrix
+    interaction:
+      minimum_state: VALIDATED
+      evidence_kinds:
+      - interaction_validation
+    terminal_lifecycle:
+      minimum_state: VALIDATED
+      evidence_kinds:
+      - pty_validation
+    legibility:
+      minimum_state: IMPLEMENTED
+      evidence_kinds:
+      - rendered_observation
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - test
+    - verify
+    - validate
+  - field: trigger
+    in:
+    - validation_requested
+    - test_requested
+  - field: current_state
+    in:
+    - IMPLEMENTED
+    - EXERCISABLE
+    - VALIDATED
 ---
 # Flow: Test (building the evidence base)
 

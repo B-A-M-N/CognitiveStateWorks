@@ -1,0 +1,17 @@
+version: 1.0.0
+steps:
+  - id: gather-requirements
+    label: Gather requirements
+    required_evidence:
+      - plan
+    work_class: analysis
+    domain_effect: example.requirements_recorded
+  - id: review-requirements
+    label: Review requirements
+    depends_on:
+      - gather-requirements
+    required_evidence:
+      - plan
+    work_class: review
+    domain_effect: example.requirements_reviewed
+    progress_class: TERMINAL

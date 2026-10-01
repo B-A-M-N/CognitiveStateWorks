@@ -19,12 +19,14 @@ CognitiveStateWorks provides both an advisory installation and an enforcing stan
 
 The enforcing runtime includes:
 
-- `StandaloneHostInterface` for resolving StateWorks, starting or resuming subjects, submitting attested observations, requesting transitions, and recovering from invalidation.
+- `WorkflowAuthority` with a shared, engine-neutral step API for state-machine and milestone/checklist workflows.
+- `StandaloneHostInterface` for resolving StateWorks, starting or resuming subjects, submitting attested observations, requesting workflow steps, and recovering from invalidation.
 - `SubjectStateStore` for durable state keyed by namespace, application, subject, StateWork, and contract version.
 - Revision compare-and-swap updates and append-only transition history so stale writers re-inspect instead of overwriting newer state.
 - `EvidenceStore` for trusted evidence references, attestation integrity, persistence, and restart recovery.
 - Explicit consequential transition markers and registered provenance for authorization, mutation, verification, and terminal-state transitions.
-- Flow-selection metadata, transition contracts, packet schemas, evidence-kind registry, and repository-truth validation in the enforcing product.
+- A compiled bundle registry with local packet/evidence contracts, freshness rules, and trusted engine pins.
+- Bounded, data-only flow predicates with explicit fallback, ambiguity, and no-match policy.
 
 Use the advisory product for documentation and workflow guidance:
 
@@ -168,6 +170,38 @@ registry.yaml
 ```
 
 Registration means **this StateWork is available to the resolver**. It does not mean **load this StateWork into every agent**. CognitiveFrameWorks resolves the task, selects the applicable StateWork chain, and activates only what is needed.
+
+Create a data-only extension starter with:
+
+```bash
+python3 scripts/new_statework.py release-audit \
+  --domain software_release \
+  --purpose "Qualify software releases using evidence-backed milestones." \
+  --engine milestone
+```
+
+The command writes under `extensions/`, validates the starter against the shared
+registry, and supports either `state_machine` or `milestone` contracts. Compile
+the registry after editing a bundle:
+
+```bash
+python3 scripts/compile-registry.py
+```
+
+A flow declares its selector as bounded data:
+
+```yaml
+when:
+  all:
+    - field: operation
+      in: [deploy, upgrade]
+    - field: current_state
+      in: [PLANNED, CHANGING]
+```
+
+Only host-exposed routing fields are accepted. The manifest `flow_selection`
+contract controls fallback (`required`, `optional`, or `forbidden`), ambiguity,
+and whether a no-match makes the StateWork inactive or blocks the plan.
 
 A StateWork can contain multiple flows for different operations or starting conditions:
 

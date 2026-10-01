@@ -1,13 +1,28 @@
 ---
 flow: discover
-operations: [observe, inspect, discover]
-triggers: [observation, observe]
 states:
-  from: [UNKNOWN, OBSERVED]
-  through: [OBSERVED]
-framework_requirements: [owl, anchor]
+  through:
+  - OBSERVED
+framework_requirements:
+- owl
+- anchor
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - observe
+    - inspect
+    - discover
+  - field: trigger
+    in:
+    - observation
+    - observe
+  - field: current_state
+    in:
+    - UNKNOWN
+    - OBSERVED
 ---
 # Flow: Discover (UNKNOWN → OBSERVED)
 

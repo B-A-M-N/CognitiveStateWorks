@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cognitivestatework.dev/schemas/statework-manifest.schema.json",
   "title": "CognitiveStateWork manifest",
-  "description": "Machine-readable declaration every StateWork must carry so dispatchers can route without hard-coding domain vocabulary. version: semver of this StateWork manifest.",
+  "description": "Versioned, engine-neutral StateWork bundle manifest. Extension vocabulary is data owned by the bundle; executable engines and validators are host-trusted registrations.",
   "type": "object",
   "required": [
     "id",
@@ -15,8 +15,8 @@
     "phase",
     "inputs",
     "emits",
-    "core_requirements",
-    "context_budget"
+    "context_budget",
+    "flow_selection"
   ],
   "properties": {
     "id": {
@@ -48,23 +48,33 @@
     "match": {
       "type": "object",
       "properties": {
-        "required_any": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "secondary": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        "required_any": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "secondary": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       },
       "additionalProperties": false
     },
     "phase": {
-      "enum": [
-        "observation",
-        "mutation",
-        "domain_state",
-        "validation",
-        "recovery"
-      ]
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
     },
     "inputs": {
       "type": "object",
-      "required": ["required", "optional"],
+      "required": [
+        "required",
+        "optional"
+      ],
       "properties": {
         "required": {
           "type": "array",
@@ -89,21 +99,17 @@
     },
     "framework_enhancements": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "default": []
     },
     "core_requirements": {
       "type": "array",
       "items": {
-        "enum": [
-          "owl",
-          "anchor",
-          "dox",
-          "fuse",
-          "flow",
-          "ward",
-          "sispis"
-        ]
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
       }
     },
     "context_budget": {
@@ -118,7 +124,10 @@
       "properties": {
         "specialists": {
           "type": "object",
-          "required": ["required", "optional"],
+          "required": [
+            "required",
+            "optional"
+          ],
           "properties": {
             "required": {
               "type": "array",
@@ -147,6 +156,136 @@
     "version": {
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "bundle_schema_version": {
+      "const": 2
+    },
+    "engine": {
+      "type": "object",
+      "required": [
+        "kind",
+        "contract",
+        "contract_version"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "contract": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "contract_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "additionalProperties": false
+    },
+    "composition": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "mode": {
+          "enum": [
+            "composable",
+            "exclusive"
+          ]
+        },
+        "requires": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "conflicts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "contracts": {
+      "type": "object",
+      "properties": {
+        "packets": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schemas": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "integrations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "required": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "enhancements": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "flow_selection": {
+      "type": "object",
+      "required": [
+        "fallback",
+        "ambiguity",
+        "no_match"
+      ],
+      "properties": {
+        "fallback": {
+          "enum": [
+            "required",
+            "optional",
+            "forbidden"
+          ]
+        },
+        "ambiguity": {
+          "const": "error"
+        },
+        "no_match": {
+          "enum": [
+            "inactive",
+            "blocked"
+          ]
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

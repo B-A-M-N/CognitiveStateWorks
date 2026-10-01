@@ -1,12 +1,23 @@
 ---
 flow: design
-operations: [design, plan]
-triggers: [design_requested, planning_requested]
 states:
-  from: [ASSESSED]
-  through: [PLANNED]
+  through:
+  - PLANNED
 required_specialists: []
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - design
+    - plan
+  - field: trigger
+    in:
+    - design_requested
+    - planning_requested
+  - field: current_state
+    in:
+    - ASSESSED
 ---
 # Flow: Design (→ PLANNED, for new or restructured infrastructure)
 

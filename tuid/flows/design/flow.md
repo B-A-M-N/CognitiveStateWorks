@@ -1,12 +1,28 @@
 ---
 flow: design
-operations: [design, redesign]
-triggers: [design_requested, redesign_requested]
 states:
-  from: [OBSERVED, MODELED, DESIGNED, IMPLEMENTED]
-  through: [DESIGNED]
-required_specialists: ['../../aspects/feedback-states/aspect.md', '../../aspects/keyboard/aspect.md']
+  through:
+  - DESIGNED
+required_specialists:
+- ../../aspects/feedback-states/aspect.md
+- ../../aspects/keyboard/aspect.md
 optional_specialists: []
+when:
+  all:
+  - field: operation
+    in:
+    - design
+    - redesign
+  - field: trigger
+    in:
+    - design_requested
+    - redesign_requested
+  - field: current_state
+    in:
+    - OBSERVED
+    - MODELED
+    - DESIGNED
+    - IMPLEMENTED
 ---
 # Flow: Design (MODELED → DESIGNED)
 

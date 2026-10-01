@@ -1,0 +1,33 @@
+id: milestone-example
+domain: example_milestone
+purpose: Demonstrate a checklist workflow without introducing artificial states.
+name: Milestone Checklist Example
+entrypoint: README.md
+triggers:
+  - checklist
+phase: domain_state
+inputs:
+  required:
+    - task_context
+  optional: []
+emits: []
+core_requirements: []
+framework_enhancements: []
+context_budget: low
+version: 0.1.0
+bundle_schema_version: 2
+engine:
+  kind: milestone
+  contract: milestones.yaml
+  contract_version: milestone/v1
+composition:
+  group: example_milestone
+  mode: composable
+  requires: []
+  conflicts: []
+contracts:
+  schemas: []
+flow_selection:
+  fallback: forbidden
+  ambiguity: error
+  no_match: inactive
