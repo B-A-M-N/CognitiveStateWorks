@@ -16,7 +16,6 @@ from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-FRAMEWORK_STAGES = {"owl", "anchor", "dox", "fuse", "flow", "ward", "sispis"}
 
 
 def load_yaml(path: Path) -> Any:
@@ -116,10 +115,15 @@ def main() -> int:
         entry = data.get("entrypoint")
         if entry and not (owner / entry).exists() and not (ROOT / entry).exists():
             problems.append(f"{name}: entrypoint {entry!r} does not exist")
-        # core requirements recognized
-        bad_reqs = [r for r in data.get("core_requirements", []) if r not in FRAMEWORK_STAGES]
-        if bad_reqs:
-            problems.append(f"{name}: unknown core_requirements {bad_reqs}")
+        # Advisory entrypoints are explicit bundle-local paths. CSW keeps
+        # integration capability names opaque to the host integration.
+        advisory_entrypoint = data.get("advisory_entrypoint")
+        if advisory_entrypoint:
+            path = Path(str(advisory_entrypoint))
+            if (path.is_absolute() or ".." in path.parts
+                    or not (owner / path).is_file()
+                    or (owner / path).is_symlink()):
+                problems.append(f"{name}: invalid advisory_entrypoint {advisory_entrypoint!r}")
         manifests[name] = data
 
     flow_schema_path = ROOT / "schemas" / "statework-flow.schema.json"

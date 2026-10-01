@@ -25,9 +25,9 @@ completion:
       minimum_state: IMPLEMENTED
       evidence_kinds:
       - rendered_observation
-framework_requirements:
-- fuse
-- ward
+integrations:
+  cognitiveframeworks:
+    required: [fuse, ward]
 required_specialists: []
 optional_specialists: []
 when:

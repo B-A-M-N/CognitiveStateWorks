@@ -3,9 +3,9 @@ flow: discover
 states:
   through:
   - OBSERVED
-framework_requirements:
-- owl
-- anchor
+integrations:
+  cognitiveframeworks:
+    required: [owl, anchor]
 required_specialists: []
 optional_specialists: []
 when:

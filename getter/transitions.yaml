@@ -33,7 +33,6 @@ transitions:
   progress_class: FORWARD_PROGRESS
   consequential: true
   required_evidence: [authority, rollback]
-  framework_requirements: [fuse, ward]
 - from: CHANGING
   to: VERIFIED
   trigger: validate

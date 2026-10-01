@@ -4,6 +4,7 @@ purpose: Model and control infrastructure changes using bounded evidence and rec
   paths.
 name: Infrae
 entrypoint: infrae/STATEWORK.md
+advisory_entrypoint: STATEWORK.md
 triggers:
 - infrastructure
 - topology
@@ -13,7 +14,7 @@ triggers:
 - migration
 - recovery
 - observability
-phase: domain_state
+phase_tags: [domain_state]
 inputs:
   required:
   - task_context
@@ -22,10 +23,6 @@ inputs:
 emits:
 - infrastructure_truth_packet
 - infrastructure_evidence_packet
-core_requirements: []
-framework_enhancements:
-- owl
-- anchor
 context_budget: medium
 exclusive_group: infrastructure_state
 handoff: infrastructure_truth_packet

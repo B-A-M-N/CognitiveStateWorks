@@ -2,7 +2,7 @@
   "builtin_engine_hashes": {
     "flow_selector": "33f50a692126cfc2ca8237fb40d5cb4c9998afa0e30ee53d2b03c91881ba33d1",
     "milestone": "3ba2eed288d98881ccc9930dac82d6b504ef0cec35f4590527e7568c88a66eef",
-    "state_machine": "901f974476f74a26ce61f95760a610149fe2b4b6916e53f50efb317fff644d13"
+    "state_machine": "71a5cb9c4d5705ce54406d51fbdb1b65ef4eca1043e71859ae1fa0dc21d4c84f"
   },
   "evidence_registry": {
     "kinds": {
@@ -430,9 +430,7 @@
     "version": "1.0.0"
   },
   "freshness_validator_hashes": {
-    "infrastructure_truth_v1": "a3d631137ab7bf65ecfa5a9d3b3b204c62697b54a87cc2b9b78a9be52edb0a28",
-    "repository_truth_v1": "83a3e03172a328bfab6c4f4d082556fae580bf3dbd6c1699e7a7307bc1de3027",
-    "tui_validation_v1": "6cd20a92ee7a86b87d6de7cb16ad7a4305c15a4e07d74287d22d16d572c5f7c7"
+    "repository_truth_v1": "83a3e03172a328bfab6c4f4d082556fae580bf3dbd6c1699e7a7307bc1de3027"
   },
   "packet_registry": {
     "packets": {
@@ -1066,11 +1064,11 @@
     }
   },
   "registry_config_hash": "d4efe61d7c37394e7e4d7fd0406b5d83c94e2b0941cf56f7c2e57a881693ef85",
-  "registry_hash": "6476ed5605338c08614d082aa266ca3d9a736af81912116c63c38cfddb38109c",
+  "registry_hash": "7a5238c194a11700cd45ce4e3d7a166ff58714dd4b2248a644cb66474bd95f3c",
   "registry_version": "2.0.0",
   "stateworks": [
     {
-      "bundle_hash": "c5d37edd7dc80dc168196a36e418a0cb7021ef4cd3ea455a18c693b1a3f4c3f3",
+      "bundle_hash": "95705617cf4509bd2bd57c8c7ad88959d73a0046783a0dd0a7b6a71036d86177",
       "bundle_ref": "infrae",
       "contracts": {
         "evidence": [
@@ -1404,17 +1402,17 @@
         "domains/security/domain.md": "8d5cb5e8f7d38f1bb2dddd79694b6f4e0fcd651a28992dac295a8f697a3e4cf3",
         "domains/storage/domain.md": "1bf2c628450bf4bb8f40af6743d9f007106248dc697a3599b971eb5a6cba1c57",
         "flows/assess/flow.md": "8316cb94f8e505175856324616af7e224abf6c8bbac92633521f0485827a74a9",
-        "flows/change/flow.md": "a27156debe8efe1cad25acf331aa1d296fddd1a7db8d4dcaf4086d0ab891750b",
+        "flows/change/flow.md": "de8ab1b4cc5934ded4d406ce2b0c9f5cde041a5523c371763c6c5a8a49029313",
         "flows/decommission/flow.md": "f0fe1432a4a6dde366008b5375504bb280e71d685ef075f9741a3006292df73a",
         "flows/design/flow.md": "315d2464e04103093cb52d15482a1e2ae6e57658b3fa57dc39a68a333683d712",
-        "flows/discover/flow.md": "aa1e30754a13e06c0dea3b1565aa0f6989357c97b0cf61a7547507bd2367f2ec",
+        "flows/discover/flow.md": "dac6e3b87b80eff6b20f884c9a0b7bdf79dbf630c6a4ee42b764615acab49c30",
         "flows/incident/flow.md": "3dbbf79728cecfb0e7d8a7db23583eae29240992f1ba4a6f064896a701f42f55",
         "flows/migrate/flow.md": "81105e7f8520500edcb174753a656ea8e81bf95bf8c51c9630ef888ceae03dff",
         "flows/model/flow.md": "9c3ba2ec71f4a30dcdf93d8d943ecdc6e1660707fbd3d3ab2774943b3c08e901",
-        "flows/recover/flow.md": "d39b54220e323cc25cbdc96f18904ad1b8f274c5d4b09a577872d99431dbaa04",
+        "flows/recover/flow.md": "7f908b0f99a163ab4b66d7a5f03b5af1d29a7a8e101b777e0233bf2f4bfc6938",
         "flows/scale/flow.md": "81e4ecd1945403d0dda28dac6731f12de5a8eac790ee58ed19920a18cd0f14dd",
-        "flows/validate/flow.md": "ed76add890d510e17fbb2a0a220b2ffe010d47bc0215510496fe5c9b3ccdb447",
-        "manifest.yaml": "f6a18987ccdc1b0ff78aebfddb867369f4a81ac080a362d8940dcd0f981a4f92",
+        "flows/validate/flow.md": "fe391362f9ecf2b2780debecd2ec4e4a57c81988286d47c7efa59c8bbe68122f",
+        "manifest.yaml": "6dd657d70118f484aa572a33ae2a8cc97fd9f93e4c24e64fa6a72b8257336500",
         "policies/concurrency/README.md": "4eb0b4c369eb79d439a0c357799f059792b2901f25b4069433ef0ba4b7e6998b",
         "policies/destructive-change/README.md": "478803fe1c0045d6e3ca2e9861750a27645faf5bfc0c552ac86dc76e20e9a7fb",
         "policies/evidence-thresholds/README.md": "3c866f7cf8a37712b458802be17fa48cb9232a48c41bff29568285c4528619d4",
@@ -1434,6 +1432,7 @@
       },
       "id": "infrae",
       "manifest": {
+        "advisory_entrypoint": "STATEWORK.md",
         "bundle_schema_version": 2,
         "composition": {
           "conflicts": [],
@@ -1450,7 +1449,6 @@
             "contracts/schemas/infrastructure-truth-packet.schema.json"
           ]
         },
-        "core_requirements": [],
         "domain": "infrastructure_state",
         "emits": [
           "infrastructure_truth_packet",
@@ -1468,10 +1466,6 @@
           "fallback": "required",
           "no_match": "blocked"
         },
-        "framework_enhancements": [
-          "owl",
-          "anchor"
-        ],
         "handoff": "infrastructure_truth_packet",
         "id": "infrae",
         "inputs": {
@@ -1492,7 +1486,9 @@
           }
         },
         "name": "Infrae",
-        "phase": "domain_state",
+        "phase_tags": [
+          "domain_state"
+        ],
         "purpose": "Model and control infrastructure changes using bounded evidence and recovery paths.",
         "triggers": [
           "infrastructure",
@@ -1507,10 +1503,12 @@
         "version": "1.1.0"
       },
       "root_ref": ".",
+      "runtime_capsule": "# Infrae \u2014 StateWork\nDomain: infrastructure_state\nPurpose: Model and control infrastructure changes using bounded evidence and recovery paths.\nWorkflow engine: state_machine (state-machine/v1)\nAvailable flows:\n- assess\n- change\n- decommission\n- design\n- discover\n- incident\n- migrate\n- model\n- recover\n- scale\n- validate\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n",
+      "runtime_capsule_hash": "a13db836553c2d026fb8f0723f36227e962a3a57fb16e4132779844fbee3ff62",
       "source_root": "."
     },
     {
-      "bundle_hash": "6c6ea5c4a8becf4aba5b3e7e615590fe81240115239efee28512cf68f42901ba",
+      "bundle_hash": "cd29142f75aab00ac18cc22faa6dcd9ecee1c7b7c6b963afe3f0a639f3629bae",
       "bundle_ref": "gitter",
       "contracts": {
         "evidence": [
@@ -1592,12 +1590,13 @@
         "contracts/evidence-kinds.yaml": "cf2eda40054573c778ea341ffbad6e382bb5d397cec4fd3e691b6852e3da5503",
         "contracts/packets.yaml": "fcc9787d417c11a98e9d1df88179bf12a241ae90b8bb308fa6a0b7ea55bef957",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
-        "manifest.yaml": "2187686dacc14227071c63447f455787c47d80312d1ee8bf7cd9e0268a6b7df7",
+        "manifest.yaml": "28719308565b0f7eaa653be0c69cac521b611528a60be1c16395b05c34469210",
         "runtime.md": "43b5a0f6068ed5f9a4b26ffb4e1a58370819ad5d8a179a2caccf370ebc9dbc61",
         "transitions.yaml": "4d89a2ae88062b30d2ecda41b016d05616efaae8cddbcc1ca520452c257b8088"
       },
       "id": "gitter",
       "manifest": {
+        "advisory_entrypoint": "SKILL.md",
         "bundle_schema_version": 2,
         "composition": {
           "conflicts": [],
@@ -1613,7 +1612,6 @@
             "contracts/schemas/repository-truth-packet.schema.json"
           ]
         },
-        "core_requirements": [],
         "domain": "repository_state",
         "emits": [
           "repository_truth_packet"
@@ -1630,10 +1628,6 @@
           "fallback": "forbidden",
           "no_match": "inactive"
         },
-        "framework_enhancements": [
-          "owl",
-          "anchor"
-        ],
         "handoff": "repository_truth_packet",
         "id": "gitter",
         "inputs": {
@@ -1652,7 +1646,9 @@
           }
         },
         "name": "Gitter",
-        "phase": "observation",
+        "phase_tags": [
+          "observation"
+        ],
         "purpose": "Establish the current repository state from scoped, inspectable evidence.",
         "triggers": [
           "repository state",
@@ -1667,10 +1663,12 @@
         "version": "1.1.0"
       },
       "root_ref": ".",
+      "runtime_capsule": "# Gitter \u2014 StateWork\nDomain: repository_state\nPurpose: Establish the current repository state from scoped, inspectable evidence.\nWorkflow engine: state_machine (state-machine/v1)\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n",
+      "runtime_capsule_hash": "a82b5cd4751319ddd9f4e1af244a6ce3b44d538387921482c9235f090ab47b3e",
       "source_root": "."
     },
     {
-      "bundle_hash": "68db1117b92101526c4df57f4ddb4b8e0737a86abca2aef4674620138fb524d0",
+      "bundle_hash": "b2ff411d3f707ef12fcb93884fac8588f1f8f0cf0178ea8e423987bf9eff07b5",
       "bundle_ref": "getter",
       "contracts": {
         "evidence": [
@@ -1726,10 +1724,6 @@
             {
               "consequential": true,
               "domain_effect": "begin_repository_change",
-              "framework_requirements": [
-                "fuse",
-                "ward"
-              ],
               "from": "PLANNED",
               "id": "getter.planned.mutate.changing",
               "progress_class": "FORWARD_PROGRESS",
@@ -1820,7 +1814,7 @@
           ],
           "version": "1.1.0"
         },
-        "contract_hash": "e8557b7770e2f57a19fd05b3dba20e4187b09f7f2cea2db9c6a2506dc7f1adea",
+        "contract_hash": "596f98c8af9f060746111fb6d448d26bb10f00a6d67c6c96701941db2b83748d",
         "contract_path": "transitions.yaml",
         "contract_version": "state-machine/v1",
         "kind": "state_machine"
@@ -1831,12 +1825,13 @@
         "contracts/packets.yaml": "19db12dfb5fef646a4e9db5cf9ece1a78e97a8c6c53d83af5218d2f24eab08f8",
         "contracts/schemas/repository-evidence-packet.schema.json": "5508e285ebbcbb525819b8c344e56af6c94a06e081af0e9a7f173aa4b62e27ba",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
-        "manifest.yaml": "43986ad6f905005dd71728380df77efd5b1b02a25e1374eb73aab7c5dd424610",
+        "manifest.yaml": "478ca92ca6d9e8125a471fc7c835c5726b3f6445e5c7193b7c2ab9224d1322c9",
         "runtime.md": "e75f62fa7dfe1ade1adbb6c2408adab234c3022b7f968c646fb589f157603e0e",
-        "transitions.yaml": "9e1d0d549ca77679a4f2b9a0751eefcab6eee087786e8b9063f07672db0de008"
+        "transitions.yaml": "0673a2735ada5e9e9bd5499ae33aac6138341f090a951a8998ac0f50d9bdd026"
       },
       "id": "getter",
       "manifest": {
+        "advisory_entrypoint": "SKILL.md",
         "bundle_schema_version": 2,
         "composition": {
           "conflicts": [],
@@ -1855,7 +1850,6 @@
             "contracts/schemas/repository-truth-packet.schema.json"
           ]
         },
-        "core_requirements": [],
         "domain": "repository_state",
         "emits": [
           "repository_evidence_packet"
@@ -1872,11 +1866,6 @@
           "fallback": "forbidden",
           "no_match": "inactive"
         },
-        "framework_enhancements": [
-          "owl",
-          "anchor",
-          "ward"
-        ],
         "handoff": "repository_evidence_packet",
         "id": "getter",
         "inputs": {
@@ -1889,13 +1878,19 @@
           "cognitiveframeworks": {
             "enhancements": [
               "owl",
-              "anchor"
+              "anchor",
+              "ward"
             ],
-            "required": []
+            "required": [
+              "fuse",
+              "ward"
+            ]
           }
         },
         "name": "Getter",
-        "phase": "mutation",
+        "phase_tags": [
+          "mutation"
+        ],
         "purpose": "Safely change Git repository state under evidence-backed authorization.",
         "triggers": [
           "merge",
@@ -1911,10 +1906,12 @@
         "version": "1.1.0"
       },
       "root_ref": ".",
+      "runtime_capsule": "# Getter \u2014 StateWork\nDomain: repository_state\nPurpose: Safely change Git repository state under evidence-backed authorization.\nWorkflow engine: state_machine (state-machine/v1)\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n",
+      "runtime_capsule_hash": "f748ee211feb60ac0e39cfcc91cc66451fe8c02cc290b1bcf5f236c402523c66",
       "source_root": "."
     },
     {
-      "bundle_hash": "8892f83e00d6cccce7ff339b47745d5695195448e284de0738a135eccbcd457e",
+      "bundle_hash": "31b031e81b5f9fb67f215bafb9dff2dfec8f4d5a9dddc28ca6fd0560cae17487",
       "bundle_ref": "tuid",
       "contracts": {
         "evidence": [
@@ -2243,10 +2240,10 @@
         "contracts/evidence-kinds.yaml": "8f7ff71cde882e85d233d8ce4434353fb8b28a53193941eb09a17d7a02640188",
         "contracts/packets.yaml": "7aedd198322d5e0c21826c3f79c67340b7be07cef6e387cd2262b098b385b115",
         "contracts/schemas/tui-validation-packet.schema.json": "b4d591799f40ddbd0bd955a7b51bd8b38f89c975ab4ff5f5dcf29c50d1537625",
-        "flows/debug/flow.md": "37dc0d48b12b63c081947662f3943a7f4f126f37f6cb4d6721b6ace5471ffb46",
+        "flows/debug/flow.md": "42c73982fde143ddc98d6304854a41583b46c492869c68c89c859e21febf76ad",
         "flows/design/flow.md": "edea7ac28d8d5ce0301ee1a317e475d9afa9ef2ee3f8aba210fe5cc2f91bacc1",
         "flows/discover/flow.md": "8b5d93b3a2819e43c67b0f05468775c42c46f4b4bb00df4b80e500b624bc12bd",
-        "flows/implement/flow.md": "242e6ecd97c5e7d5a3bcdacaf9e45c3fa9403467b77a69ac9231b56bbefb0175",
+        "flows/implement/flow.md": "f31202e6e3d38d5cf671bdf120acec9f251bf754e88d8d402877da1a04ddefe0",
         "flows/interact/flow.md": "351962345fa85b8960037b172f791e3097f58510d20b1472a3f392ce5b29a661",
         "flows/model/flow.md": "3612bd85a08869aaaeb7fbbb45539861e013c4322d2c5fe474b816b2d871b3ef",
         "flows/recover/flow.md": "845c9267fac88f59779341de1d57dd9e6e2731b71034ee5172bf1832dee43d25",
@@ -2259,7 +2256,7 @@
         "frameworks/ink-typescript/framework.md": "1dc4662124c72ada4810f16b209a93f5d841a9cff8cd6a333d720f78dcf494b4",
         "frameworks/ratatui-rust/framework.md": "a6470e80eb124ac1e439be5e12fff2d1c19f1d1866e22ccae49e3ff428b493f0",
         "frameworks/textual-python/framework.md": "4bfdcc3fcdd332c7d975e45356c71e918e4b37928cdf48312013b011907b84cc",
-        "manifest.yaml": "ce5b192b2cd8ee2fab8f77707089bbc46878289b695461b123dc8cfb3bcea2ca",
+        "manifest.yaml": "eb3b6a637d7408284ba4a1b9801ca2e998ca485aa0a15e7b150fce72bc310d03",
         "patterns/command-center/pattern.md": "d96757a3047ee87d26be92f1d55701000d6cee8fb8256758a4e2332b691fe2ce",
         "patterns/dashboard/pattern.md": "9914c4ea67ff944d53e230c9a17878b3870f53e4a160e292869e5e8524bfb89a",
         "patterns/data-browser/pattern.md": "0471747940677b8e66c7a045a9d8acdfa2b759a72c6567f84baaf64d3b0928dd",
@@ -2304,6 +2301,7 @@
       },
       "id": "tuid",
       "manifest": {
+        "advisory_entrypoint": "SKILL.md",
         "bundle_schema_version": 2,
         "composition": {
           "conflicts": [],
@@ -2319,7 +2317,6 @@
             "contracts/schemas/tui-validation-packet.schema.json"
           ]
         },
-        "core_requirements": [],
         "domain": "terminal_interface_state",
         "emits": [
           "tui_validation_packet"
@@ -2336,10 +2333,6 @@
           "fallback": "required",
           "no_match": "blocked"
         },
-        "framework_enhancements": [
-          "owl",
-          "anchor"
-        ],
         "handoff": "tui_validation_packet",
         "id": "tuid",
         "inputs": {
@@ -2376,7 +2369,9 @@
           ]
         },
         "name": "tui'd",
-        "phase": "domain_state",
+        "phase_tags": [
+          "domain_state"
+        ],
         "purpose": "Model, implement, exercise, and validate terminal interface behavior.",
         "runtime": {
           "specialists": {
@@ -2393,6 +2388,8 @@
         "version": "1.1.0"
       },
       "root_ref": ".",
+      "runtime_capsule": "# tui'd \u2014 StateWork\nDomain: terminal_interface_state\nPurpose: Model, implement, exercise, and validate terminal interface behavior.\nWorkflow engine: state_machine (state-machine/v1)\nAvailable flows:\n- debug\n- design\n- discover\n- implement\n- interact\n- model\n- recover\n- redesign\n- review\n- test\n- validate\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n",
+      "runtime_capsule_hash": "83093bd02b94cae1a91070fd8632bcb6214b78ade94d5c72e985b9f976622a4a",
       "source_root": "."
     }
   ],

@@ -4,10 +4,9 @@ states:
   through:
   - RECOVERING
   - STABLE
-framework_requirements:
-- owl
-- anchor
-- ward
+integrations:
+  cognitiveframeworks:
+    required: [owl, anchor, ward]
 required_specialists: []
 optional_specialists: []
 when:

@@ -1,28 +1,10 @@
 #!/usr/bin/env python3
-"""Install StateWorks into the runtime skill registry as self-contained
-compact runtime capsules.
-
-Deployment model: manifest-backed registered skills. The installed wrapper
-embeds the StateWork's compact runtime capsule (runtime.md; falls back to a
-generated capsule from the source entrypoint when absent) so the installed
-artifact is self-contained and portable — it does NOT depend on a sibling
-source checkout.
-
-Install layout (per StateWork):
-
-    <registry>/<name>/
-      SKILL.md          compact self-contained runtime capsule
-      manifest.yaml     copy of the source manifest
-      fingerprint       sha256 of the source runtime capsule (doctor parity)
-
-Wrappers are regenerable; never hand-edit them.
-"""
+"""Install compiled StateWork bundles and their generated runtime capsules."""
 from __future__ import annotations
 
 import argparse
 import hashlib
 import os
-import shutil
 import sys
 import json
 import tempfile
@@ -123,33 +105,6 @@ def write_owned(registry: Path, paths: set[str]) -> None:
             os.unlink(temporary)
 
 
-def load_yaml(path: Path):
-    import yaml
-    return yaml.safe_load(path.read_text(encoding="utf-8"))
-
-
-def runtime_capsule(name: str) -> str:
-    """The compact runtime capsule for a StateWork: runtime.md if present,
-    else a minimal generated capsule. Self-contained; no source pointer."""
-    capsule_path = ROOT / name / "runtime.md"
-    if capsule_path.exists():
-        return capsule_path.read_text(encoding="utf-8")
-    # minimal generated capsule from the manifest + entrypoint frontmatter
-    manifest_path = ROOT / name / "manifest.yaml"
-    manifest = load_yaml(manifest_path) if manifest_path.exists() else {}
-    return f"""# {name} — StateWork Runtime Capsule (generated)
-
-Phase: {manifest.get('phase', 'domain_state')}
-Requires: {', '.join(manifest.get('core_requirements', [])) or 'none'}
-Consumes (required): {manifest.get('inputs', {}).get('required', []) or manifest.get('consumes', [])}
-Emits: {', '.join(manifest.get('emits', [])) or 'none'}
-Handoff: {manifest.get('handoff', '')}
-
-Resolve the active flow, then load no more than two relevant specialists.
-Emit the typed handoff packet in the common envelope before completion.
-"""
-
-
 def _main_impl() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target", nargs="+", default=None,
@@ -162,25 +117,16 @@ def _main_impl() -> int:
                         help="also install the executable CSW controller and schemas")
     args = parser.parse_args()
 
-    import yaml
-    registry_path = ROOT / "registry.yaml"
-    if not registry_path.exists():
-        print("Missing registry.yaml")
+    try:
+        from control_plane import RegistryCompiler, load_compiled_registry
+        compiled = load_compiled_registry(ROOT, verify_bundles=True)
+    except Exception as exc:
+        print(f"Invalid compiled StateWork registry: {exc}")
         return 1
-    registry = load_yaml(registry_path)
-    names = registry.get("stateworks", [])
-    missing = []
-    for name in names:
-        source_dir = ROOT / name
-        manifest_path = source_dir / "manifest.yaml"
-        source_skill = source_dir / "SKILL.md"
-        if not source_skill.exists():
-            source_skill = source_dir / "STATEWORK.md"
-        if (not manifest_path.is_file() or manifest_path.is_symlink()
-                or not source_skill.is_file() or source_skill.is_symlink()):
-            missing.append(name)
-    if missing:
-        print("Missing mandatory StateWork artifacts: " + ", ".join(missing))
+    bundles = list(compiled.get("stateworks") or ())
+    names = [str(item.get("id") or "") for item in bundles]
+    if not names or any(not name for name in names) or len(names) != len(set(names)):
+        print("Compiled StateWork registry has missing or duplicate bundle IDs")
         return 1
 
     selected_targets = args.target if args.target is not None else (
@@ -212,15 +158,10 @@ def _main_impl() -> int:
             journal.capture(reg / relative_path)
         installed = 0
         owned: set[str] = set()
-        for name in names:
-            manifest_path = ROOT / name / "manifest.yaml"
-            source_dir = ROOT / name
-            source_skill = source_dir / "SKILL.md"
-            if not source_skill.exists():
-                source_skill = source_dir / "STATEWORK.md"
-            if not manifest_path.is_file() or not source_skill.is_file():
-                print(f"[FAIL] {name}: missing manifest or source skill")
-                return 1
+        for bundle in bundles:
+            name = str(bundle["id"])
+            source_dir = Path(str(bundle["bundle_root"]))
+            manifest = dict(bundle.get("manifest") or {})
             dst_dir = reg / name
             if dst_dir.exists() and not any(item == name or item.startswith(name + "/")
                                             for item in previous):
@@ -228,48 +169,64 @@ def _main_impl() -> int:
             ensure_directory(reg, dst_dir)
             _copy_args = dict(previous_digests=previous_digests,
                               allow_replace_modified=args.replace_modified_managed_files)
-            copy_owned_file(source_skill, dst_dir / "SKILL.md", reg,
-                            relative(reg, dst_dir / "SKILL.md"), journal=journal, **_copy_args)
-            copy_owned_file(manifest_path, dst_dir / "manifest.yaml", reg,
-                            relative(reg, dst_dir / "manifest.yaml"), journal=journal, **_copy_args)
-            fingerprint = dst_dir / "fingerprint"
-            relative_fingerprint = relative(reg, fingerprint)
-            from install_primitives import write_owned_file as safe_write
-            safe_write(sha256(source_skill) + "\n", fingerprint, reg,
-                       relative_fingerprint, previous_digests,
-                       allow_replace_modified=args.replace_modified_managed_files,
-                       journal=journal)
-            owned.update({relative(reg, dst_dir / "SKILL.md"),
-                          relative(reg, dst_dir / "manifest.yaml"), relative_fingerprint})
+            file_hashes = dict(bundle.get("file_hashes") or {})
+            for bundle_path in sorted(file_hashes):
+                source = source_dir / bundle_path
+                destination = dst_dir / bundle_path
+                ensure_directory(reg, destination.parent)
+                copy_owned_file(source, destination, reg, relative(reg, destination),
+                                journal=journal, **_copy_args)
+                owned.add(relative(reg, destination))
+            advisory_entrypoint = manifest.get("advisory_entrypoint")
+            if advisory_entrypoint:
+                source = (source_dir / str(advisory_entrypoint)).resolve()
+                try:
+                    source.relative_to(source_dir.resolve())
+                except ValueError as exc:
+                    raise InstallSafetyError(
+                        f"{name}: advisory entrypoint escapes its bundle") from exc
+                if not source.is_file() or source.is_symlink():
+                    raise InstallSafetyError(f"{name}: advisory entrypoint is unavailable")
+                skill = dst_dir / "SKILL.md"
+                if source != skill:
+                    copy_owned_file(source, skill, reg, relative(reg, skill),
+                                    journal=journal, **_copy_args)
+                owned.add(relative(reg, skill))
+            capsule = str(bundle.get("runtime_capsule") or "")
+            capsule_path = dst_dir / "RUNTIME.md"
+            write_owned_file(capsule, capsule_path, reg, relative(reg, capsule_path),
+                             previous_digests,
+                             allow_replace_modified=args.replace_modified_managed_files,
+                             journal=journal)
+            owned.add(relative(reg, capsule_path))
             print(f"  [ok]   {name} -> {dst_dir}")
             installed += 1
         if args.enforcing_runtime:
             enforcing = reg / "cognitive_statework_runtime"
             journal.capture(enforcing)
             ensure_directory(reg, enforcing)
-            source_runtime = ROOT / "scripts" / "control_plane.py"
-            destination_runtime = enforcing / "control_plane.py"
-            copy_owned_file(source_runtime, destination_runtime, reg,
-                                  relative(reg, destination_runtime), previous_digests,
-                                  allow_replace_modified=args.replace_modified_managed_files,
-                                  journal=journal)
-            owned.add(relative(reg, destination_runtime))
-            for schema_name in ("packet-registry.yaml", "evidence-kinds.yaml",
-                                "packet-registry.schema.json", "evidence-kinds.schema.json",
-                                "handoff-packet.schema.json", "statework-flow.schema.json",
-                                "transition-contract.schema.json", "statework-manifest.schema.json"):
-                source_schema = ROOT / "schemas" / schema_name
-                if not source_schema.exists():
+            _copy_args = dict(previous_digests=previous_digests,
+                              allow_replace_modified=args.replace_modified_managed_files,
+                              journal=journal)
+            for source in sorted((ROOT / "scripts").rglob("*.py")):
+                if (source.is_symlink() or "__pycache__" in source.parts
+                        or source.name.startswith("test-")):
                     continue
-                destination_schema = enforcing / "schemas" / schema_name
-                copy_owned_file(source_schema, destination_schema, reg,
-                                      relative(reg, destination_schema), previous_digests,
-                                      allow_replace_modified=args.replace_modified_managed_files,
-                                      journal=journal)
-                owned.add(relative(reg, destination_schema))
+                destination = enforcing / source.relative_to(ROOT / "scripts")
+                ensure_directory(reg, destination.parent)
+                copy_owned_file(source, destination, reg, relative(reg, destination),
+                                **_copy_args)
+                owned.add(relative(reg, destination))
+            for source in sorted((ROOT / "schemas").rglob("*")):
+                if source.is_dir() or source.is_symlink():
+                    continue
+                destination = enforcing / "schemas" / source.relative_to(ROOT / "schemas")
+                ensure_directory(reg, destination.parent)
+                copy_owned_file(source, destination, reg, relative(reg, destination),
+                                **_copy_args)
+                owned.add(relative(reg, destination))
             interface = enforcing / "host-interface.json"
-            from install_primitives import write_owned_file as safe_write
-            safe_write(json.dumps({
+            write_owned_file(json.dumps({
                 "runtime_version": "1.0.0",
                 "operations": ["resolve_statework", "start_or_resume_subject",
                                 "submit_attested_observation", "request_transition",
@@ -278,53 +235,34 @@ def _main_impl() -> int:
             }, indent=2) + "\n", interface, reg, relative(reg, interface), previous_digests,
                 allow_replace_modified=args.replace_modified_managed_files, journal=journal)
             owned.add(relative(reg, interface))
-            validator_source = ROOT / "scripts" / "validate-repository-truth.py"
-            validator_destination = enforcing / "validate-repository-truth.py"
-            copy_owned_file(validator_source, validator_destination, reg,
-                             relative(reg, validator_destination), previous_digests,
+            enforcing_registry = enforcing / "registry.yaml"
+            registry_text = "version: 2.0.0\nstateworks:\n" + "".join(
+                f"  - {json.dumps(name)}\n" for name in names)
+            registry_text += "extension_roots: []\n"
+            write_owned_file(registry_text, enforcing_registry, reg,
+                             relative(reg, enforcing_registry), previous_digests,
                              allow_replace_modified=args.replace_modified_managed_files,
                              journal=journal)
-            owned.add(relative(reg, validator_destination))
-            validator_schema = ROOT / "schemas" / "repository-truth-packet.schema.json"
-            validator_schema_destination = enforcing / "schemas" / "repository-truth-packet.schema.json"
-            copy_owned_file(validator_schema, validator_schema_destination, reg,
-                            relative(reg, validator_schema_destination), previous_digests,
-                            allow_replace_modified=args.replace_modified_managed_files,
-                            journal=journal)
-            owned.add(relative(reg, validator_schema_destination))
-            enforcing_registry = enforcing / "registry.yaml"
-            copy_owned_file(ROOT / "registry.yaml", enforcing_registry, reg,
-                                  relative(reg, enforcing_registry), previous_digests,
-                                  allow_replace_modified=args.replace_modified_managed_files,
-                                  journal=journal)
             owned.add(relative(reg, enforcing_registry))
-            for statework_name in names:
-                source_statework = ROOT / statework_name
-                destination_statework = enforcing / statework_name
-                ensure_directory(reg, destination_statework)
-                for artifact_name in ("manifest.yaml", "transitions.yaml", "runtime.md",
-                                      "SKILL.md", "STATEWORK.md"):
-                    source_artifact = source_statework / artifact_name
-                    if not source_artifact.exists():
-                        continue
-                    destination_artifact = destination_statework / artifact_name
-                    copy_owned_file(source_artifact, destination_artifact, reg,
-                                          relative(reg, destination_artifact), previous_digests,
-                                          allow_replace_modified=args.replace_modified_managed_files,
-                                          journal=journal)
-                    owned.add(relative(reg, destination_artifact))
-                flows_source = source_statework / "flows"
-                if flows_source.is_dir():
-                    for flow_file in sorted(flows_source.rglob("*")):
-                        if not flow_file.is_file():
-                            continue
-                        destination_flow = destination_statework / flow_file.relative_to(source_statework)
-                        ensure_directory(reg, destination_flow.parent)
-                        copy_owned_file(flow_file, destination_flow, reg,
-                                              relative(reg, destination_flow), previous_digests,
-                                              allow_replace_modified=args.replace_modified_managed_files,
-                                              journal=journal)
-                        owned.add(relative(reg, destination_flow))
+            for bundle in bundles:
+                name = str(bundle["id"])
+                source_root = Path(str(bundle["bundle_root"]))
+                destination_root = enforcing / name
+                for bundle_path in sorted(dict(bundle.get("file_hashes") or {})):
+                    source = source_root / bundle_path
+                    destination = destination_root / bundle_path
+                    ensure_directory(reg, destination.parent)
+                    copy_owned_file(source, destination, reg, relative(reg, destination),
+                                    **_copy_args)
+                    owned.add(relative(reg, destination))
+            compiled_runtime = RegistryCompiler(enforcing).compile(write=False)
+            compiled_path = enforcing / "compiled-registry.json"
+            write_owned_file(json.dumps(compiled_runtime, sort_keys=True, indent=2) + "\n",
+                             compiled_path, reg, relative(reg, compiled_path),
+                             previous_digests,
+                             allow_replace_modified=args.replace_modified_managed_files,
+                             journal=journal)
+            owned.add(relative(reg, compiled_path))
             print(f"  [ok]   enforcing runtime -> {enforcing}")
         print(f"  installed {installed} wrapper(s) into {reg}")
         stale = previous - owned

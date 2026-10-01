@@ -49,6 +49,26 @@ def _load_yaml(path: Path) -> Any:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
+def render_runtime_capsule(manifest: Mapping[str, Any], *, engine_kind: str,
+                           contract_version: str, flows: Iterable[str],
+                           guidance: str = "") -> str:
+    """Render compact runtime guidance from machine-owned bundle metadata."""
+    lines = [f"# {manifest.get('name') or manifest.get('id')} — StateWork",
+             f"Domain: {manifest.get('domain') or 'unspecified'}",
+             f"Purpose: {manifest.get('purpose') or 'unspecified'}",
+             f"Workflow engine: {engine_kind} ({contract_version})"]
+    flow_names = tuple(sorted(set(str(item) for item in flows if item)))
+    if flow_names:
+        lines.extend(["Available flows:", *[f"- {name}" for name in flow_names]])
+    lines.extend([
+        "Inspect current workflow progress and eligible steps through the host workflow authority.",
+        "Use the selected flow as guidance; the workflow contract and host authority determine legal steps.",
+    ])
+    if guidance.strip():
+        lines.extend(["", "## Domain guidance", "", guidance.strip()])
+    return "\n".join(lines) + "\n"
+
+
 def _aware_datetime(value: Any) -> datetime:
     if not isinstance(value, str) or not value:
         raise ValueError("timestamp must be non-empty date-time text")
@@ -158,18 +178,6 @@ def _repository_truth_v1(packet: Dict[str, Any], context: Mapping[str, Any]) -> 
                for key in required)
 
 
-def _infrastructure_truth_v1(packet: Dict[str, Any], context: Mapping[str, Any]) -> bool:
-    expected = context.get("infrastructure_fingerprint")
-    actual = packet.get("payload", {}).get("freshness_fingerprint")
-    return bool(expected and actual == expected)
-
-
-def _tui_validation_v1(packet: Dict[str, Any], context: Mapping[str, Any]) -> bool:
-    expected = context.get("validation_fingerprint")
-    actual = packet.get("payload", {}).get("freshness_fingerprint")
-    return bool(expected and actual == expected)
-
-
 class FreshnessValidatorRegistry:
     """Explicit host-trusted registry for specialized freshness checks."""
     def __init__(self) -> None:
@@ -206,13 +214,9 @@ def _trusted_validator_hash(function: Any) -> str:
 
 
 FRESHNESS_VALIDATORS = FreshnessValidatorRegistry()
-for _validator_id, _validator in {
-        "repository_truth_v1": _repository_truth_v1,
-        "infrastructure_truth_v1": _infrastructure_truth_v1,
-        "tui_validation_v1": _tui_validation_v1}.items():
-    FRESHNESS_VALIDATORS.register(
-        _validator_id, _validator,
-        implementation_hash=_trusted_validator_hash(_validator), trusted=True)
+FRESHNESS_VALIDATORS.register(
+    "repository_truth_v1", _repository_truth_v1,
+    implementation_hash=_trusted_validator_hash(_repository_truth_v1), trusted=True)
 
 
 def _path_value(value: Mapping[str, Any], path: str) -> Any:
@@ -1489,6 +1493,15 @@ class RegistryCompiler:
                 if source_root == self.root:
                     source_root_ref = "."
                 files_digest = self._digest(files)
+                guidance_path = bundle_root / "guidance.md"
+                guidance = (guidance_path.read_text(encoding="utf-8")
+                            if guidance_path.is_file() and not guidance_path.is_symlink()
+                            else "")
+                runtime_capsule = render_runtime_capsule(
+                    manifest, engine_kind=kind,
+                    contract_version=str(engine_decl.get("contract_version") or ""),
+                    flows=(path.parent.name for path in flow_paths),
+                    guidance=guidance)
                 source_by_id[sid] = (root_ref, source_root)
                 compiled.append({
                     "id": sid, "root_ref": root_ref,
@@ -1500,6 +1513,9 @@ class RegistryCompiler:
                                "contract_path": contract_relative,
                                "contract_hash": contract_digest,
                                "contract": dict(workflow_contract)},
+                    "runtime_capsule": runtime_capsule,
+                    "runtime_capsule_hash": hashlib.sha256(
+                        runtime_capsule.encode("utf-8")).hexdigest(),
                     "contracts": {"packets": list(local_packets),
                                   "evidence": list(local_evidence)}})
 
@@ -1556,6 +1572,11 @@ def load_compiled_registry(root: Optional[Path] = None, *,
     if result.get("builtin_engine_hashes") != RegistryCompiler._builtin_engine_hashes():
         raise TransitionError("compiled workflow engine implementation changed")
     for item in result.get("stateworks") or ():
+        capsule = str(item.get("runtime_capsule") or "")
+        capsule_hash = hashlib.sha256(capsule.encode("utf-8")).hexdigest()
+        if capsule_hash != item.get("runtime_capsule_hash"):
+            raise TransitionError(
+                f"compiled runtime capsule for {item.get('id')!r} has an invalid hash")
         source_root_ref = str(item.get("source_root") or ".")
         source_root = (root if source_root_ref == "." else
                        Path(source_root_ref) if Path(source_root_ref).is_absolute()

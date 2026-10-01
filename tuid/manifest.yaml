@@ -3,6 +3,7 @@ domain: terminal_interface_state
 purpose: Model, implement, exercise, and validate terminal interface behavior.
 name: tui'd
 entrypoint: tuid/SKILL.md
+advisory_entrypoint: SKILL.md
 triggers:
 - terminal interface
 - TUI
@@ -23,17 +24,13 @@ match:
   - resize
   - terminal capabilities
   - terminal corruption
-phase: domain_state
+phase_tags: [domain_state]
 inputs:
   required:
   - task_context
   optional: []
 emits:
 - tui_validation_packet
-core_requirements: []
-framework_enhancements:
-- owl
-- anchor
 context_budget: medium
 exclusive_group: tui_state
 runtime:

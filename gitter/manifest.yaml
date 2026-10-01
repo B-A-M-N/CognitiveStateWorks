@@ -3,6 +3,7 @@ domain: repository_state
 purpose: Establish the current repository state from scoped, inspectable evidence.
 name: Gitter
 entrypoint: gitter/SKILL.md
+advisory_entrypoint: SKILL.md
 triggers:
 - repository state
 - branch
@@ -12,17 +13,13 @@ triggers:
 - ownership
 - divergence
 - what actually changed
-phase: observation
+phase_tags: [observation]
 inputs:
   required:
   - task_context
   optional: []
 emits:
 - repository_truth_packet
-core_requirements: []
-framework_enhancements:
-- owl
-- anchor
 context_budget: low
 exclusive_group: repository_state
 handoff: repository_truth_packet

@@ -3,9 +3,9 @@ flow: change
 states:
   through:
   - CHANGING
-framework_requirements:
-- fuse
-- ward
+integrations:
+  cognitiveframeworks:
+    required: [fuse, ward]
 required_specialists: []
 optional_specialists: []
 when:

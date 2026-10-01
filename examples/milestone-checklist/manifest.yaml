@@ -3,16 +3,15 @@ domain: example_milestone
 purpose: Demonstrate a checklist workflow without introducing artificial states.
 name: Milestone Checklist Example
 entrypoint: README.md
+advisory_entrypoint: README.md
 triggers:
   - checklist
-phase: domain_state
+phase_tags: [domain_state]
 inputs:
   required:
     - task_context
   optional: []
 emits: []
-core_requirements: []
-framework_enhancements: []
 context_budget: low
 version: 0.1.0
 bundle_schema_version: 2
@@ -27,6 +26,7 @@ composition:
   conflicts: []
 contracts:
   schemas: []
+integrations: {}
 flow_selection:
   fallback: forbidden
   ambiguity: error

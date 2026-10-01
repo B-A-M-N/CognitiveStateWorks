@@ -3,6 +3,7 @@ domain: repository_state
 purpose: Safely change Git repository state under evidence-backed authorization.
 name: Getter
 entrypoint: getter/SKILL.md
+advisory_entrypoint: SKILL.md
 triggers:
 - merge
 - rebase
@@ -13,18 +14,13 @@ triggers:
 - reset
 - conflict resolution
 - repository recovery
-phase: mutation
+phase_tags: [mutation]
 inputs:
   required:
   - repository_truth_packet
   optional: []
 emits:
 - repository_evidence_packet
-core_requirements: []
-framework_enhancements:
-- owl
-- anchor
-- ward
 context_budget: low
 exclusive_group: repository_state
 handoff: repository_evidence_packet
@@ -48,10 +44,11 @@ contracts:
   - contracts/schemas/repository-truth-packet.schema.json
 integrations:
   cognitiveframeworks:
-    required: []
+    required: [fuse, ward]
     enhancements:
     - owl
     - anchor
+    - ward
 flow_selection:
   fallback: forbidden
   ambiguity: error

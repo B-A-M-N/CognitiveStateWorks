@@ -59,13 +59,13 @@ def scaffold(*, bundle_id: str, domain: str, purpose: str,
         "purpose": purpose.strip(),
         "name": display_name,
         "entrypoint": "README.md",
+        "advisory_entrypoint": "README.md",
         "triggers": [domain.replace("_", " ")],
         "match": {"required_any": [domain.replace("_", " ")], "secondary": []},
-        "phase": "domain_state",
+        "phase_tags": ["domain_state"],
         "inputs": {"required": ["task_context"], "optional": []},
         "emits": [],
-        "core_requirements": [],
-        "framework_enhancements": [],
+        "integrations": {},
         "context_budget": "medium",
         "version": "0.1.0",
         "bundle_schema_version": 2,
@@ -122,12 +122,10 @@ def scaffold(*, bundle_id: str, domain: str, purpose: str,
     try:
         _write_yaml(bundle_root / "manifest.yaml", manifest)
         _write_yaml(bundle_root / contract_name, contract)
-        (bundle_root / "runtime.md").write_text(
-            f"# {display_name} runtime\n\n"
-            f"Purpose: {purpose.strip()}\n\n"
-            "The compiled manifest and workflow contract define routing and workflow "
-            "authority. Keep domain guidance in README.md until a dedicated guidance "
-            "contract is declared.\n",
+        (bundle_root / "guidance.md").write_text(
+            f"# {display_name} guidance\n\n"
+            "Keep this file for domain-specific model guidance. Routing and workflow "
+            "authority come from the compiled manifest and workflow contract.\n",
             encoding="utf-8")
         (bundle_root / "README.md").write_text(
             f"# {display_name}\n\n"

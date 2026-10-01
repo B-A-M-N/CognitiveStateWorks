@@ -27,6 +27,7 @@ The enforcing runtime includes:
 - Explicit consequential transition markers and registered provenance for authorization, mutation, verification, and terminal-state transitions.
 - A compiled bundle registry with local packet/evidence contracts, freshness rules, and trusted engine pins.
 - Bounded, data-only flow predicates with explicit fallback, ambiguity, and no-match policy.
+- Runtime capsules generated from the compiled manifest and workflow contract, with optional `guidance.md` text.
 
 Use the advisory product for documentation and workflow guidance:
 
@@ -71,7 +72,7 @@ python3 scripts/install-stateworks.py \
   --enforcing-runtime
 ```
 
-That product contains the controller, schemas, transition contracts, evidence registry, StateWorks, flows, and repository-truth validator. The ordinary installation remains an advisory skill product.
+That product contains the controller, schemas, compiled StateWork bundles, flows, and validators declared by the runtime package. The ordinary installation remains an advisory skill product.
 
 ## Optional integrations
 
@@ -118,13 +119,13 @@ CFW provides general behavioral discipline. CSW provides **domain-specific opera
 
 ## A StateWork is an executable workflow model
 
-A StateWork is not simply a skill describing best practices. It defines a domain as explicit operational state and can specify:
+A StateWork is a self-describing workflow bundle, not only a state machine or a skill. It defines a domain and can specify:
 
-* states, vocabulary, and initial state;
-* legal transitions, normal paths, and failure/recovery paths;
+* a workflow contract for a trusted engine such as `state_machine` or `milestone`;
+* legal steps, dependencies, failure/recovery paths, and completion rules;
 * triggers, evidence requirements, invalidation rules, and completion states;
 * typed inputs, outputs, handoff packets, flows, and specialists;
-* framework requirements and runtime metadata.
+* bundle-local packet and evidence contracts, namespaced integrations, and optional guidance.
 
 ```text
 observation
@@ -162,11 +163,12 @@ StateWorks use explicit registration:
 registry.yaml
     │
     └── manifest.yaml
-          ├── domain/triggers
-          ├── phase and inputs/outputs
-          ├── framework requirements
+          ├── domain/triggers/phase_tags
+          ├── inputs/outputs and composition
+          ├── namespaced integrations
           ├── flows
-          └── runtime metadata
+          ├── packet/evidence contracts
+          └── optional guidance.md
 ```
 
 Registration means **this StateWork is available to the resolver**. It does not mean **load this StateWork into every agent**. CognitiveFrameWorks resolves the task, selects the applicable StateWork chain, and activates only what is needed.
@@ -180,9 +182,10 @@ python3 scripts/new_statework.py release-audit \
   --engine milestone
 ```
 
-The command writes under `extensions/`, validates the starter against the shared
-registry, and supports either `state_machine` or `milestone` contracts. Compile
-the registry after editing a bundle:
+The command writes a bundle under `extensions/` and supports either `state_machine`
+or `milestone` contracts. Put domain instructions in optional `guidance.md`; the
+compiled registry generates the compact runtime capsule from machine-owned metadata.
+Compile the registry after editing a bundle:
 
 ```bash
 python3 scripts/compile-registry.py
@@ -274,7 +277,7 @@ DP may influence future optional composition, but it cannot rewrite StateWork in
 python3 scripts/validate-stateworks.py
 ```
 
-Validation checks registry integrity, manifest and transition schemas, unique identities, packet registration, producer/consumer consistency, declared states, legal paths, completion reachability, failure/recovery routes, framework requirements, and typed handoff fixtures.
+Validation checks registry integrity, manifest and workflow schemas, unique identities, packet and evidence declarations, producer/consumer consistency, legal paths, completion reachability, failure/recovery routes, namespaced integration metadata, and typed handoff fixtures.
 
 A StateWork should be treated as executable policy, not descriptive documentation.
 

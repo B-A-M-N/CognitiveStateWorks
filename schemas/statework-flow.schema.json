@@ -63,10 +63,26 @@
       },
       "additionalProperties": false
     },
-    "framework_requirements": {
-      "type": "array",
-      "items": {
-        "type": "string"
+    "integrations": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "required": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "enhancements": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          }
+        },
+        "additionalProperties": false
       }
     },
     "required_specialists": {

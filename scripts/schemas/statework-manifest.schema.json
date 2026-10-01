@@ -12,7 +12,7 @@
     "name",
     "entrypoint",
     "triggers",
-    "phase",
+    "phase_tags",
     "inputs",
     "emits",
     "context_budget",
@@ -65,9 +65,14 @@
       },
       "additionalProperties": false
     },
-    "phase": {
-      "type": "string",
-      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    "phase_tags": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_.-]{0,63}$"
+      }
     },
     "inputs": {
       "type": "object",
@@ -97,20 +102,10 @@
         "type": "string"
       }
     },
-    "framework_enhancements": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": []
-    },
-    "core_requirements": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 128
-      }
+    "advisory_entrypoint": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
     },
     "context_budget": {
       "enum": [
@@ -239,26 +234,35 @@
     },
     "integrations": {
       "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "required": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
+      "patternProperties": {
+        "^[a-z][a-z0-9_.-]{0,63}$": {
+          "type": "object",
+          "properties": {
+            "required": {
+              "type": "array",
+              "uniqueItems": true,
+              "maxItems": 32,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "enhancements": {
+              "type": "array",
+              "uniqueItems": true,
+              "maxItems": 32,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
             }
           },
-          "enhancements": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          }
-        },
-        "additionalProperties": false
-      }
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     },
     "flow_selection": {
       "type": "object",

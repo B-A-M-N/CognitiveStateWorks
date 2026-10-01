@@ -3,9 +3,9 @@ flow: debug
 states:
   through:
   - DEBUGGED
-framework_requirements:
-- owl
-- anchor
+integrations:
+  cognitiveframeworks:
+    required: [owl, anchor]
 required_specialists: []
 optional_specialists: []
 when:

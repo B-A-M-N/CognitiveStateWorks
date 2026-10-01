@@ -26,7 +26,6 @@
           "required_evidence": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
           "consequential": { "type": "boolean" },
           "path_class": { "enum": ["normal", "recovery", "failure", "invalidation", "external"] },
-          "framework_requirements": { "type": "array", "uniqueItems": true, "items": { "enum": ["owl", "anchor_open", "anchor_closeout", "dox_load", "dox_closeout", "fuse", "flow", "ward", "sispis"] } },
           "evidence_freshness": {
             "type": "object",
             "properties": {
