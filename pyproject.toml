@@ -10,9 +10,37 @@ requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = ["jsonschema>=4.18", "PyYAML>=6.0"]
 
+[project.scripts]
+cognitive-statework-compile-registry = "cognitive_statework.cli:compile_registry"
+
 [tool.setuptools]
-packages = ["cognitive_statework"]
-package-dir = {cognitive_statework = "scripts"}
+packages = [
+  "cognitive_statework",
+  "cognitive_statework.schemas",
+  "cognitive_statework.builtin",
+  "cognitive_statework.builtin.schemas",
+  "cognitive_statework.builtin.gitter",
+  "cognitive_statework.builtin.getter",
+  "cognitive_statework.builtin.tuid",
+  "cognitive_statework.builtin.infrae",
+]
+
+[tool.setuptools.package-dir]
+cognitive_statework = "scripts"
+"cognitive_statework.schemas" = "scripts/schemas"
+"cognitive_statework.builtin" = "scripts/builtin"
+"cognitive_statework.builtin.schemas" = "scripts/schemas"
+"cognitive_statework.builtin.gitter" = "gitter"
+"cognitive_statework.builtin.getter" = "getter"
+"cognitive_statework.builtin.tuid" = "tuid"
+"cognitive_statework.builtin.infrae" = "infrae"
 
 [tool.setuptools.package-data]
 cognitive_statework = ["schemas/*.json", "schemas/*.yaml"]
+"cognitive_statework.schemas" = ["*.json", "*.yaml"]
+"cognitive_statework.builtin" = ["registry.yaml"]
+"cognitive_statework.builtin.schemas" = ["*.json", "*.yaml"]
+"cognitive_statework.builtin.gitter" = ["**/*"]
+"cognitive_statework.builtin.getter" = ["**/*"]
+"cognitive_statework.builtin.tuid" = ["**/*"]
+"cognitive_statework.builtin.infrae" = ["**/*"]

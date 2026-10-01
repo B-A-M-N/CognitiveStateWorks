@@ -2,7 +2,7 @@
   "builtin_engine_hashes": {
     "flow_selector": "33f50a692126cfc2ca8237fb40d5cb4c9998afa0e30ee53d2b03c91881ba33d1",
     "milestone": "70b8da14e606c650788c474e7a3732fc7599d61819be13a01adc92ee204ee223",
-    "state_machine": "41d0b7768ddd385d026ec6ce2dec7aac57f2538d1a7b5f149c03e5213edc0339"
+    "state_machine": "e9dfb75cf5be2942848223d04622597b9aba45b0db79415142cf3a1fcec3fe18"
   },
   "evidence_registry": {
     "kinds": {
@@ -1065,7 +1065,7 @@
     }
   },
   "registry_config_hash": "d4efe61d7c37394e7e4d7fd0406b5d83c94e2b0941cf56f7c2e57a881693ef85",
-  "registry_hash": "6958d1a7a50b62f9e27cf67065df1806ef1670c5aa9dee8adac6beb8ba8570a0",
+  "registry_hash": "1ab1880acb046eab54faa4d31e40c1a7a9e77b0d6a930bd0b911e3d2872ace33",
   "registry_version": "2.0.0",
   "stateworks": [
     {

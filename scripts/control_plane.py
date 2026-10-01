@@ -32,9 +32,15 @@ except ImportError:
                                   WorkflowSnapshot)
     from flow_selectors import FlowSelector
 
-ROOT = (Path(__file__).resolve().parent
-        if (Path(__file__).resolve().parent / "schemas").is_dir()
-        else Path(__file__).resolve().parents[1])
+_CODE_ROOT = Path(__file__).resolve().parent
+_CHECKOUT_ROOT = Path(__file__).resolve().parents[1]
+_PACKAGED_BUILTIN_ROOT = _CODE_ROOT / "builtin"
+if (_CHECKOUT_ROOT / "registry.yaml").is_file():
+    ROOT = _CHECKOUT_ROOT
+elif (_PACKAGED_BUILTIN_ROOT / "registry.yaml").is_file():
+    ROOT = _PACKAGED_BUILTIN_ROOT
+else:
+    ROOT = _CODE_ROOT
 EVIDENCE_KIND_REGISTRY_PATH = ROOT / "schemas" / "evidence-kinds.yaml"
 
 
