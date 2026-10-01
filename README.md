@@ -73,7 +73,7 @@ transition with trusted evidence allowed: True
 after restart: OBSERVED revision 2
 ```
 
-The example uses the Gitter transition contract, initializes a subject through `StandaloneHostInterface`, rejects a transition without trusted evidence, accepts a repository-truth reference, and proves that state survives a new interface instance.
+The example uses the Infrae transition contract, initializes a subject through `StandaloneHostInterface`, rejects a transition without host-attested discovery evidence, and proves that state survives a new interface instance. Repository-truth transitions remain bound to their specialized validator.
 
 For a deployable enforcing installation:
 
