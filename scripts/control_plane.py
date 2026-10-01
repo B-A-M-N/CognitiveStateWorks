@@ -7,8 +7,8 @@ import copy
 import fcntl
 import hashlib
 import os
+import re
 import tempfile
-from datetime import datetime
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional
@@ -34,6 +34,18 @@ class TransitionError(ValueError):
 
 def _load_yaml(path: Path) -> Any:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def _aware_datetime(value: Any) -> datetime:
+    if not isinstance(value, str) or not value:
+        raise ValueError("timestamp must be non-empty date-time text")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("timestamp is not a valid date-time") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError("timestamp must include a timezone")
+    return parsed
 
 
 def _package_resource(relative: str):
@@ -612,7 +624,7 @@ class StandaloneStateWorkController:
         self.state_store = state_store
         self.evidence_store = evidence_store
         self.engine = TransitionEngine(dict(contract), evidence_registry=evidence_registry,
-                                       require_registered=False, evidence_store=evidence_store)
+                                       require_registered=True, evidence_store=evidence_store)
         self.entry_times: Dict[str, str] = {}
         initial = contract.get("initial_state")
         if not isinstance(initial, str) or not initial:
@@ -651,22 +663,31 @@ class StandaloneStateWorkController:
                 f"subject state revision conflict: expected {expected_revision}, "
                 f"found {snapshot.get('revision', 0)}; re-inspect required")
         from_state = str(snapshot.get("state"))
-        resolved = self.evidence_store.resolve(list(evidence_refs))
+        references = list(evidence_refs)
+        resolved = self.evidence_store.resolve(references)
         edges = self.engine.matching_edges(from_state, to_state, trigger)
         freshness = (edges[0].get("evidence_freshness") if len(edges) == 1 else {}) or {}
         entry = self.entry_times.get(from_state) or snapshot.get("updated_at")
+        required_kinds = set(edges[0].get("required_evidence") or []) if len(edges) == 1 else set()
+        relevant = [item for item in resolved if item.get("kind") in required_kinds]
         if freshness.get("mode") == "after_state_entry" and entry:
-            for item in resolved:
-                if str(item.get("observed_at")) < str(entry):
-                    return TransitionDecision(False, "evidence predates current state entry", from_state, to_state, trigger, list(self.engine.matching_edges(from_state, to_state, trigger)[0].get("required_evidence", [])))
+            try:
+                entry_at = _aware_datetime(entry)
+                for item in relevant:
+                    if _aware_datetime(item.get("observed_at")) < entry_at:
+                        return TransitionDecision(
+                            False, "evidence predates current state entry", from_state,
+                            to_state, trigger, list(edges[0].get("required_evidence", [])))
+            except ValueError as exc:
+                return TransitionDecision(False, str(exc), from_state, to_state, trigger)
         max_age = freshness.get("max_age_seconds")
         if max_age is not None:
             now = datetime.now(timezone.utc)
-            for item in resolved:
+            for item in relevant:
                 try:
-                    observed = datetime.fromisoformat(str(item.get("observed_at")).replace("Z", "+00:00"))
-                except ValueError:
-                    return TransitionDecision(False, "evidence has invalid observed_at", from_state, to_state, trigger)
+                    observed = _aware_datetime(item.get("observed_at"))
+                except ValueError as exc:
+                    return TransitionDecision(False, str(exc), from_state, to_state, trigger)
                 if (now - observed).total_seconds() > int(max_age):
                     return TransitionDecision(False, "evidence exceeds declared freshness", from_state, to_state, trigger)
         decision = self.engine.transition(
@@ -674,7 +695,7 @@ class StandaloneStateWorkController:
             trigger=trigger, evidence_refs=resolved)
         if not decision.allowed:
             return decision
-        transition_record = {"trigger": trigger, "evidence_refs": list(evidence_refs),
+        transition_record = {"trigger": trigger, "evidence_refs": references,
                              "decision_reason": decision.reason,
                              "progress": decision.progress_facts()}
         self.state_store.commit(
@@ -706,23 +727,20 @@ class TransitionDecision:
     edge_id: Optional[str] = None
     path_class: Optional[str] = None
     progress_class: str = "LATERAL"
+    work_class: Optional[str] = None
+    domain_effect: Optional[str] = None
     normal_path_rank_before: Optional[int] = None
     normal_path_rank_after: Optional[int] = None
 
     def progress_facts(self) -> Dict[str, Any]:
         return {"edge_id": self.edge_id, "path_class": self.path_class,
                 "progress_class": self.progress_class,
+                "work_class": self.work_class, "domain_effect": self.domain_effect,
                 "normal_path_rank_before": self.normal_path_rank_before,
                 "normal_path_rank_after": self.normal_path_rank_after}
 
     def is_forward_progress(self) -> bool:
-        if self.progress_class == "FORWARD_PROGRESS":
-            return True
-        before = self.normal_path_rank_before
-        after = self.normal_path_rank_after
-        if before is None or after is None:
-            return False
-        return int(after) > int(before)
+        return self.progress_class in {"FORWARD_PROGRESS", "TERMINAL"}
 
 
 class TransitionEngine:
@@ -746,8 +764,6 @@ class TransitionEngine:
         self.completion_states = set(contract.get("completion_states") or [])
         self.normal_path = list(contract.get("normal_path") or [])
         self._normal_rank = {state: index for index, state in enumerate(self.normal_path)}
-        self.failure_states = {"DEFECTIVE", "DEGRADED", "RECOVERY", "FALLBACK"}
-
         registry = evidence_registry
         if registry is None:
             try:
@@ -757,7 +773,14 @@ class TransitionEngine:
         self.evidence_registry = dict((registry or {}).get("kinds") or {})
         self.require_registered = require_registered
         self.evidence_store = evidence_store
+        edge_ids: set[str] = set()
         for edge in transitions:
+            edge_id = edge.get("id")
+            if not isinstance(edge_id, str) or not edge_id.strip() or len(edge_id) > 128:
+                raise TransitionError("every transition requires a stable bounded id")
+            if edge_id in edge_ids:
+                raise TransitionError(f"duplicate transition id {edge_id!r}")
+            edge_ids.add(edge_id)
             origin = edge.get("from")
             destination = edge.get("to")
             if origin != "*" and origin not in self.states:
@@ -769,11 +792,31 @@ class TransitionEngine:
             required = edge.get("required_evidence") or []
             if not required or any(not isinstance(kind, str) or not kind for kind in required):
                 raise TransitionError(f"transition {origin!r} -> {destination!r} requires evidence kinds")
-            if require_registered:
+            if (not edge.get("work_class") or not edge.get("domain_effect")
+                    or edge.get("progress_class") not in PROGRESS_CLASSES):
+                raise TransitionError(
+                    f"transition {edge_id!r} requires work_class, domain_effect, and progress_class")
+            path_class = edge.get("path_class")
+            if path_class is not None and path_class not in {
+                    "normal", "recovery", "failure", "invalidation", "external"}:
+                raise TransitionError(f"transition {edge_id!r} has an unsupported path_class")
+            if edge.get("path_class") == "external" and edge.get("progress_class") != "INVALIDATION":
+                raise TransitionError("external transitions must classify progress as INVALIDATION")
+            if (path_class in {"failure", "invalidation"}
+                    and edge.get("progress_class") not in {"INVALIDATION", "TERMINAL"}):
+                raise TransitionError(
+                    "failure and invalidation paths must classify progress as INVALIDATION unless terminal")
+            if path_class == "recovery" and edge.get("progress_class") not in {"RECOVERY", "TERMINAL"}:
+                raise TransitionError("recovery paths must classify progress as RECOVERY or TERMINAL")
+            entering_completion = destination in self.completion_states
+            if entering_completion != (edge.get("progress_class") == "TERMINAL"):
+                raise TransitionError(
+                    f"transition {edge_id!r} must classify completion-state entry as TERMINAL")
+            if require_registered and self._is_consequential(edge, str(destination)):
                 missing = [kind for kind in required if kind not in self.evidence_registry]
                 if missing:
                     raise TransitionError(
-                        f"transition {origin!r} -> {destination!r} uses unregistered evidence kinds: {missing}")
+                        f"consequential transition {edge_id!r} uses unregistered evidence kinds: {missing}")
 
     def _progress_facts(self, edge: Mapping[str, Any], from_state: str,
                         to_state: str) -> Dict[str, Any]:
@@ -781,33 +824,17 @@ class TransitionEngine:
         before = self._normal_rank.get(from_state)
         after = self._normal_rank.get(to_state)
         path_class = str(edge.get("path_class") or ("normal" if after is not None else "unranked"))
-        if path_class == "failure":
-            progress_class = "INVALIDATION"
-        elif path_class == "recovery":
-            progress_class = "RECOVERY"
-        elif to_state in self.failure_states:
-            progress_class = "INVALIDATION"
-        elif before is not None and after is not None:
-            if after > before:
-                progress_class = "FORWARD_PROGRESS"
-            elif after == before:
-                progress_class = "LATERAL"
-            else:
-                progress_class = "REGRESSION"
-        elif to_state in self.completion_states:
-            progress_class = "TERMINAL"
-        else:
-            progress_class = "LATERAL"
-        return {"edge_id": edge.get("id"),
+        progress_class = str(edge["progress_class"])
+        return {"edge_id": edge["id"],
                 "path_class": path_class,
                 "progress_class": progress_class,
+                "work_class": str(edge["work_class"]),
+                "domain_effect": str(edge["domain_effect"]),
                 "normal_path_rank_before": before,
                 "normal_path_rank_after": after}
 
     def _is_consequential(self, edge: Mapping[str, Any], to_state: str) -> bool:
-        if edge.get("consequential") is not None:
-            return bool(edge["consequential"])
-        return any(kind in self.evidence_registry for kind in (edge.get("required_evidence") or ()))
+        return edge.get("consequential") is True
 
     def _evidence_is_valid(self, kind: str, item: Mapping[str, Any], *, consequential: bool = False) -> bool:
         spec = self.evidence_registry.get(kind)
@@ -944,7 +971,35 @@ class StandaloneHostInterface:
         return controller.inspect()
 
     def submit_attested_observation(self, record: Mapping[str, Any]) -> str:
-        ref = self.evidence_store.create(record)
+        if not isinstance(record, Mapping):
+            raise TransitionError("observation must be a mapping")
+        candidate = dict(record)
+        kind = candidate.get("kind")
+        registry = load_evidence_kind_registry(self.root / "schemas" / "evidence-kinds.yaml")
+        spec = (registry.get("kinds") or {}).get(kind)
+        if spec:
+            if not spec.get("mintable_by_host"):
+                raise TransitionError(
+                    f"evidence kind {kind!r} requires its registered specialized issuer")
+            if len(spec.get("allowed_issuers") or []) != 1:
+                raise TransitionError(f"host-minted evidence kind {kind!r} has ambiguous issuers")
+            metadata = {
+                "issuer": spec["allowed_issuers"][0],
+                "validator": spec["validator"],
+                "schema": spec["schema"],
+            }
+            for key, value in metadata.items():
+                if key in candidate and candidate[key] != value:
+                    raise TransitionError(f"caller cannot declare trusted evidence field {key!r}")
+                candidate[key] = value
+            if not isinstance(candidate.get("subject_ref"), str) or not candidate["subject_ref"]:
+                raise TransitionError("registered evidence requires subject_ref")
+            _aware_datetime(candidate.get("observed_at"))
+            digest = candidate.get("content_digest")
+            if not isinstance(digest, str) or not re.fullmatch(r"[a-fA-F0-9]{64}", digest):
+                raise TransitionError(
+                    "registered evidence requires a SHA-256 content_digest from the host observation")
+        ref = self.evidence_store.create(candidate)
         self.evidence_store.save(self.evidence_path)
         return ref
 

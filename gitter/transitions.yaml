@@ -13,16 +13,28 @@ transitions:
 - from: UNKNOWN
   to: OBSERVED
   trigger: observe
+  id: gitter.unknown.observe.observed
+  work_class: observation
+  domain_effect: establish_repository_truth
+  progress_class: TERMINAL
   consequential: true
   required_evidence: [repository_truth]
 - from: OBSERVED
   to: STALE
   trigger: invalidate
+  id: gitter.observed.invalidate.stale
+  work_class: invalidation
+  domain_effect: invalidate_repository_truth
+  progress_class: INVALIDATION
   required_evidence: [invalidation]
   path_class: invalidation
 - from: STALE
   to: UNKNOWN
   trigger: reobserve
+  id: gitter.stale.reobserve.unknown
+  work_class: recovery
+  domain_effect: invalidate_repository_observation
+  progress_class: RECOVERY
   consequential: true
   required_evidence: [reinspection]
   path_class: recovery

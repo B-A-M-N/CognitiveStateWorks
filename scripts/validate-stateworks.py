@@ -189,9 +189,9 @@ def main() -> int:
             continue
         try:
             jsonschema.validate(instance=contract, schema=transition_schema)
-            # Ordinary StateWork observations remain extensible; semantic
-            # authority names are still registry-validated by TransitionEngine.
-            TransitionEngine(contract, evidence_registry=evidence_registry, require_registered=False)
+            # Consequential edges must use evidence kinds registered by the host.
+            # Ordinary observation edges may still use StateWork-specific kinds.
+            TransitionEngine(contract, evidence_registry=evidence_registry, require_registered=True)
         except Exception as exc:
             problems.append(f"{name}: invalid transition contract: {exc}")
             continue

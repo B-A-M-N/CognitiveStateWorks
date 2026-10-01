@@ -7,6 +7,12 @@ kinds:
     allowed_issuers: ["validator:repository-truth-v1"]
     validator: repository-truth-v1
     schema: repository-truth-packet.schema.json
+  reinspection:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
   authority:
     authoritative: true
     allowed_issuers: ["host:authorization"]
@@ -27,3 +33,105 @@ kinds:
     allowed_issuers: ["host:rollback-plan"]
     validator: rollback-plan-v1
     schema: rollback-plan-v1
+  plan:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  invariants:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  change_gate:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  effective_state:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  regression_check:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  verified_invariants:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  operational_health:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  service_restored:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  state_integrity:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  redundancy:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  monitoring:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  decommission_checklist:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  implementation:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  interaction_evidence:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  validation_evidence:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  operational_evidence:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  recovery_evidence:
+    authoritative: true
+    allowed_issuers: ["host:statework-observation"]
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true

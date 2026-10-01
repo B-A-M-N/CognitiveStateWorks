@@ -1,12 +1,27 @@
 #!/usr/bin/env python3
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.control_plane import PacketStore, TransitionEngine  # noqa: E402
+
+
+def edge(origin, destination, trigger, required, *, progress="LATERAL", **metadata):
+    edge_id = metadata.pop("id", f"test.{origin}.{trigger}.{destination}".lower().replace("*", "any"))
+    return {
+        "id": edge_id,
+        "from": origin,
+        "to": destination,
+        "trigger": trigger,
+        "required_evidence": list(required),
+        "work_class": metadata.pop("work_class", "test"),
+        "domain_effect": metadata.pop("domain_effect", f"enter_{destination.lower()}"),
+        "progress_class": progress,
+        **metadata,
+    }
 
 
 def main() -> int:
@@ -44,8 +59,8 @@ def main() -> int:
         "states": ["UNKNOWN", "OBSERVED", "MODELED"],
         "completion_states": ["MODELED"],
         "transitions": [
-            {"from": "UNKNOWN", "to": "OBSERVED", "trigger": "discover", "required_evidence": ["e1"]},
-            {"from": "OBSERVED", "to": "MODELED", "trigger": "model", "required_evidence": ["e1", "e2"]},
+            edge("UNKNOWN", "OBSERVED", "discover", ["e1"], progress="FORWARD_PROGRESS"),
+            edge("OBSERVED", "MODELED", "model", ["e1", "e2"], progress="TERMINAL"),
         ],
     })
     legal_evidence = [
@@ -66,8 +81,8 @@ def main() -> int:
     wildcard = TransitionEngine({
         "initial_state": "UNKNOWN", "states": ["UNKNOWN", "DEFECTIVE"],
         "completion_states": ["UNKNOWN"],
-        "transitions": [{"from": "*", "to": "DEFECTIVE", "trigger": "violation",
-                         "required_evidence": ["violation"]}],
+        "transitions": [edge("*", "DEFECTIVE", "violation", ["violation"],
+                              progress="INVALIDATION", path_class="external")],
     })
     check("wildcard transition executes",
           wildcard.transition("s", "UNKNOWN", "DEFECTIVE", trigger="violation",
@@ -78,8 +93,7 @@ def main() -> int:
     reordered = TransitionEngine({
         "initial_state": "UNKNOWN", "states": ["OBSERVED", "UNKNOWN"],
         "completion_states": ["OBSERVED"],
-        "transitions": [{"from": "UNKNOWN", "to": "OBSERVED", "trigger": "discover",
-                         "required_evidence": ["e1"]}],
+        "transitions": [edge("UNKNOWN", "OBSERVED", "discover", ["e1"], progress="TERMINAL")],
     })
     check("transition initialization honors initial_state",
           reordered.transition("subject", "UNKNOWN", "OBSERVED", trigger="discover",
@@ -93,6 +107,21 @@ def main() -> int:
         check("missing initial_state rejected", False)
     except Exception:
         check("missing initial_state rejected", True)
+    try:
+        TransitionEngine({"initial_state": "UNKNOWN", "states": ["UNKNOWN", "CHANGING"],
+                          "transitions": [edge("UNKNOWN", "CHANGING", "mutate", ["authority"],
+                                                progress="FORWARD_PROGRESS", consequential=True)]},
+                         evidence_registry={"kinds": {}}, require_registered=True)
+        check("unregistered consequential evidence rejected", False)
+    except Exception:
+        check("unregistered consequential evidence rejected", True)
+    try:
+        TransitionEngine({"initial_state": "UNKNOWN", "states": ["UNKNOWN", "INCIDENT"],
+                          "transitions": [edge("*", "INCIDENT", "incident", ["failure"],
+                                                progress="FORWARD_PROGRESS", path_class="external")]})
+        check("external transition must be classified as invalidation", False)
+    except Exception:
+        check("external transition must be classified as invalidation", True)
 
     from scripts.control_plane import EvidenceStore, SubjectStateStore, TransitionError
     import tempfile
@@ -108,7 +137,7 @@ def main() -> int:
         except TransitionError:
             check("stale subject writer rejected", True)
         attested = EvidenceStore([{"ref": "auth-1", "kind": "authority", "subject_ref": "repo", "observed_at": "2026-01-01T00:00:00Z", "issuer": "host:authorization", "validator": "host-authorization-v1", "schema": "authority-record-v1"}])
-        contract = {"initial_state": "UNKNOWN", "states": ["UNKNOWN", "CHANGING"], "transitions": [{"from": "UNKNOWN", "to": "CHANGING", "trigger": "mutate", "required_evidence": ["authority"]}]}
+        contract = {"initial_state": "UNKNOWN", "states": ["UNKNOWN", "CHANGING"], "transitions": [edge("UNKNOWN", "CHANGING", "mutate", ["authority"], progress="FORWARD_PROGRESS", consequential=True)]}
         engine = TransitionEngine(contract, evidence_registry={"kinds": {"authority": {"authoritative": True, "allowed_issuers": ["host:authorization"], "validator": "host-authorization-v1", "schema": "authority-record-v1"}}}, evidence_store=attested)
         check("trusted reference authorizes consequential transition", engine.transition("repo", "UNKNOWN", "CHANGING", trigger="mutate", evidence_refs=["auth-1"]).allowed)
         check("caller-declared authority metadata is not trusted", not engine.transition("repo", "UNKNOWN", "CHANGING", trigger="mutate", evidence_refs=[{"ref": "forged-auth", "kind": "authority", "subject_ref": "repo", "observed_at": "2026-01-01T00:00:00Z", "issuer": "host:authorization", "validator": "host-authorization-v1", "schema": "authority-record-v1"}]).allowed)
@@ -147,9 +176,20 @@ def main() -> int:
             check("mismatched StateWork identity rejected", True)
         freshness_store = SubjectStateStore(Path(raw) / "freshness-state.json")
         freshness_evidence = EvidenceStore([{"ref": "fresh-old", "kind": "authority", "subject_ref": "repo", "observed_at": "2020-01-01T00:00:00Z", "issuer": "host:authorization", "validator": "host-authorization-v1", "schema": "authority-record-v1"}])
-        freshness_contract = {"initial_state": "UNKNOWN", "states": ["UNKNOWN", "CHANGING"], "transitions": [{"from": "UNKNOWN", "to": "CHANGING", "trigger": "mutate", "required_evidence": ["authority"], "evidence_freshness": {"mode": "after_state_entry", "max_age_seconds": 60}}]}
+        freshness_contract = {"initial_state": "UNKNOWN", "states": ["UNKNOWN", "CHANGING"], "transitions": [edge("UNKNOWN", "CHANGING", "mutate", ["authority"], progress="FORWARD_PROGRESS", consequential=True, evidence_freshness={"mode": "after_state_entry", "max_age_seconds": 60})]}
         fresh_controller = StandaloneStateWorkController(contract=freshness_contract, identity=identity, state_store=freshness_store, evidence_store=freshness_evidence, evidence_registry={"kinds": {"authority": {"authoritative": True, "allowed_issuers": ["host:authorization"], "validator": "host-authorization-v1", "schema": "authority-record-v1"}}})
         check("freshness rejects evidence predating state entry", not fresh_controller.request_transition(to_state="CHANGING", trigger="mutate", evidence_refs=["fresh-old"], expected_revision=fresh_controller.inspect()["revision"]).allowed)
+        entry = datetime.now(timezone.utc).replace(microsecond=0)
+        fresh_controller.entry_times["UNKNOWN"] = entry.isoformat().replace("+00:00", "Z")
+        offset_observed = entry.astimezone(timezone(timedelta(hours=-5))).isoformat()
+        freshness_evidence.create({"ref": "fresh-offset", "kind": "authority", "subject_ref": "repo",
+                                  "observed_at": offset_observed, "issuer": "host:authorization",
+                                  "validator": "host-authorization-v1", "schema": "authority-record-v1",
+                                  "content_digest": "offset-evidence"})
+        check("timezone-offset evidence compares by instant",
+              fresh_controller.request_transition(to_state="CHANGING", trigger="mutate",
+                  evidence_refs=["fresh-offset"],
+                  expected_revision=fresh_controller.inspect()["revision"]).allowed)
         with tempfile.TemporaryDirectory(prefix="statework-tamper-") as tamper_raw:
             evidence_path = Path(tamper_raw) / "evidence.json"
             trusted = EvidenceStore()
@@ -175,12 +215,12 @@ def main() -> int:
         cycle_state = SubjectStateStore(Path(raw) / "cycle-state.json")
         cycle_evidence = EvidenceStore()
         cycle_contract = {"initial_state": "A", "states": ["A", "B"], "transitions": [
-            {"from": "A", "to": "B", "trigger": "advance", "required_evidence": ["authority"], "evidence_freshness": {"mode": "after_state_entry"}},
-            {"from": "B", "to": "A", "trigger": "return", "required_evidence": ["authority"], "evidence_freshness": {"mode": "after_state_entry"}}]}
-        cycle = StandaloneStateWorkController(contract=cycle_contract, identity=identity, state_store=cycle_state, evidence_store=cycle_evidence, evidence_registry={"kinds": {}})
-        cycle_evidence.create({"ref": "after-initial-a", "kind": "authority", "subject_ref": "repo", "observed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "issuer": "host:test", "content_digest": "a"})
+            edge("A", "B", "advance", ["authority"], progress="FORWARD_PROGRESS", consequential=True, evidence_freshness={"mode": "after_state_entry"}),
+            edge("B", "A", "return", ["authority"], progress="RECOVERY", consequential=True, evidence_freshness={"mode": "after_state_entry"})]}
+        cycle = StandaloneStateWorkController(contract=cycle_contract, identity=identity, state_store=cycle_state, evidence_store=cycle_evidence, evidence_registry={"kinds": {"authority": {"authoritative": True, "allowed_issuers": ["host:test"], "validator": "host-test-v1", "schema": "test-evidence-v1"}}})
+        cycle_evidence.create({"ref": "after-initial-a", "kind": "authority", "subject_ref": "repo", "observed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "issuer": "host:test", "validator": "host-test-v1", "schema": "test-evidence-v1", "content_digest": "a"})
         check("cycle A to B", cycle.request_transition(to_state="B", trigger="advance", evidence_refs=["after-initial-a"], expected_revision=cycle.inspect()["revision"]).allowed)
-        cycle_evidence.create({"ref": "after-b", "kind": "authority", "subject_ref": "repo", "observed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "issuer": "host:test", "content_digest": "b"})
+        cycle_evidence.create({"ref": "after-b", "kind": "authority", "subject_ref": "repo", "observed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "issuer": "host:test", "validator": "host-test-v1", "schema": "test-evidence-v1", "content_digest": "b"})
         check("cycle B to A", cycle.request_transition(to_state="A", trigger="return", evidence_refs=["after-b"], expected_revision=cycle.inspect()["revision"]).allowed)
         # Progress metadata: a recovery hop must not be reported as forward
         # progress, or CFW would silently reset its no-progress budget.
@@ -188,10 +228,10 @@ def main() -> int:
             "completion_states": ["VERIFIED"],
             "normal_path": ["PLANNED", "CHANGING", "VERIFIED"],
             "transitions": [
-                {"from": "PLANNED", "to": "CHANGING", "trigger": "start", "required_evidence": ["authority"]},
-                {"from": "CHANGING", "to": "VERIFIED", "trigger": "verify", "required_evidence": ["authority"]},
-                {"from": "CHANGING", "to": "RECOVERY", "trigger": "fail", "required_evidence": ["authority"], "path_class": "recovery"},
-                {"from": "RECOVERY", "to": "PLANNED2", "trigger": "replan", "required_evidence": ["authority"], "path_class": "recovery"}]}
+                edge("PLANNED", "CHANGING", "start", ["authority"], progress="FORWARD_PROGRESS"),
+                edge("CHANGING", "VERIFIED", "verify", ["authority"], progress="TERMINAL"),
+                edge("CHANGING", "RECOVERY", "fail", ["authority"], progress="RECOVERY", path_class="recovery"),
+                edge("RECOVERY", "PLANNED2", "replan", ["authority"], progress="RECOVERY", path_class="recovery")]}
         progress_kinds = {"kinds": {"authority": {"authoritative": True,
             "allowed_issuers": ["host:authorization"],
             "validator": "host-authorization-v1", "schema": "authority-record-v1"}}}
@@ -209,7 +249,7 @@ def main() -> int:
         recovery = progress_engine.transition("repo", "CHANGING", "RECOVERY", trigger="fail",
                                              evidence_refs=["pa-3"])
         check("forward transition reports FORWARD_PROGRESS", forward.progress_class == "FORWARD_PROGRESS" and forward.is_forward_progress(), forward.progress_class)
-        check("reaching completion state is forward progress", terminal.progress_class == "FORWARD_PROGRESS" and terminal.is_forward_progress(), terminal.progress_class)
+        check("reaching completion state is terminal forward progress", terminal.progress_class == "TERMINAL" and terminal.is_forward_progress(), terminal.progress_class)
         check("recovery hop is not forward progress", recovery.progress_class == "RECOVERY" and not recovery.is_forward_progress(), recovery.progress_class)
         check("second A uses latest entry freshness", not cycle.request_transition(to_state="B", trigger="advance", evidence_refs=["after-initial-a"], expected_revision=cycle.inspect()["revision"]).allowed)
 

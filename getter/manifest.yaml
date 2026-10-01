@@ -1,4 +1,6 @@
 id: getter
+domain: repository_state
+purpose: Safely change Git repository state under evidence-backed authorization.
 name: Getter
 entrypoint: getter/SKILL.md
 triggers:

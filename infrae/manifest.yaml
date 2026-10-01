@@ -1,4 +1,6 @@
 id: infrae
+domain: infrastructure_state
+purpose: Model and control infrastructure changes using bounded evidence and recovery paths.
 name: Infrae
 entrypoint: infrae/STATEWORK.md
 triggers:

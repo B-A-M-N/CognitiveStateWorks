@@ -30,87 +30,159 @@ transitions:
 - from: UNKNOWN
   to: OBSERVED
   trigger: discover
+  id: infrae.unknown.discover.observed
+  work_class: observation
+  domain_effect: capture_infrastructure_state
+  progress_class: FORWARD_PROGRESS
   required_evidence: [discovery]
 - from: OBSERVED
   to: MODELED
   trigger: model
+  id: infrae.observed.model.modeled
+  work_class: modeling
+  domain_effect: model_infrastructure_topology
+  progress_class: FORWARD_PROGRESS
   required_evidence: [observed_model]
 - from: MODELED
   to: ASSESSED
   trigger: assess
+  id: infrae.modeled.assess.assessed
+  work_class: assessment
+  domain_effect: assess_infrastructure_risk
+  progress_class: FORWARD_PROGRESS
   required_evidence: [assessment]
 - from: ASSESSED
   to: PLANNED
   trigger: design
+  id: infrae.assessed.design.planned
+  work_class: planning
+  domain_effect: record_infrastructure_change_plan
+  progress_class: FORWARD_PROGRESS
   consequential: true
   required_evidence: [plan, invariants, rollback]
 - from: PLANNED
   to: CHANGING
   trigger: mutate
+  id: infrae.planned.mutate.changing
+  work_class: mutation
+  domain_effect: apply_infrastructure_change
+  progress_class: FORWARD_PROGRESS
   consequential: true
   required_evidence: [change_gate, authority]
 - from: CHANGING
   to: VERIFIED
   trigger: validate
+  id: infrae.changing.validate.verified
+  work_class: validation
+  domain_effect: verify_infrastructure_change
+  progress_class: FORWARD_PROGRESS
   consequential: true
   required_evidence: [effective_state, regression_check]
 - from: VERIFIED
   to: STABLE
   trigger: stabilize
+  id: infrae.verified.stabilize.stable
+  work_class: validation
+  domain_effect: confirm_operational_stability
+  progress_class: TERMINAL
   consequential: true
   required_evidence: [verified_invariants, operational_health]
 - from: VERIFIED
   to: DEGRADED
   trigger: invalidate
+  id: infrae.verified.invalidate.degraded
+  work_class: invalidation
+  domain_effect: invalidate_operational_stability
+  progress_class: INVALIDATION
   required_evidence: [invalidation]
   path_class: invalidation
 - from: STABLE
   to: DEGRADED
   trigger: invalidate
+  id: infrae.stable.invalidate.degraded
+  work_class: invalidation
+  domain_effect: invalidate_operational_stability
+  progress_class: INVALIDATION
   required_evidence: [invalidation]
   path_class: invalidation
 - from: CHANGING
   to: DEGRADED
   trigger: invariant_violation
+  id: infrae.changing.invariant_violation.degraded
+  work_class: invalidation
+  domain_effect: invalidate_operational_stability
+  progress_class: INVALIDATION
   required_evidence: [violation]
   path_class: failure
 - from: DEGRADED
   to: RECOVERING
   trigger: recover
+  id: infrae.degraded.recover.recovering
+  work_class: recovery
+  domain_effect: begin_infrastructure_recovery
+  progress_class: RECOVERY
   required_evidence: [recovery_plan]
   path_class: recovery
 - from: INCIDENT
   to: RECOVERING
   trigger: recover
+  id: infrae.incident.recover.recovering
+  work_class: recovery
+  domain_effect: begin_infrastructure_recovery
+  progress_class: RECOVERY
   required_evidence: [recovery_plan]
   path_class: recovery
 - from: RECOVERING
   to: STABLE
   trigger: stabilize
+  id: infrae.recovering.stabilize.stable
+  work_class: validation
+  domain_effect: confirm_operational_stability
+  progress_class: TERMINAL
   consequential: true
   required_evidence: [service_restored, state_integrity, redundancy, monitoring]
   path_class: recovery
 - from: ASSESSED
   to: BLOCKED
   trigger: block
+  id: infrae.assessed.block.blocked
+  work_class: blocking
+  domain_effect: block_unsafe_infrastructure_work
+  progress_class: LATERAL
   required_evidence: [unknown_ownership]
 - from: ASSESSED
   to: RETIRED
   trigger: decommission
+  id: infrae.assessed.decommission.retired
+  work_class: retirement
+  domain_effect: retire_infrastructure_resource
+  progress_class: TERMINAL
   consequential: true
   required_evidence: [decommission_checklist]
 - from: BLOCKED
   to: RETIRED
   trigger: decommission
+  id: infrae.blocked.decommission.retired
+  work_class: retirement
+  domain_effect: retire_infrastructure_resource
+  progress_class: TERMINAL
   consequential: true
   required_evidence: [decommission_checklist]
   path_class: failure
 - from: PLANNED
   to: BLOCKED
   trigger: block
+  id: infrae.planned.block.blocked
+  work_class: blocking
+  domain_effect: block_unsafe_infrastructure_work
+  progress_class: LATERAL
   required_evidence: [unacceptable_risk]
 - from: "*"
   to: INCIDENT
   trigger: incident
+  id: infrae.any.incident.incident
+  work_class: incident
+  domain_effect: record_infrastructure_incident
+  progress_class: INVALIDATION
   required_evidence: [catastrophic_failure]
   path_class: external

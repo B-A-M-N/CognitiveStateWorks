@@ -1,4 +1,6 @@
 id: tuid
+domain: terminal_interface_state
+purpose: Model, implement, exercise, and validate terminal interface behavior.
 name: tui'd
 entrypoint: tuid/SKILL.md
 triggers:

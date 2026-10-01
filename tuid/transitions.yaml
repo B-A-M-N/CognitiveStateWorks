@@ -29,84 +29,152 @@ transitions:
 - from: UNKNOWN
   to: OBSERVED
   trigger: discover
+  id: tuid.unknown.discover.observed
+  work_class: observation
+  domain_effect: capture_rendered_state
+  progress_class: FORWARD_PROGRESS
   required_evidence: [rendered_observation]
 - from: OBSERVED
   to: MODELED
   trigger: model
+  id: tuid.observed.model.modeled
+  work_class: modeling
+  domain_effect: record_terminal_state_model
+  progress_class: FORWARD_PROGRESS
   required_evidence: [state_model]
 - from: MODELED
   to: DESIGNED
   trigger: design
+  id: tuid.modeled.design.designed
+  work_class: planning
+  domain_effect: record_terminal_interaction_design
+  progress_class: FORWARD_PROGRESS
   required_evidence: [interaction_model]
 - from: DESIGNED
   to: IMPLEMENTED
   trigger: implement
+  id: tuid.designed.implement.implemented
+  work_class: mutation
+  domain_effect: apply_terminal_implementation
+  progress_class: FORWARD_PROGRESS
   consequential: true
   required_evidence: [implementation]
 - from: IMPLEMENTED
   to: EXERCISABLE
   trigger: interact
+  id: tuid.implemented.interact.exercisable
+  work_class: interaction
+  domain_effect: record_terminal_interaction
+  progress_class: FORWARD_PROGRESS
   consequential: true
   required_evidence: [interaction_evidence]
 - from: EXERCISABLE
   to: VALIDATED
   trigger: validate
+  id: tuid.exercisable.validate.validated
+  work_class: validation
+  domain_effect: validate_terminal_behavior
+  progress_class: TERMINAL
   consequential: true
   required_evidence: [validation_evidence]
 - from: VALIDATED
   to: STABLE
   trigger: operate
+  id: tuid.validated.operate.stable
+  work_class: operation
+  domain_effect: operate_validated_terminal_ui
+  progress_class: TERMINAL
   consequential: true
   required_evidence: [operational_evidence]
   path_class: normal
 - from: VALIDATED
   to: DEGRADED
   trigger: invalidate
+  id: tuid.validated.invalidate.degraded
+  work_class: invalidation
+  domain_effect: invalidate_terminal_behavior
+  progress_class: INVALIDATION
   required_evidence: [invalidation]
   path_class: invalidation
 - from: STABLE
   to: DEGRADED
   trigger: invalidate
+  id: tuid.stable.invalidate.degraded
+  work_class: invalidation
+  domain_effect: invalidate_terminal_behavior
+  progress_class: INVALIDATION
   required_evidence: [invalidation]
   path_class: invalidation
 - from: "*"
   to: DEFECTIVE
   trigger: invariant_violation
+  id: tuid.any.invariant_violation.defective
+  work_class: invalidation
+  domain_effect: record_terminal_invariant_violation
+  progress_class: INVALIDATION
   required_evidence: [violation]
   path_class: failure
 - from: DEFECTIVE
   to: DEBUGGED
   trigger: debug
+  id: tuid.defective.debug.debugged
+  work_class: recovery
+  domain_effect: record_terminal_debug_result
+  progress_class: RECOVERY
   required_evidence: [debug_evidence]
   path_class: recovery
 - from: DEFECTIVE
   to: RECOVERY
   trigger: recover
+  id: tuid.defective.recover.recovery
+  work_class: recovery
+  domain_effect: begin_terminal_recovery
+  progress_class: RECOVERY
   required_evidence: [recovery_plan]
   path_class: recovery
 - from: DEGRADED
   to: RECOVERY
   trigger: recover
+  id: tuid.degraded.recover.recovery
+  work_class: recovery
+  domain_effect: begin_terminal_recovery
+  progress_class: RECOVERY
   required_evidence: [recovery_plan]
   path_class: recovery
 - from: RECOVERY
   to: DEBUGGED
   trigger: debug
+  id: tuid.recovery.debug.debugged
+  work_class: recovery
+  domain_effect: record_terminal_debug_result
+  progress_class: RECOVERY
   required_evidence: [debug_evidence]
   path_class: recovery
 - from: RECOVERY
   to: FALLBACK
   trigger: fallback
+  id: tuid.recovery.fallback.fallback
+  work_class: recovery
+  domain_effect: activate_terminal_fallback
+  progress_class: RECOVERY
   required_evidence: [fallback_plan]
   path_class: recovery
 - from: FALLBACK
   to: IMPLEMENTED
   trigger: restore
+  id: tuid.fallback.restore.implemented
+  work_class: recovery
+  domain_effect: apply_terminal_implementation
+  progress_class: RECOVERY
   consequential: true
   required_evidence: [implementation, recovery_evidence]
   path_class: recovery
 - from: DEBUGGED
   to: EXERCISABLE
   trigger: reexercise
+  id: tuid.debugged.reexercise.exercisable
+  work_class: validation
+  domain_effect: record_terminal_interaction
+  progress_class: RECOVERY
   required_evidence: [debug_evidence, interaction_evidence]
   path_class: recovery
