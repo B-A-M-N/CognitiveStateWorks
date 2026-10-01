@@ -92,6 +92,18 @@ That product contains the controller, schemas, compiled StateWork bundles, flows
 - **CSW + DP:** DP may rank and request activation of an eligible StateWork. CSW checks the composition and selection revision, then records the active set; DP cannot create eligibility, weaken a transition contract, or rewrite workflow state.
 - **CSW + CFW + DP:** CFW supplies cognitive components and action enforcement, DP coordinates behavior through explicit ports, and CSW remains the authority for workflow selection, state, evidence, and legal transitions.
 
+| Deployment | CSW role | Other-system requirement |
+| --- | --- | --- |
+| **CSW alone** | Workflow selection, durable subject state, evidence, and legal transitions | None |
+| **CFW alone** | Not loaded | CFW resolves components and action enforcement independently |
+| **CFW + CSW** | Authoritative workflow state and evidence | CFW supplies task components and action guards; DP is not required |
+| **CFW + CSW + DP** | Authoritative workflow state, candidate eligibility, and transition enforcement | DP coordinates behavioral interventions; CFW supplies signals and validates component directives |
+
+CSW's standalone runtime and its CFW integration remain usable without DP.
+The complete three-system deployment adds adaptation while preserving CSW as
+the only authority that can activate eligible StateWorks or commit legal
+workflow transitions.
+
 The host calls `WorkflowAuthority.behavioral_snapshot(...)` with the workflow
 scope and an optional bounded candidate list. It does not supply active
 workflow identities: CSW reads those from its own revisioned selection store.
@@ -104,6 +116,14 @@ selection revision. Applying any workflow step still uses
 `WorkflowAuthority.apply_step(...)` with evidence and an expected workflow
 revision.
 
+In the three-system runtime, DP receives a CSW snapshot containing the current
+selection revision, active workflow states, legal steps, and only registered,
+composition-compatible candidates. DP may request one eligible activation or
+release a temporary selection when its bounded intervention ends. CSW checks
+the expected selection revision for either operation and returns the new
+authoritative snapshot. DP cannot infer eligibility from tags or claim that a
+requested StateWork became active without CSW confirmation.
+
 The top-level architecture diagram is a combined deployment view, not a statement that CFW is required for CSW execution. The standalone quickstart above is the canonical CSW entry point.
 
 ## The larger architecture
@@ -115,31 +135,29 @@ The top-level architecture diagram is a combined deployment view, not a statemen
 | **DigitalPsychology** | **How should behavior adapt, and did the intervention improve progress?** |
 
 ```text
-             CognitiveFrameWorks
-             behavioral policy
-                    │
-                    ▼
-Task ───────→ effective runtime policy
-                    │
-                    ▼
-             CognitiveStateWorks
-             operational state
-                    │
-             legal transitions
-                    │
-                    ▼
-                  Agent
-                    │
-            real actions/results
-                    │
-                    ▼
-             state observations
-                    │
-                    └─────────────→ DigitalPsychology
-                                      behavioral analysis
+                    DigitalPsychology runtime host
+                 observes and selects a bounded intervention
+                          ↙                       ↘
+          CFW signals and directives       CSW state and eligible choices
+          CFW validates controls           CSW validates workflow operations
+                          ↘                       ↙
+                                     Agent
+                                       │
+                        actions, artifacts, host evidence
+                                       │
+                                       ▼
+                      independent DP outcome evaluator
+                                       │
+                  retain, relax, reverse, or refine policy
 ```
 
 CFW provides cognitive components and action enforcement. CSW provides **authoritative domain workflow state**. DigitalPsychology owns cross-system behavioral adaptation and measures progress against the user's objective.
+
+The diagram shows the full adaptive deployment. CSW remains usable alone, and
+CFW+CSW can run together without DP. When DP is enabled, its outcome evaluator
+uses host and CSW evidence to assess whether a targeted intervention improved
+required-goal progress; the controlled agent's completion statement is not the
+success signal.
 
 ## A StateWork is an executable workflow model
 
