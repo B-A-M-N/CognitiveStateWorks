@@ -1188,6 +1188,97 @@ class TransitionEngine:
         return matches
 
 
+class WorkflowSelectionStore:
+    """Revisioned CSW-owned active workflow sets scoped to one task subject."""
+
+    SCOPE_FIELDS = ("namespace_id", "application_id", "application_instance_id",
+                    "workflow_id", "subject_ref")
+
+    def __init__(self, path: Path) -> None:
+        self.path = Path(path)
+        self.lock_path = self.path.with_name(self.path.name + ".lock")
+        self.path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+
+    @classmethod
+    def _scope_key(cls, scope: Mapping[str, Any]) -> str:
+        if not isinstance(scope, Mapping) or set(scope) != set(cls.SCOPE_FIELDS):
+            raise TransitionError("workflow selection scope has missing or unknown fields")
+        normalized = {}
+        for name in cls.SCOPE_FIELDS:
+            value = scope.get(name)
+            if not isinstance(value, str) or not value.strip() or len(value) > 256:
+                raise TransitionError(f"workflow selection scope {name} is invalid")
+            normalized[name] = value
+        return json.dumps(normalized, sort_keys=True, separators=(",", ":"))
+
+    def _read_unlocked(self) -> dict[str, Any]:
+        if not self.path.exists():
+            return {"version": 1, "scopes": {}}
+        try:
+            value = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise TransitionError("workflow selection store is unreadable") from exc
+        if (not isinstance(value, dict) or value.get("version") != 1
+                or not isinstance(value.get("scopes"), dict)):
+            raise TransitionError("workflow selection store has invalid structure")
+        return value
+
+    def get(self, scope: Mapping[str, Any]) -> dict[str, Any]:
+        key = self._scope_key(scope)
+        self.lock_path.touch(mode=0o600, exist_ok=True)
+        with self.lock_path.open("r", encoding="utf-8") as lock:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_SH)
+            record = self._read_unlocked()["scopes"].get(key) or {
+                "scope": {name: scope[name] for name in self.SCOPE_FIELDS},
+                "revision": 0, "active_workflows": {},
+            }
+            if (not isinstance(record, dict)
+                    or not isinstance(record.get("active_workflows"), dict)
+                    or not isinstance(record.get("revision"), int)):
+                raise TransitionError("workflow selection record has invalid structure")
+            return copy.deepcopy(record)
+
+    def replace(self, scope: Mapping[str, Any], *, expected_revision: int,
+                active_workflows: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+        key = self._scope_key(scope)
+        if not isinstance(active_workflows, Mapping) or len(active_workflows) > 16:
+            raise TransitionError("active workflow set exceeds its bounds")
+        candidate = copy.deepcopy(dict(active_workflows))
+        if any(not isinstance(statework_id, str) or not statework_id
+               or not isinstance(row, Mapping)
+               or set(row) != {"identity", "contract_hash"}
+               for statework_id, row in candidate.items()):
+            raise TransitionError("active workflow set is malformed")
+        self.lock_path.touch(mode=0o600, exist_ok=True)
+        with self.lock_path.open("r+", encoding="utf-8") as lock:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            data = self._read_unlocked()
+            prior = data["scopes"].get(key) or {
+                "scope": {name: scope[name] for name in self.SCOPE_FIELDS},
+                "revision": 0, "active_workflows": {},
+            }
+            if int(prior.get("revision", 0)) != int(expected_revision):
+                raise TransitionError(
+                    f"workflow selection revision conflict: expected {expected_revision}, "
+                    f"found {prior.get('revision', 0)}; re-inspect required")
+            updated = {"scope": {name: scope[name] for name in self.SCOPE_FIELDS},
+                       "revision": int(expected_revision) + 1,
+                       "active_workflows": candidate}
+            data["scopes"][key] = updated
+            fd, temporary = tempfile.mkstemp(dir=str(self.path.parent),
+                                             prefix=f".{self.path.name}.", suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as stream:
+                    json.dump(data, stream, sort_keys=True, separators=(",", ":"))
+                    stream.write("\n"); stream.flush(); os.fsync(stream.fileno())
+                os.chmod(temporary, 0o600)
+                os.replace(temporary, self.path)
+            finally:
+                if os.path.exists(temporary):
+                    os.unlink(temporary)
+            return copy.deepcopy(updated)
+
+
 class WorkflowAuthority:
     """Generic host authority over compiled StateWork workflow engines.
 
@@ -1197,12 +1288,15 @@ class WorkflowAuthority:
     def __init__(self, *, root: Optional[Path] = None,
                  state_store: Optional[SubjectStateStore] = None,
                  evidence_store: Optional[EvidenceStore] = None,
-                 engine_registry: Optional[EngineRegistry] = None):
+                 engine_registry: Optional[EngineRegistry] = None,
+                 selection_store: Optional[WorkflowSelectionStore] = None):
         self.root = Path(root or ROOT)
         self.state_store = state_store or SubjectStateStore(
             self.root / "state" / "subjects.json")
         self.evidence_store = evidence_store or EvidenceStore()
         self.engine_registry = engine_registry or EngineRegistry()
+        self.selection_store = selection_store or WorkflowSelectionStore(
+            self.root / "state" / "workflow-selections.json")
         self._controllers: Dict[str, StandaloneStateWorkController] = {}
 
     def _bundle(self, statework_id: str, contract_hash: Optional[str] = None
@@ -1277,27 +1371,127 @@ class WorkflowAuthority:
                 "contract_hash": digest, "contract": contract,
                 "manifest": manifest}
 
+    @staticmethod
+    def _selection_scope(identity: WorkflowIdentity | Mapping[str, Any]
+                         ) -> dict[str, str]:
+        identity = WorkflowAuthority._identity(identity)
+        return {name: str(getattr(identity, name))
+                for name in WorkflowSelectionStore.SCOPE_FIELDS}
+
+    @staticmethod
+    def _depends_on(entries: Mapping[str, Mapping[str, Any]],
+                    statework_id: str, target_id: str) -> bool:
+        pending = [statework_id]
+        visited: set[str] = set()
+        while pending:
+            current = pending.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            manifest = dict(entries[current].get("manifest") or {})
+            required_ids = set((manifest.get("composition") or {}).get("requires") or ())
+            if target_id in required_ids:
+                return True
+            pending.extend(item for item in required_ids if item in entries)
+        return False
+
+    @classmethod
+    def _selection_compatible(cls, entries: Mapping[str, Mapping[str, Any]],
+                              statework_id: str, active_ids: set[str]) -> bool:
+        manifest = dict(entries[statework_id].get("manifest") or {})
+        composition = dict(manifest.get("composition") or {})
+        if not set(composition.get("requires") or ()).issubset(active_ids):
+            return False
+        if set(composition.get("conflicts") or ()).intersection(active_ids):
+            return False
+        group = str(composition.get("group") or "")
+        for active_id in active_ids:
+            active_manifest = dict(entries[active_id].get("manifest") or {})
+            active_composition = dict(active_manifest.get("composition") or {})
+            active_group = str(active_composition.get("group") or "")
+            if (group and group == active_group
+                    and not cls._depends_on(entries, statework_id, active_id)
+                    and not cls._depends_on(entries, active_id, statework_id)):
+                return False
+        return True
+
+    def activate_workflow(self, identity: WorkflowIdentity | Mapping[str, Any], *,
+                          contract_hash: str,
+                          expected_selection_revision: int) -> dict[str, Any]:
+        """Activate a StateWork only after CSW checks registration and composition."""
+        identity = self._identity(identity)
+        statework_id = identity.statework_id
+        manifest, _contract, digest, engine, _evidence = self._bundle(
+            statework_id, contract_hash)
+        if digest != contract_hash:
+            raise TransitionError("workflow contract pin is not current")
+        scope = self._selection_scope(identity)
+        selection = self.selection_store.get(scope)
+        if int(selection["revision"]) != int(expected_selection_revision):
+            raise TransitionError(
+                f"workflow selection revision conflict: expected {expected_selection_revision}, "
+                f"found {selection['revision']}; re-inspect required")
+        active = dict(selection["active_workflows"])
+        if statework_id in active:
+            row = active[statework_id]
+            if row != {"identity": dict(identity.__dict__), "contract_hash": digest}:
+                raise TransitionError("active workflow identity differs from the current request")
+            return selection
+        if len(active) >= 16:
+            raise TransitionError("active workflow set exceeds its bounds")
+        compiled = load_compiled_registry(self.root)
+        entries = {str(item.get("id")): item for item in compiled.get("stateworks") or ()}
+        if not self._selection_compatible(entries, statework_id, set(active)):
+            raise TransitionError("StateWork is not composition-compatible with the active set")
+        # Initialize through the same authoritative engine before publishing
+        # the active selection. An interrupted activation can leave an
+        # initialized but inactive subject, never an active uninitialized one.
+        self.inspect_workflow(identity, contract_hash=digest)
+        active[statework_id] = {"identity": dict(identity.__dict__),
+                                "contract_hash": digest}
+        return self.selection_store.replace(
+            scope, expected_revision=expected_selection_revision,
+            active_workflows=active)
+
+    def deactivate_workflow(self, *, workflow_scope: Mapping[str, Any],
+                            statework_id: str,
+                            expected_selection_revision: int) -> dict[str, Any]:
+        """Remove an active workflow unless another active workflow requires it."""
+        selection = self.selection_store.get(workflow_scope)
+        if int(selection["revision"]) != int(expected_selection_revision):
+            raise TransitionError(
+                f"workflow selection revision conflict: expected {expected_selection_revision}, "
+                f"found {selection['revision']}; re-inspect required")
+        active = dict(selection["active_workflows"])
+        if statework_id not in active:
+            raise TransitionError(f"StateWork {statework_id!r} is not active")
+        compiled = load_compiled_registry(self.root)
+        entries = {str(item.get("id")): item for item in compiled.get("stateworks") or ()}
+        for other_id in set(active) - {statework_id}:
+            if self._depends_on(entries, other_id, statework_id):
+                raise TransitionError(
+                    f"StateWork {statework_id!r} is required by active {other_id!r}")
+        active.pop(statework_id)
+        return self.selection_store.replace(
+            workflow_scope, expected_revision=expected_selection_revision,
+            active_workflows=active)
+
     def behavioral_snapshot(
-            self, *,
-            active_workflows: Iterable[Mapping[str, Any]] = (),
-            candidate_statework_ids: Iterable[str] = (),
+            self, *, workflow_scope: Mapping[str, Any],
+            candidate_statework_ids: Optional[Iterable[str]] = None,
             ) -> dict[str, Any]:
-        """Return bounded authoritative workflow facts for a behavioral host.
+        """Return bounded state and legal choices from CSW-owned workflow selection.
 
-        DigitalPsychology may rank the returned candidates. CSW determines
-        which candidates are registered and composition-compatible, reports
-        the authoritative state and legal steps of already active workflows,
-        and remains the only authority that can apply a workflow step.
-
-        Each active workflow row has the shape ``{"identity": {...},
-        "contract_hash": "..."}``, where identity is a normal workflow
-        identity mapping. Candidate IDs are supplied by the trusted runtime
-        host; neither this method nor its output activates or transitions a
-        StateWork.
+        DigitalPsychology may rank the eligible candidates. Only CSW activates
+        or deactivates them and applies their legal, evidence-bound transitions.
         """
-        active_rows = list(active_workflows)
-        candidates = list(candidate_statework_ids)
-        if len(active_rows) > 16 or len(candidates) > 32:
+        selection = self.selection_store.get(workflow_scope)
+        active_rows = selection["active_workflows"]
+        if len(active_rows) > 16:
+            raise TransitionError("active workflow set exceeds its bounds")
+        candidates = (list(candidate_statework_ids) if candidate_statework_ids is not None
+                      else None)
+        if candidates is not None and len(candidates) > 32:
             raise TransitionError("behavioral snapshot request exceeds its bounds")
 
         compiled = load_compiled_registry(self.root)
@@ -1305,33 +1499,32 @@ class WorkflowAuthority:
                    for item in compiled.get("stateworks") or ()}
         active_ids: set[str] = set()
         active: list[dict[str, Any]] = []
-        for row in active_rows:
+        scope_key = WorkflowSelectionStore._scope_key(workflow_scope)
+        expected_scope = json.loads(scope_key)
+        for statework_id, row in sorted(active_rows.items()):
             if not isinstance(row, Mapping) or set(row) != {"identity", "contract_hash"}:
-                raise TransitionError("active workflow snapshot row is malformed")
+                raise TransitionError("stored active workflow row is malformed")
             raw_identity = row.get("identity")
             contract_hash = row.get("contract_hash")
             if not isinstance(raw_identity, Mapping):
-                raise TransitionError("active workflow identity must be an object")
+                raise TransitionError("stored active workflow identity is malformed")
             identity_fields = {
                 "namespace_id", "application_id", "application_instance_id",
                 "workflow_id", "subject_ref", "statework_id", "contract_version",
             }
             if set(raw_identity) != identity_fields:
-                raise TransitionError("active workflow identity has missing or unknown fields")
+                raise TransitionError("stored active workflow identity is malformed")
             identity = self._identity(raw_identity)
-            statework_id = identity.statework_id
+            actual_scope = self._selection_scope(identity)
+            if actual_scope != expected_scope or identity.statework_id != statework_id:
+                raise TransitionError("stored active workflow escapes its selection scope")
             if statework_id not in entries:
-                raise TransitionError(f"StateWork {statework_id!r} is unavailable")
-            if statework_id in active_ids:
-                raise TransitionError("active workflow StateWork IDs must be unique")
-            if (not isinstance(contract_hash, str) or len(contract_hash) != 64
-                    or any(char not in "0123456789abcdef" for char in contract_hash)):
-                raise TransitionError("active workflow contract hash is malformed")
-            snapshot = self.inspect_workflow(identity, contract_hash=contract_hash)
+                raise TransitionError(f"active StateWork {statework_id!r} is unavailable")
+            snapshot = self.inspect_workflow(identity, contract_hash=str(contract_hash))
             active_ids.add(statework_id)
             active.append({
                 "identity": dict(identity.__dict__),
-                "contract_hash": contract_hash,
+                "contract_hash": str(contract_hash),
                 "engine_kind": snapshot.engine_kind,
                 "revision": snapshot.revision,
                 "current_state": snapshot.current_state,
@@ -1345,6 +1538,7 @@ class WorkflowAuthority:
                 ],
             })
 
+        candidates = list(entries) if candidates is None else candidates
         if any(not isinstance(item, str) or not item or len(item) > 128
                for item in candidates):
             raise TransitionError("candidate StateWork IDs must be bounded text")
@@ -1353,52 +1547,12 @@ class WorkflowAuthority:
         unknown = sorted(set(candidates) - set(entries))
         if unknown:
             raise TransitionError(f"unavailable candidate StateWorks: {unknown}")
-
-        active_manifests = [dict(entries[statework_id].get("manifest") or {})
-                            for statework_id in active_ids]
-
-        def depends_on(statework_id: str, target_id: str) -> bool:
-            pending = [statework_id]
-            visited: set[str] = set()
-            while pending:
-                current = pending.pop()
-                if current in visited:
-                    continue
-                visited.add(current)
-                manifest = dict(entries[current].get("manifest") or {})
-                required_ids = set(
-                    (manifest.get("composition") or {}).get("requires") or ())
-                if target_id in required_ids:
-                    return True
-                pending.extend(item for item in required_ids if item in entries)
-            return False
-
         eligible = []
         for statework_id in sorted(candidates):
-            if statework_id in active_ids:
+            if statework_id in active_ids or not self._selection_compatible(
+                    entries, statework_id, active_ids):
                 continue
             manifest = dict(entries[statework_id].get("manifest") or {})
-            composition = dict(manifest.get("composition") or {})
-            required = set(composition.get("requires") or ())
-            conflicts = set(composition.get("conflicts") or ())
-            exclusive_group = str(composition.get("group") or "")
-            independent_group_conflict = False
-            # A declared prerequisite chain may include related members of an
-            # exclusive group. Independent roots in that group remain mutually
-            # exclusive, matching the resolver's composition rule.
-            for active_manifest in active_manifests:
-                active_id = str(active_manifest.get("id") or "")
-                active_composition = dict(active_manifest.get("composition") or {})
-                active_group = str(active_composition.get("group") or "")
-                if (exclusive_group and exclusive_group == active_group
-                        and not depends_on(statework_id, active_id)
-                        and not depends_on(active_id, statework_id)):
-                    independent_group_conflict = True
-                    break
-            if (not required.issubset(active_ids)
-                    or conflicts.intersection(active_ids)
-                    or independent_group_conflict):
-                continue
             eligible.append({
                 "statework_id": statework_id,
                 "domain": str(manifest.get("domain") or ""),
@@ -1407,6 +1561,7 @@ class WorkflowAuthority:
             })
 
         body = {"registry_hash": compiled["registry_hash"],
+                "selection_revision": int(selection["revision"]),
                 "active_workflows": active,
                 "eligible_stateworks": eligible}
         snapshot_id = hashlib.sha256(json.dumps(

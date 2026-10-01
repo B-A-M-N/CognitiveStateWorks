@@ -88,16 +88,20 @@ That product contains the controller, schemas, compiled StateWork bundles, flows
 ## Optional integrations
 
 - **CSW alone:** use `StandaloneHostInterface` and the enforcing installation; CFW and DP are not required.
-- **CSW + CFW:** CFW may compose StateWork flow eligibility and framework enhancements, but CSW retains state and evidence authority.
-- **CSW + DP:** DP may recommend a legal future flow preference. It cannot create flow eligibility, weaken a transition contract, or rewrite an active subject state.
+- **CSW + CFW:** CFW supplies task components and action enforcement; CSW retains workflow selection, state, evidence, and transition authority.
+- **CSW + DP:** DP may rank and request activation of an eligible StateWork. CSW checks the composition and selection revision, then records the active set; DP cannot create eligibility, weaken a transition contract, or rewrite workflow state.
 
-The runtime host may call `WorkflowAuthority.behavioral_snapshot(...)` with its
-active workflow identities and a bounded candidate list. CSW returns current
-authoritative workflow states and legal steps, plus only registered,
-composition-compatible StateWorks with their bounded `behavior_tags`. DP may
-rank those candidates; tags are descriptive hints and do not grant activation
-or transition authority. Applying any workflow step still uses
-`WorkflowAuthority.apply_step(...)` with evidence and an expected revision.
+The host calls `WorkflowAuthority.behavioral_snapshot(...)` with the workflow
+scope and an optional bounded candidate list. It does not supply active
+workflow identities: CSW reads those from its own revisioned selection store.
+The snapshot returns current authoritative workflow states and legal steps,
+plus only registered, composition-compatible StateWorks with bounded
+`behavior_tags`. DP may rank those candidates; tags are descriptive hints and
+do not grant activation or transition authority. Activation uses
+`WorkflowAuthority.activate_workflow(...)` with a contract hash and expected
+selection revision. Applying any workflow step still uses
+`WorkflowAuthority.apply_step(...)` with evidence and an expected workflow
+revision.
 
 The top-level architecture diagram is a combined deployment view, not a statement that CFW is required for CSW execution. The standalone quickstart above is the canonical CSW entry point.
 
@@ -105,9 +109,9 @@ The top-level architecture diagram is a combined deployment view, not a statemen
 
 | System | Primary question |
 | --- | --- |
-| **CognitiveFrameWorks** | **How should the agent behave?** |
-| **CognitiveStateWorks** | **What behavior and transitions are appropriate now?** |
-| **DigitalPsychology** | **Why is the agent behaving this way under these conditions?** |
+| **CognitiveFrameWorks** | **Which cognitive components and enforcement rules are available?** |
+| **CognitiveStateWorks** | **Which workflow state and transitions are legal now?** |
+| **DigitalPsychology** | **How should behavior adapt, and did the intervention improve progress?** |
 
 ```text
              CognitiveFrameWorks
@@ -134,7 +138,7 @@ Task ───────→ effective runtime policy
                                       behavioral analysis
 ```
 
-CFW provides general behavioral discipline. CSW provides **domain-specific operational structure**. DigitalPsychology measures whether either system actually improves behavior.
+CFW provides cognitive components and action enforcement. CSW provides **authoritative domain workflow state**. DigitalPsychology owns cross-system behavioral adaptation and measures progress against the user's objective.
 
 ## A StateWork is an executable workflow model
 
@@ -190,7 +194,7 @@ registry.yaml
           └── optional guidance.md
 ```
 
-Registration means **this StateWork is available to the resolver**. It does not mean **load this StateWork into every agent**. CognitiveFrameWorks resolves the task, selects the applicable StateWork chain, and activates only what is needed.
+Registration means **this StateWork is available to CSW's resolver**. It does not mean **load this StateWork into every agent**. DP may rank options from a CSW snapshot; only CSW can activate the composition-compatible selection for its workflow scope.
 
 Create a data-only extension starter with:
 
@@ -249,7 +253,7 @@ domain/subject state
 
 A repository, deployment, infrastructure resource, interface, or pull request may persist across many agent sessions. Its operational state cannot be blindly scoped to one chat. Conversely, telemetry from independent sessions must not be merged simply because both operated on the same subject.
 
-CSW owns **durable operational state**. CFW owns the **runtime execution session**. DigitalPsychology uses session/attempt identity to reconstruct behavior without corrupting the domain state model.
+CSW owns **durable operational state and active workflow selections**. CFW owns task-local action enforcement and component lifecycle. DigitalPsychology owns cross-system behavioral sessions and uses session/attempt identity to assess interventions without changing CSW state directly.
 
 ## Handoffs
 
