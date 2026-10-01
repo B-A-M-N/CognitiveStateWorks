@@ -1,8 +1,8 @@
 {
   "builtin_engine_hashes": {
     "flow_selector": "33f50a692126cfc2ca8237fb40d5cb4c9998afa0e30ee53d2b03c91881ba33d1",
-    "milestone": "3ba2eed288d98881ccc9930dac82d6b504ef0cec35f4590527e7568c88a66eef",
-    "state_machine": "71a5cb9c4d5705ce54406d51fbdb1b65ef4eca1043e71859ae1fa0dc21d4c84f"
+    "milestone": "70b8da14e606c650788c474e7a3732fc7599d61819be13a01adc92ee204ee223",
+    "state_machine": "41d0b7768ddd385d026ec6ce2dec7aac57f2538d1a7b5f149c03e5213edc0339"
   },
   "evidence_registry": {
     "kinds": {
@@ -429,6 +429,7 @@
     },
     "version": "1.0.0"
   },
+  "evidence_validator_hashes": {},
   "freshness_validator_hashes": {
     "repository_truth_v1": "83a3e03172a328bfab6c4f4d082556fae580bf3dbd6c1699e7a7307bc1de3027"
   },
@@ -1064,7 +1065,7 @@
     }
   },
   "registry_config_hash": "d4efe61d7c37394e7e4d7fd0406b5d83c94e2b0941cf56f7c2e57a881693ef85",
-  "registry_hash": "7a5238c194a11700cd45ce4e3d7a166ff58714dd4b2248a644cb66474bd95f3c",
+  "registry_hash": "6958d1a7a50b62f9e27cf67065df1806ef1670c5aa9dee8adac6beb8ba8570a0",
   "registry_version": "2.0.0",
   "stateworks": [
     {

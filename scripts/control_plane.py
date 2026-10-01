@@ -7,6 +7,7 @@ import copy
 import fcntl
 import hashlib
 import inspect
+from importlib import metadata
 import os
 import re
 import tempfile
@@ -178,11 +179,14 @@ def _repository_truth_v1(packet: Dict[str, Any], context: Mapping[str, Any]) -> 
                for key in required)
 
 
-class FreshnessValidatorRegistry:
-    """Explicit host-trusted registry for specialized freshness checks."""
-    def __init__(self) -> None:
+class TrustedValidatorRegistry:
+    """Host-trusted callable registry loaded only from explicit source pins."""
+    def __init__(self, entry_point_group: str) -> None:
+        if not isinstance(entry_point_group, str) or not entry_point_group.strip():
+            raise ValueError("validator registry requires an entry-point group")
         self._validators: Dict[str, Any] = {}
         self._hashes: Dict[str, str] = {}
+        self.entry_point_group = entry_point_group
 
     def register(self, validator_id: str, implementation: Any, *,
                  implementation_hash: str, trusted: bool = False) -> None:
@@ -199,6 +203,65 @@ class FreshnessValidatorRegistry:
         self._validators[validator_id] = implementation
         self._hashes[validator_id] = implementation_hash
 
+    def contains(self, validator_id: str) -> bool:
+        return validator_id in self._validators
+
+    @staticmethod
+    def _entry_point_identity(entry_point: Any) -> str:
+        return EngineRegistry.entry_point_identity(entry_point)
+
+    @staticmethod
+    def _entry_point_source_hash(entry_point: Any) -> str:
+        return EngineRegistry.entry_point_source_hash(entry_point)
+
+    def _load_entries(self, trusted_entry_points: Mapping[str, str],
+                      entry_points: Iterable[Any]) -> tuple[str, ...]:
+        """Load only validator source trees explicitly adopted by the host."""
+        if not isinstance(trusted_entry_points, Mapping):
+            raise TypeError("trusted validator entry points must be a host-owned mapping")
+        if not trusted_entry_points:
+            return ()
+        discovered: Dict[str, Any] = {}
+        for entry_point in entry_points:
+            try:
+                identity = self._entry_point_identity(entry_point)
+            except (AttributeError, TypeError, ValueError):
+                continue
+            if identity not in trusted_entry_points:
+                continue
+            if identity in discovered:
+                raise ValueError(f"duplicate trusted validator entry point {identity!r}")
+            discovered[identity] = entry_point
+        missing = set(trusted_entry_points) - set(discovered)
+        if missing:
+            raise ValueError(f"trusted validator entry points are unavailable: {sorted(missing)}")
+
+        loaded: List[str] = []
+        for identity, expected_hash in trusted_entry_points.items():
+            if (not isinstance(expected_hash, str) or len(expected_hash) != 64
+                    or any(char not in "0123456789abcdef" for char in expected_hash)):
+                raise ValueError("trusted validator pins must be lowercase SHA-256 hashes")
+            entry_point = discovered[identity]
+            actual_hash = self._entry_point_source_hash(entry_point)
+            if actual_hash != expected_hash:
+                raise PermissionError(
+                    f"validator entry point source differs from host trust pin: {identity}")
+            implementation = entry_point.load()
+            if not callable(implementation):
+                raise TypeError("validator entry point must load a callable")
+            self.register(entry_point.name, implementation,
+                          implementation_hash=actual_hash, trusted=True)
+            loaded.append(entry_point.name)
+        return tuple(loaded)
+
+    def load_trusted_entry_points(self, trusted_entry_points: Mapping[str, str]
+                                  ) -> tuple[str, ...]:
+        """Load the host's configured validator entry points after checking pins."""
+        if not trusted_entry_points:
+            return ()
+        entries = metadata.entry_points(group=self.entry_point_group)
+        return self._load_entries(trusted_entry_points, entries)
+
     def validate(self, validator_id: str, packet: Dict[str, Any],
                  context: Mapping[str, Any]) -> bool:
         implementation = self._validators.get(validator_id)
@@ -213,10 +276,21 @@ def _trusted_validator_hash(function: Any) -> str:
     return hashlib.sha256(inspect.getsource(function).encode("utf-8")).hexdigest()
 
 
+class FreshnessValidatorRegistry(TrustedValidatorRegistry):
+    def __init__(self) -> None:
+        super().__init__("cognitive_statework.freshness_validators")
+
+
+class EvidenceValidatorRegistry(TrustedValidatorRegistry):
+    def __init__(self) -> None:
+        super().__init__("cognitive_statework.evidence_validators")
+
+
 FRESHNESS_VALIDATORS = FreshnessValidatorRegistry()
 FRESHNESS_VALIDATORS.register(
     "repository_truth_v1", _repository_truth_v1,
     implementation_hash=_trusted_validator_hash(_repository_truth_v1), trusted=True)
+EVIDENCE_VALIDATORS = EvidenceValidatorRegistry()
 
 
 def _path_value(value: Mapping[str, Any], path: str) -> Any:
@@ -277,8 +351,10 @@ def evaluate_freshness(packet: Dict[str, Any], context: Mapping[str, Any],
 
 class EvidenceStore:
     """Trusted evidence authority with immutable revisions and locked merge."""
-    def __init__(self, records: Optional[Iterable[Mapping[str, Any]]] = ()) -> None:
+    def __init__(self, records: Optional[Iterable[Mapping[str, Any]]] = (), *,
+                 validator_registry: Optional[TrustedValidatorRegistry] = None) -> None:
         self._records: Dict[str, Dict[str, Any]] = {}
+        self.validator_registry = validator_registry or EVIDENCE_VALIDATORS
         for record in records or ():
             self.create(record)
 
@@ -306,6 +382,11 @@ class EvidenceStore:
         """Create host-attested evidence; only this path may mint a digest."""
         self._validate_shape(record)
         candidate = self._current_body(record)
+        validator_id = str(candidate.get("validator") or "")
+        if (validator_id and self.validator_registry.contains(validator_id)
+                and not self.validator_registry.validate(validator_id, candidate, {})):
+            raise TransitionError(
+                f"registered evidence validator {validator_id!r} rejected the record")
         supplied = record.get("attestation_digest")
         expected = self._digest(candidate)
         if supplied is not None and supplied != expected:
@@ -1164,6 +1245,12 @@ class WorkflowAuthority:
             engine = MilestoneWorkflowEngine()
         else:
             engine = self.engine_registry.get(kind)
+            expected_engine_hash = dict(compiled.get("workflow_engine_hashes") or {}).get(kind)
+            registered_engine_hash = self.engine_registry.identities.get(kind)
+            if (expected_engine_hash is None
+                    or registered_engine_hash != expected_engine_hash):
+                raise TransitionError(
+                    f"workflow engine {kind!r} differs from the compiled host trust pin")
         engine.validate_contract(contract)
         return manifest, dict(contract), digest, engine, evidence_registry
 
@@ -1293,306 +1380,24 @@ class WorkflowAuthority:
             completed=decision.completed, evidence_refs=decision.evidence_refs)
 
 
-class RegistryCompiler:
-    """Compile trusted bundle roots into one immutable, content-addressed registry."""
-    VERSION = "2.0.0"
-
-    def __init__(self, root: Optional[Path] = None, *,
-                 engine_registry: Optional[EngineRegistry] = None):
-        self.root = Path(root or ROOT).resolve()
-        self.engine_registry = engine_registry or EngineRegistry()
-
-    @staticmethod
-    def _digest(value: Any) -> str:
-        return hashlib.sha256(json.dumps(
-            value, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
-
-    @staticmethod
-    def _builtin_engine_hashes() -> dict[str, str]:
-        engine_bytes = Path(__file__).with_name("workflow_engines.py").read_bytes()
-        selector_bytes = Path(__file__).with_name("flow_selectors.py").read_bytes()
-        control_bytes = Path(__file__).read_bytes()
-        return {
-            "state_machine": hashlib.sha256(engine_bytes + control_bytes).hexdigest(),
-            "milestone": hashlib.sha256(engine_bytes).hexdigest(),
-            "flow_selector": hashlib.sha256(selector_bytes).hexdigest(),
-        }
-
-    @staticmethod
-    def _relative_file(bundle_root: Path, name: str) -> Path:
-        path = Path(name)
-        if path.is_absolute() or ".." in path.parts:
-            raise TransitionError(f"bundle contract path escapes its owner: {name!r}")
-        resolved = (bundle_root / path).resolve()
-        try:
-            resolved.relative_to(bundle_root.resolve())
-        except ValueError as exc:
-            raise TransitionError(f"bundle contract path escapes its owner: {name!r}") from exc
-        if not resolved.is_file() or resolved.is_symlink():
-            raise TransitionError(f"bundle contract file is missing or linked: {name!r}")
-        return resolved
-
-    def _bundle_files(self, bundle_root: Path) -> dict[str, str]:
-        hashes: dict[str, str] = {}
-        for path in sorted(bundle_root.rglob("*")):
-            if path.is_symlink():
-                raise TransitionError(f"StateWork bundles cannot contain symlinks: {path}")
-            if path.is_file():
-                hashes[path.relative_to(bundle_root).as_posix()] = hashlib.sha256(
-                    path.read_bytes()).hexdigest()
-        return hashes
-
-    def _load_fragment(self, bundle_root: Path, relative: Optional[str], *,
-                       fragment: str) -> dict[str, Any]:
-        if not relative:
-            return {}
-        path = self._relative_file(bundle_root, relative)
-        value = _load_yaml(path) or {}
-        if not isinstance(value, Mapping) or not isinstance(value.get(fragment), Mapping):
-            raise TransitionError(f"{fragment} contract fragment must be a mapping")
-        return dict(value[fragment])
-
-    def compile(self, *, write: bool = False) -> dict[str, Any]:
-        registry_path = self.root / "registry.yaml"
-        registry = _load_yaml(registry_path) or {}
-        if str(registry.get("version")) != self.VERSION:
-            raise TransitionError("registry.yaml must declare registry bundle version 2.0.0")
-        base_ids = list(registry.get("stateworks") or ())
-        if len(base_ids) != len(set(base_ids)):
-            raise TransitionError("registry.yaml contains duplicate StateWork IDs")
-        roots: list[tuple[str, Path, Optional[list[str]]]] = [(".", self.root, base_ids)]
-        for index, raw in enumerate(registry.get("extension_roots") or ()):
-            if not isinstance(raw, str) or not raw:
-                raise TransitionError("extension_roots must contain trusted root paths")
-            target = Path(raw).expanduser()
-            target = (self.root / target).resolve() if not target.is_absolute() else target.resolve()
-            if not target.is_dir() or target.is_symlink():
-                raise TransitionError(f"trusted extension root is unavailable or linked: {raw}")
-            roots.append((f"extension:{index}", target, None))
-
-        global_packets = load_packet_registry(self.root / "schemas" / "packet-registry.yaml")
-        global_evidence = load_evidence_kind_registry(
-            self.root / "schemas" / "evidence-kinds.yaml")
-        packet_rows: dict[str, dict[str, Any]] = dict(global_packets.get("packets") or {})
-        packet_schema_docs: dict[str, dict[str, Any]] = {}
-        for packet_id, meta in packet_rows.items():
-            schema_path = self.root / "schemas" / str(meta.get("schema") or "")
-            if schema_path.is_file():
-                packet_schema_docs[packet_id] = json.loads(schema_path.read_text(encoding="utf-8"))
-        evidence_rows: dict[str, dict[str, Any]] = dict(global_evidence.get("kinds") or {})
-        compiled: list[dict[str, Any]] = []
-        source_by_id: dict[str, tuple[str, Path]] = {}
-
-        for root_ref, source_root, explicit_ids in roots:
-            candidates = ([source_root / sid for sid in explicit_ids]
-                          if explicit_ids is not None else sorted(
-                              path.parent for path in source_root.glob("*/manifest.yaml")))
-            for bundle_root in candidates:
-                manifest_path = bundle_root / "manifest.yaml"
-                if not manifest_path.is_file() or manifest_path.is_symlink():
-                    raise TransitionError(f"bundle {bundle_root} is missing a regular manifest.yaml")
-                manifest = _load_yaml(manifest_path) or {}
-                sid = str(manifest.get("id") or "")
-                if not sid or sid != bundle_root.name or sid in source_by_id:
-                    raise TransitionError(f"StateWork identifier collision or path mismatch: {sid!r}")
-                schema_path = self.root / "schemas" / "statework-manifest.schema.json"
-                jsonschema.validate(instance=manifest,
-                                    schema=json.loads(schema_path.read_text(encoding="utf-8")))
-                if manifest.get("bundle_schema_version") != 2:
-                    raise TransitionError(f"StateWork {sid!r} must use bundle schema version 2")
-                flow_policy = manifest.get("flow_selection") or {}
-                flow_schema_path = self.root / "schemas" / "statework-flow.schema.json"
-                flow_schema = json.loads(flow_schema_path.read_text(encoding="utf-8"))
-                flow_paths = sorted(bundle_root.glob("flows/*/flow.md"))
-                fallbacks = []
-                for flow_path in flow_paths:
-                    pieces = flow_path.read_text(encoding="utf-8").split("---", 2)
-                    if len(pieces) != 3 or pieces[0].strip():
-                        raise TransitionError(
-                            f"StateWork {sid!r} flow {flow_path.parent.name!r} lacks frontmatter")
-                    try:
-                        flow_meta = yaml.safe_load(pieces[1]) or {}
-                        jsonschema.validate(instance=flow_meta, schema=flow_schema)
-                        if flow_meta.get("flow") != flow_path.parent.name:
-                            raise TransitionError(
-                                f"StateWork {sid!r} flow name differs from its directory")
-                        if (flow_meta.get("states")
-                                and str((manifest.get("engine") or {}).get("kind") or "")
-                                != "state_machine"):
-                            raise TransitionError(
-                                f"StateWork {sid!r} non-state-machine flows cannot declare states")
-                        if "when" in flow_meta:
-                            FlowSelector.validate_predicate(flow_meta["when"])
-                    except (ValueError, jsonschema.ValidationError, yaml.YAMLError) as exc:
-                        raise TransitionError(
-                            f"StateWork {sid!r} flow {flow_path.parent.name!r} is invalid: {exc}") from exc
-                    if flow_meta.get("fallback") is True:
-                        fallbacks.append(flow_path.parent.name)
-                fallback_policy = str(flow_policy.get("fallback"))
-                if ((fallback_policy == "required" and len(fallbacks) != 1)
-                        or (fallback_policy == "optional" and len(fallbacks) > 1)
-                        or (fallback_policy == "forbidden" and fallbacks)):
-                    raise TransitionError(
-                        f"StateWork {sid!r} fallback policy {fallback_policy!r} "
-                        f"does not match declared fallback flows {fallbacks}")
-                files = self._bundle_files(bundle_root)
-                if "manifest.yaml" not in files:
-                    raise TransitionError(f"StateWork {sid!r} manifest is not part of its bundle")
-                engine_decl = manifest.get("engine") or {}
-                kind = str(engine_decl.get("kind") or "")
-                contract_relative = str(engine_decl.get("contract") or "")
-                contract_path = self._relative_file(bundle_root, contract_relative)
-                workflow_contract = _load_yaml(contract_path) or {}
-                contracts = manifest.get("contracts") or {}
-                local_packets = self._load_fragment(
-                    bundle_root, contracts.get("packets"), fragment="packets")
-                local_evidence = self._load_fragment(
-                    bundle_root, contracts.get("evidence"), fragment="kinds")
-                for packet_id, row in local_packets.items():
-                    if not isinstance(row, Mapping):
-                        raise TransitionError(f"packet fragment {packet_id!r} is malformed")
-                    schema_relative = str(row.get("schema") or "")
-                    local_schema_path = self._relative_file(bundle_root, schema_relative)
-                    schema_doc = json.loads(local_schema_path.read_text(encoding="utf-8"))
-                    jsonschema.Draft202012Validator.check_schema(schema_doc)
-                    existing = packet_rows.get(str(packet_id))
-                    if existing is not None:
-                        previous_schema = packet_schema_docs.get(str(packet_id))
-                        if ({key: value for key, value in existing.items() if key != "schema"}
-                                != {key: value for key, value in row.items() if key != "schema"}
-                                or previous_schema is not None and previous_schema != schema_doc):
-                            raise TransitionError(f"packet contract collision for {packet_id!r}")
-                    packet_rows[str(packet_id)] = dict(row)
-                    packet_schema_docs[str(packet_id)] = schema_doc
-                for kind_id, row in local_evidence.items():
-                    if not isinstance(row, Mapping):
-                        raise TransitionError(f"evidence declaration {kind_id!r} is malformed")
-                    existing = evidence_rows.get(str(kind_id))
-                    if existing is not None and dict(existing) != dict(row):
-                        raise TransitionError(f"evidence kind collision for {kind_id!r}")
-                    evidence_rows[str(kind_id)] = dict(row)
-
-                if kind == "state_machine":
-                    evidence_registry = {"kinds": evidence_rows}
-                    engine_impl: Any = StateMachineWorkflowEngine(TransitionEngine(
-                        dict(workflow_contract), evidence_registry=evidence_registry,
-                        require_registered=True))
-                elif kind == "milestone":
-                    engine_impl = MilestoneWorkflowEngine()
-                else:
-                    engine_impl = self.engine_registry.get(kind)
-                engine_impl.validate_contract(workflow_contract)
-                contract_digest = self._digest(workflow_contract)
-
-                ref = (bundle_root.relative_to(source_root).as_posix()
-                       if bundle_root != source_root else ".")
-                try:
-                    source_root_ref = source_root.relative_to(self.root).as_posix()
-                except ValueError:
-                    source_root_ref = str(source_root)
-                if source_root == self.root:
-                    source_root_ref = "."
-                files_digest = self._digest(files)
-                guidance_path = bundle_root / "guidance.md"
-                guidance = (guidance_path.read_text(encoding="utf-8")
-                            if guidance_path.is_file() and not guidance_path.is_symlink()
-                            else "")
-                runtime_capsule = render_runtime_capsule(
-                    manifest, engine_kind=kind,
-                    contract_version=str(engine_decl.get("contract_version") or ""),
-                    flows=(path.parent.name for path in flow_paths),
-                    guidance=guidance)
-                source_by_id[sid] = (root_ref, source_root)
-                compiled.append({
-                    "id": sid, "root_ref": root_ref,
-                    "source_root": source_root_ref,
-                    "bundle_ref": ref, "bundle_hash": files_digest,
-                    "file_hashes": files, "manifest": dict(manifest),
-                    "engine": {"kind": kind,
-                               "contract_version": str(engine_decl.get("contract_version") or ""),
-                               "contract_path": contract_relative,
-                               "contract_hash": contract_digest,
-                               "contract": dict(workflow_contract)},
-                    "runtime_capsule": runtime_capsule,
-                    "runtime_capsule_hash": hashlib.sha256(
-                        runtime_capsule.encode("utf-8")).hexdigest(),
-                    "contracts": {"packets": list(local_packets),
-                                  "evidence": list(local_evidence)}})
-
-        by_id = {item["id"]: item for item in compiled}
-        for item in compiled:
-            composition = item["manifest"].get("composition") or {}
-            missing = set(composition.get("requires") or ()) - set(by_id)
-            if missing:
-                raise TransitionError(f"StateWork {item['id']!r} requires missing bundles: {sorted(missing)}")
-            unknown_conflicts = set(composition.get("conflicts") or ()) - set(by_id)
-            if unknown_conflicts:
-                raise TransitionError(f"StateWork {item['id']!r} names missing conflicts: {sorted(unknown_conflicts)}")
-        for packet_id, meta in packet_rows.items():
-            producer = str(meta.get("producer") or "")
-            if producer and producer not in by_id:
-                raise TransitionError(
-                    f"packet {packet_id!r} names unavailable producer {producer!r}")
-
-        body = {"registry_version": self.VERSION,
-                "registry_config_hash": hashlib.sha256(registry_path.read_bytes()).hexdigest(),
-                "stateworks": compiled,
-                "packet_registry": {"version": "2.0.0", "packets": packet_rows},
-                "packet_schemas": packet_schema_docs,
-                "evidence_registry": {"version": str(global_evidence.get("version") or "1.0.0"),
-                                      "kinds": evidence_rows},
-                "freshness_validator_hashes": dict(FRESHNESS_VALIDATORS.identities),
-                "builtin_engine_hashes": self._builtin_engine_hashes(),
-                "workflow_engine_hashes": dict(self.engine_registry.identities)}
-        result = {**body, "registry_hash": self._digest(body)}
-        if write:
-            path = self.root / "compiled-registry.json"
-            temporary = path.with_suffix(".json.tmp")
-            temporary.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n",
-                                 encoding="utf-8")
-            os.replace(temporary, path)
-        return result
-
-
 def load_compiled_registry(root: Optional[Path] = None, *,
-                           verify_bundles: bool = True) -> dict[str, Any]:
-    """Load the immutable compile artifact and verify its complete source hashes."""
-    root = Path(root or ROOT).resolve()
-    path = root / "compiled-registry.json"
-    if not path.is_file() or path.is_symlink():
-        raise TransitionError("compiled-registry.json is required; run compile-registry.py")
-    result = json.loads(path.read_text(encoding="utf-8"))
-    body = {key: value for key, value in result.items() if key != "registry_hash"}
-    if result.get("registry_hash") != RegistryCompiler._digest(body):
-        raise TransitionError("compiled registry content hash is invalid")
-    if result.get("registry_version") != RegistryCompiler.VERSION:
-        raise TransitionError("compiled registry version is unsupported")
-    if result.get("freshness_validator_hashes") != dict(FRESHNESS_VALIDATORS.identities):
-        raise TransitionError("compiled freshness-validator registry changed")
-    if result.get("builtin_engine_hashes") != RegistryCompiler._builtin_engine_hashes():
-        raise TransitionError("compiled workflow engine implementation changed")
-    for item in result.get("stateworks") or ():
-        capsule = str(item.get("runtime_capsule") or "")
-        capsule_hash = hashlib.sha256(capsule.encode("utf-8")).hexdigest()
-        if capsule_hash != item.get("runtime_capsule_hash"):
-            raise TransitionError(
-                f"compiled runtime capsule for {item.get('id')!r} has an invalid hash")
-        source_root_ref = str(item.get("source_root") or ".")
-        source_root = (root if source_root_ref == "." else
-                       Path(source_root_ref) if Path(source_root_ref).is_absolute()
-                       else root / source_root_ref)
-        bundle_root = (source_root / str(item.get("bundle_ref") or ".")).resolve()
-        if verify_bundles:
-            actual: dict[str, str] = {}
-            for rel, expected in dict(item.get("file_hashes") or {}).items():
-                file_path = RegistryCompiler._relative_file(bundle_root, rel)
-                actual[rel] = hashlib.sha256(file_path.read_bytes()).hexdigest()
-                if actual[rel] != expected:
-                    raise TransitionError(f"compiled StateWork {item.get('id')!r} changed: {rel}")
-            if RegistryCompiler._digest(actual) != item.get("bundle_hash"):
-                raise TransitionError(f"compiled StateWork {item.get('id')!r} bundle hash changed")
-        item["bundle_root"] = str(bundle_root)
-    return result
+                           verify_bundles: bool = True) -> Dict[str, Any]:
+    """Load the compiled registry through the dedicated registry module."""
+    try:
+        from .registry import load_compiled_registry as implementation
+    except ImportError:
+        from registry import load_compiled_registry as implementation
+    return implementation(root, verify_bundles=verify_bundles)
+
+
+def __getattr__(name: str) -> Any:
+    if name == "RegistryCompiler":
+        try:
+            from .registry import RegistryCompiler
+        except ImportError:
+            from registry import RegistryCompiler
+        return RegistryCompiler
+    raise AttributeError(name)
 
 
 class StandaloneHostInterface:

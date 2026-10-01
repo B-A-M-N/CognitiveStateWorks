@@ -118,7 +118,7 @@ def _main_impl() -> int:
     args = parser.parse_args()
 
     try:
-        from control_plane import RegistryCompiler, load_compiled_registry
+        from registry import RegistryCompiler, load_compiled_registry
         compiled = load_compiled_registry(ROOT, verify_bundles=True)
     except Exception as exc:
         print(f"Invalid compiled StateWork registry: {exc}")

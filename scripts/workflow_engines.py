@@ -7,6 +7,8 @@ decision; a bundle cannot import arbitrary Python by naming a module.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from hashlib import sha256
+from importlib import metadata
 from types import MappingProxyType
 from typing import Any, Iterable, Mapping, Protocol, Sequence
 
@@ -116,6 +118,8 @@ class WorkflowEngine(Protocol):
 
 class EngineRegistry:
     """Host-owned engine registry. Runtime bundles can only select known IDs."""
+    ENTRY_POINT_GROUP = "cognitive_statework.engines"
+
     def __init__(self) -> None:
         self._engines: dict[str, WorkflowEngine] = {}
         self._trusted_hashes: dict[str, str] = {}
@@ -124,8 +128,16 @@ class EngineRegistry:
                  trusted: bool = False) -> None:
         if not trusted:
             raise PermissionError("workflow engine registration requires explicit host trust")
-        if not engine.kind or len(engine.kind) > 64:
+        kind = getattr(engine, "kind", None)
+        contract_version = getattr(engine, "contract_version", None)
+        if not isinstance(kind, str) or not kind.strip() or len(kind) > 64:
             raise ValueError("workflow engine kind must be bounded text")
+        if (not isinstance(contract_version, str) or not contract_version.strip()
+                or len(contract_version) > 128):
+            raise TypeError("workflow engine must declare a contract version")
+        if any(not callable(getattr(engine, method, None)) for method in (
+                "validate_contract", "initialize", "inspect", "eligible_steps", "apply")):
+            raise TypeError("workflow engine does not implement the complete engine interface")
         if len(implementation_hash) != 64 or any(
                 char not in "0123456789abcdef" for char in implementation_hash):
             raise ValueError("workflow engine implementation hash must be SHA-256")
@@ -134,6 +146,99 @@ class EngineRegistry:
             raise ValueError(f"workflow engine {engine.kind!r} is already registered differently")
         self._engines[engine.kind] = engine
         self._trusted_hashes[engine.kind] = implementation_hash
+
+    @staticmethod
+    def entry_point_identity(entry_point: Any) -> str:
+        distribution = getattr(entry_point, "dist", None)
+        if distribution is None:
+            raise ValueError("workflow engine entry point has no owning distribution")
+        name = str((getattr(distribution, "metadata", {}) or {}).get("Name") or "")
+        version = str(getattr(distribution, "version", "") or "")
+        if not name or not version:
+            raise ValueError("workflow engine entry point distribution identity is incomplete")
+        return f"{name}=={version}:{entry_point.name}={entry_point.value}"
+
+    @staticmethod
+    def entry_point_source_hash(entry_point: Any) -> str:
+        distribution = entry_point.dist
+        module_name = str(entry_point.value).split(":", 1)[0]
+        if not module_name or any(not part.isidentifier() for part in module_name.split(".")):
+            raise ValueError("workflow engine entry point must name a Python module")
+        module_path = module_name.replace(".", "/")
+        candidates = {module_path + ".py", module_path + "/__init__.py"}
+        files = getattr(distribution, "files", None) or ()
+        normalized = {str(item).replace("\\", "/"): item for item in files}
+        module_matches = [normalized[name] for name in candidates if name in normalized]
+        if len(module_matches) != 1:
+            raise ValueError("workflow engine entry point module must be one packaged source file")
+        source_files = sorted((item for item in files
+                               if str(item).replace("\\", "/").endswith(".py")),
+                              key=lambda item: str(item))
+        if not source_files or len(source_files) > 4096:
+            raise ValueError("workflow engine distribution has an invalid Python source inventory")
+        digest = sha256()
+        total_bytes = 0
+        for item in source_files:
+            source = distribution.locate_file(item)
+            if source.is_symlink() or not source.is_file():
+                raise ValueError("workflow engine distribution contains missing or linked source")
+            contents = source.read_bytes()
+            total_bytes += len(contents)
+            if total_bytes > 64 * 1024 * 1024:
+                raise ValueError("workflow engine distribution source exceeds the hash bound")
+            digest.update(str(item).replace("\\", "/").encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(contents)
+            digest.update(b"\0")
+        return digest.hexdigest()
+
+    def _load_entries(self, trusted_entry_points: Mapping[str, str],
+                      entry_points: Iterable[Any]) -> tuple[str, ...]:
+        """Load only source-hash-pinned entries explicitly adopted by the host."""
+        if not isinstance(trusted_entry_points, Mapping):
+            raise TypeError("trusted engine entry points must be a host-owned mapping")
+        if not trusted_entry_points:
+            return ()
+        discovered: dict[str, Any] = {}
+        for entry_point in entry_points:
+            try:
+                identity = self.entry_point_identity(entry_point)
+            except (AttributeError, TypeError, ValueError):
+                continue
+            if identity not in trusted_entry_points:
+                continue
+            if identity in discovered:
+                raise ValueError(f"duplicate workflow engine entry point {identity!r}")
+            discovered[identity] = entry_point
+        missing = set(trusted_entry_points) - set(discovered)
+        if missing:
+            raise ValueError(f"trusted workflow engine entry points are unavailable: {sorted(missing)}")
+
+        loaded: list[str] = []
+        for identity, expected_hash in trusted_entry_points.items():
+            if (not isinstance(expected_hash, str) or len(expected_hash) != 64
+                    or any(char not in "0123456789abcdef" for char in expected_hash)):
+                raise ValueError("trusted workflow engine pins must be lowercase SHA-256 hashes")
+            entry_point = discovered[identity]
+            actual_hash = self.entry_point_source_hash(entry_point)
+            if actual_hash != expected_hash:
+                raise PermissionError(
+                    f"workflow engine entry point source differs from host trust pin: {identity}")
+            implementation = entry_point.load()
+            engine = implementation() if isinstance(implementation, type) else implementation
+            if str(getattr(engine, "kind", "")) != str(entry_point.name):
+                raise ValueError("workflow engine kind must match its entry point name")
+            self.register(engine, implementation_hash=actual_hash, trusted=True)
+            loaded.append(engine.kind)
+        return tuple(loaded)
+
+    def load_trusted_entry_points(self, trusted_entry_points: Mapping[str, str]
+                                  ) -> tuple[str, ...]:
+        """Load explicitly adopted Python engines; data bundles never trigger imports."""
+        if not trusted_entry_points:
+            return ()
+        entries = metadata.entry_points(group=self.ENTRY_POINT_GROUP)
+        return self._load_entries(trusted_entry_points, entries)
 
     def get(self, kind: str) -> WorkflowEngine:
         try:

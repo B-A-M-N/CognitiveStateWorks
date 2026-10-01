@@ -29,6 +29,8 @@ The enforcing runtime includes:
 - Bounded, data-only flow predicates with explicit fallback, ambiguity, and no-match policy.
 - Runtime capsules generated from the compiled manifest and workflow contract, with optional `guidance.md` text.
 
+External executable extensions use the `cognitive_statework.engines`, `cognitive_statework.evidence_validators`, and `cognitive_statework.freshness_validators` entry-point groups. A host must explicitly adopt each distribution/version/entry-point identity and pin its distribution Python-source SHA-256 through the corresponding registry's `load_trusted_entry_points(...)` method. The pin is checked before loading; compiled registries also pin the adopted implementation hashes. Data-only bundles cannot trigger Python imports.
+
 Use the advisory product for documentation and workflow guidance:
 
 ```bash

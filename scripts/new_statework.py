@@ -13,9 +13,9 @@ from typing import Any
 import yaml
 
 try:
-    from .control_plane import RegistryCompiler
+    from .registry import RegistryCompiler
 except ImportError:
-    from control_plane import RegistryCompiler
+    from registry import RegistryCompiler
 
 
 _SCRIPT_ROOT = Path(__file__).resolve().parent
