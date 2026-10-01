@@ -90,6 +90,7 @@ That product contains the controller, schemas, compiled StateWork bundles, flows
 - **CSW alone:** use `StandaloneHostInterface` and the enforcing installation; CFW and DP are not required.
 - **CSW + CFW:** CFW supplies task components and action enforcement; CSW retains workflow selection, state, evidence, and transition authority.
 - **CSW + DP:** DP may rank and request activation of an eligible StateWork. CSW checks the composition and selection revision, then records the active set; DP cannot create eligibility, weaken a transition contract, or rewrite workflow state.
+- **CSW + CFW + DP:** CFW supplies cognitive components and action enforcement, DP coordinates behavior through explicit ports, and CSW remains the authority for workflow selection, state, evidence, and legal transitions.
 
 The host calls `WorkflowAuthority.behavioral_snapshot(...)` with the workflow
 scope and an optional bounded candidate list. It does not supply active
