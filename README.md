@@ -91,6 +91,14 @@ That product contains the controller, schemas, compiled StateWork bundles, flows
 - **CSW + CFW:** CFW may compose StateWork flow eligibility and framework enhancements, but CSW retains state and evidence authority.
 - **CSW + DP:** DP may recommend a legal future flow preference. It cannot create flow eligibility, weaken a transition contract, or rewrite an active subject state.
 
+The runtime host may call `WorkflowAuthority.behavioral_snapshot(...)` with its
+active workflow identities and a bounded candidate list. CSW returns current
+authoritative workflow states and legal steps, plus only registered,
+composition-compatible StateWorks with their bounded `behavior_tags`. DP may
+rank those candidates; tags are descriptive hints and do not grant activation
+or transition authority. Applying any workflow step still uses
+`WorkflowAuthority.apply_step(...)` with evidence and an expected revision.
+
 The top-level architecture diagram is a combined deployment view, not a statement that CFW is required for CSW execution. The standalone quickstart above is the canonical CSW entry point.
 
 ## The larger architecture

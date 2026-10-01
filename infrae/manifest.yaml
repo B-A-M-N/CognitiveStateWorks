@@ -15,6 +15,7 @@ triggers:
 - recovery
 - observability
 phase_tags: [domain_state]
+behavior_tags: [infrastructure, diagnose, recovery, verification]
 inputs:
   required:
   - task_context

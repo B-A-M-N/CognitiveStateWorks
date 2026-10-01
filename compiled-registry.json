@@ -2,7 +2,7 @@
   "builtin_engine_hashes": {
     "flow_selector": "33f50a692126cfc2ca8237fb40d5cb4c9998afa0e30ee53d2b03c91881ba33d1",
     "milestone": "70b8da14e606c650788c474e7a3732fc7599d61819be13a01adc92ee204ee223",
-    "state_machine": "e9dfb75cf5be2942848223d04622597b9aba45b0db79415142cf3a1fcec3fe18"
+    "state_machine": "efdbf51180713c036eb24356ed8bfa1c4d85716febc757666251166c40920e3e"
   },
   "evidence_registry": {
     "kinds": {
@@ -1065,11 +1065,11 @@
     }
   },
   "registry_config_hash": "d4efe61d7c37394e7e4d7fd0406b5d83c94e2b0941cf56f7c2e57a881693ef85",
-  "registry_hash": "1ab1880acb046eab54faa4d31e40c1a7a9e77b0d6a930bd0b911e3d2872ace33",
+  "registry_hash": "708302f0552ccae62abc22c9f76f4003703dc31df2a6ee57192ffb82d7f2a4e6",
   "registry_version": "2.0.0",
   "stateworks": [
     {
-      "bundle_hash": "95705617cf4509bd2bd57c8c7ad88959d73a0046783a0dd0a7b6a71036d86177",
+      "bundle_hash": "7ad1e84e274b35ac757b24c7281ae0542082b04f1d8b9505f08d20a3920f1060",
       "bundle_ref": "infrae",
       "contracts": {
         "evidence": [
@@ -1413,7 +1413,7 @@
         "flows/recover/flow.md": "7f908b0f99a163ab4b66d7a5f03b5af1d29a7a8e101b777e0233bf2f4bfc6938",
         "flows/scale/flow.md": "81e4ecd1945403d0dda28dac6731f12de5a8eac790ee58ed19920a18cd0f14dd",
         "flows/validate/flow.md": "fe391362f9ecf2b2780debecd2ec4e4a57c81988286d47c7efa59c8bbe68122f",
-        "manifest.yaml": "6dd657d70118f484aa572a33ae2a8cc97fd9f93e4c24e64fa6a72b8257336500",
+        "manifest.yaml": "1f1a1cc69ca5b716266cc0fe00113bd3ae5c21bfccea3ce3e3344a482f128fb4",
         "policies/concurrency/README.md": "4eb0b4c369eb79d439a0c357799f059792b2901f25b4069433ef0ba4b7e6998b",
         "policies/destructive-change/README.md": "478803fe1c0045d6e3ca2e9861750a27645faf5bfc0c552ac86dc76e20e9a7fb",
         "policies/evidence-thresholds/README.md": "3c866f7cf8a37712b458802be17fa48cb9232a48c41bff29568285c4528619d4",
@@ -1434,6 +1434,12 @@
       "id": "infrae",
       "manifest": {
         "advisory_entrypoint": "STATEWORK.md",
+        "behavior_tags": [
+          "infrastructure",
+          "diagnose",
+          "recovery",
+          "verification"
+        ],
         "bundle_schema_version": 2,
         "composition": {
           "conflicts": [],
@@ -1509,7 +1515,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "cd29142f75aab00ac18cc22faa6dcd9ecee1c7b7c6b963afe3f0a639f3629bae",
+      "bundle_hash": "2ad7ef21391ffae546a6a8086bc20f06b95095f504cc140c9d5e577aa3cd37e0",
       "bundle_ref": "gitter",
       "contracts": {
         "evidence": [
@@ -1591,13 +1597,19 @@
         "contracts/evidence-kinds.yaml": "cf2eda40054573c778ea341ffbad6e382bb5d397cec4fd3e691b6852e3da5503",
         "contracts/packets.yaml": "fcc9787d417c11a98e9d1df88179bf12a241ae90b8bb308fa6a0b7ea55bef957",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
-        "manifest.yaml": "28719308565b0f7eaa653be0c69cac521b611528a60be1c16395b05c34469210",
+        "manifest.yaml": "da4e23f3e621288d3075007a3172e4eae7f88aedb61922343e98f23c393db9eb",
         "runtime.md": "43b5a0f6068ed5f9a4b26ffb4e1a58370819ad5d8a179a2caccf370ebc9dbc61",
         "transitions.yaml": "4d89a2ae88062b30d2ecda41b016d05616efaae8cddbcc1ca520452c257b8088"
       },
       "id": "gitter",
       "manifest": {
         "advisory_entrypoint": "SKILL.md",
+        "behavior_tags": [
+          "observation",
+          "diagnose",
+          "reinspection",
+          "evidence"
+        ],
         "bundle_schema_version": 2,
         "composition": {
           "conflicts": [],
@@ -1669,7 +1681,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "b2ff411d3f707ef12fcb93884fac8588f1f8f0cf0178ea8e423987bf9eff07b5",
+      "bundle_hash": "74b77426a09b8e168af3152a4e4cadff8c0285e139dbcadb0e16aa9dfaecbccf",
       "bundle_ref": "getter",
       "contracts": {
         "evidence": [
@@ -1826,13 +1838,18 @@
         "contracts/packets.yaml": "19db12dfb5fef646a4e9db5cf9ece1a78e97a8c6c53d83af5218d2f24eab08f8",
         "contracts/schemas/repository-evidence-packet.schema.json": "5508e285ebbcbb525819b8c344e56af6c94a06e081af0e9a7f173aa4b62e27ba",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
-        "manifest.yaml": "478ca92ca6d9e8125a471fc7c835c5726b3f6445e5c7193b7c2ab9224d1322c9",
+        "manifest.yaml": "fe9107f03cb2b54487d1c782185f5da45c00be350337b3c130908e63b03d45dd",
         "runtime.md": "e75f62fa7dfe1ade1adbb6c2408adab234c3022b7f968c646fb589f157603e0e",
         "transitions.yaml": "0673a2735ada5e9e9bd5499ae33aac6138341f090a951a8998ac0f50d9bdd026"
       },
       "id": "getter",
       "manifest": {
         "advisory_entrypoint": "SKILL.md",
+        "behavior_tags": [
+          "implementation",
+          "mutation",
+          "recovery"
+        ],
         "bundle_schema_version": 2,
         "composition": {
           "conflicts": [],
@@ -1912,7 +1929,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "31b031e81b5f9fb67f215bafb9dff2dfec8f4d5a9dddc28ca6fd0560cae17487",
+      "bundle_hash": "69a64ae6545343277cb00a4baf53e6b9d36a90e5bfd20c85798b071620cd2129",
       "bundle_ref": "tuid",
       "contracts": {
         "evidence": [
@@ -2257,7 +2274,7 @@
         "frameworks/ink-typescript/framework.md": "1dc4662124c72ada4810f16b209a93f5d841a9cff8cd6a333d720f78dcf494b4",
         "frameworks/ratatui-rust/framework.md": "a6470e80eb124ac1e439be5e12fff2d1c19f1d1866e22ccae49e3ff428b493f0",
         "frameworks/textual-python/framework.md": "4bfdcc3fcdd332c7d975e45356c71e918e4b37928cdf48312013b011907b84cc",
-        "manifest.yaml": "eb3b6a637d7408284ba4a1b9801ca2e998ca485aa0a15e7b150fce72bc310d03",
+        "manifest.yaml": "baaf4217ec9d8bfbb750af4a4196ad902acb08abeb2912c9827cad6c4a54d439",
         "patterns/command-center/pattern.md": "d96757a3047ee87d26be92f1d55701000d6cee8fb8256758a4e2332b691fe2ce",
         "patterns/dashboard/pattern.md": "9914c4ea67ff944d53e230c9a17878b3870f53e4a160e292869e5e8524bfb89a",
         "patterns/data-browser/pattern.md": "0471747940677b8e66c7a045a9d8acdfa2b759a72c6567f84baaf64d3b0928dd",
@@ -2303,6 +2320,12 @@
       "id": "tuid",
       "manifest": {
         "advisory_entrypoint": "SKILL.md",
+        "behavior_tags": [
+          "implementation",
+          "verification",
+          "diagnose",
+          "interface"
+        ],
         "bundle_schema_version": 2,
         "composition": {
           "conflicts": [],

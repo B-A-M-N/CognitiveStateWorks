@@ -15,6 +15,7 @@ triggers:
 - conflict resolution
 - repository recovery
 phase_tags: [mutation]
+behavior_tags: [implementation, mutation, recovery]
 inputs:
   required:
   - repository_truth_packet

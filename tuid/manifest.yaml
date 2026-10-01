@@ -25,6 +25,7 @@ match:
   - terminal capabilities
   - terminal corruption
 phase_tags: [domain_state]
+behavior_tags: [implementation, verification, diagnose, interface]
 inputs:
   required:
   - task_context

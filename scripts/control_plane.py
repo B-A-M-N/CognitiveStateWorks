@@ -1277,6 +1277,143 @@ class WorkflowAuthority:
                 "contract_hash": digest, "contract": contract,
                 "manifest": manifest}
 
+    def behavioral_snapshot(
+            self, *,
+            active_workflows: Iterable[Mapping[str, Any]] = (),
+            candidate_statework_ids: Iterable[str] = (),
+            ) -> dict[str, Any]:
+        """Return bounded authoritative workflow facts for a behavioral host.
+
+        DigitalPsychology may rank the returned candidates. CSW determines
+        which candidates are registered and composition-compatible, reports
+        the authoritative state and legal steps of already active workflows,
+        and remains the only authority that can apply a workflow step.
+
+        Each active workflow row has the shape ``{"identity": {...},
+        "contract_hash": "..."}``, where identity is a normal workflow
+        identity mapping. Candidate IDs are supplied by the trusted runtime
+        host; neither this method nor its output activates or transitions a
+        StateWork.
+        """
+        active_rows = list(active_workflows)
+        candidates = list(candidate_statework_ids)
+        if len(active_rows) > 16 or len(candidates) > 32:
+            raise TransitionError("behavioral snapshot request exceeds its bounds")
+
+        compiled = load_compiled_registry(self.root)
+        entries = {str(item.get("id")): item
+                   for item in compiled.get("stateworks") or ()}
+        active_ids: set[str] = set()
+        active: list[dict[str, Any]] = []
+        for row in active_rows:
+            if not isinstance(row, Mapping) or set(row) != {"identity", "contract_hash"}:
+                raise TransitionError("active workflow snapshot row is malformed")
+            raw_identity = row.get("identity")
+            contract_hash = row.get("contract_hash")
+            if not isinstance(raw_identity, Mapping):
+                raise TransitionError("active workflow identity must be an object")
+            identity_fields = {
+                "namespace_id", "application_id", "application_instance_id",
+                "workflow_id", "subject_ref", "statework_id", "contract_version",
+            }
+            if set(raw_identity) != identity_fields:
+                raise TransitionError("active workflow identity has missing or unknown fields")
+            identity = self._identity(raw_identity)
+            statework_id = identity.statework_id
+            if statework_id not in entries:
+                raise TransitionError(f"StateWork {statework_id!r} is unavailable")
+            if statework_id in active_ids:
+                raise TransitionError("active workflow StateWork IDs must be unique")
+            if (not isinstance(contract_hash, str) or len(contract_hash) != 64
+                    or any(char not in "0123456789abcdef" for char in contract_hash)):
+                raise TransitionError("active workflow contract hash is malformed")
+            snapshot = self.inspect_workflow(identity, contract_hash=contract_hash)
+            active_ids.add(statework_id)
+            active.append({
+                "identity": dict(identity.__dict__),
+                "contract_hash": contract_hash,
+                "engine_kind": snapshot.engine_kind,
+                "revision": snapshot.revision,
+                "current_state": snapshot.current_state,
+                "completed": snapshot.completed,
+                "eligible_steps": [
+                    {"step_id": step.step_id, "label": step.label,
+                     "work_class": step.work_class, "domain_effect": step.domain_effect,
+                     "required_evidence": list(step.required_evidence),
+                     "dependencies": list(step.dependencies)}
+                    for step in snapshot.eligible_steps
+                ],
+            })
+
+        if any(not isinstance(item, str) or not item or len(item) > 128
+               for item in candidates):
+            raise TransitionError("candidate StateWork IDs must be bounded text")
+        if len(candidates) != len(set(candidates)):
+            raise TransitionError("candidate StateWork IDs must be unique")
+        unknown = sorted(set(candidates) - set(entries))
+        if unknown:
+            raise TransitionError(f"unavailable candidate StateWorks: {unknown}")
+
+        active_manifests = [dict(entries[statework_id].get("manifest") or {})
+                            for statework_id in active_ids]
+
+        def depends_on(statework_id: str, target_id: str) -> bool:
+            pending = [statework_id]
+            visited: set[str] = set()
+            while pending:
+                current = pending.pop()
+                if current in visited:
+                    continue
+                visited.add(current)
+                manifest = dict(entries[current].get("manifest") or {})
+                required_ids = set(
+                    (manifest.get("composition") or {}).get("requires") or ())
+                if target_id in required_ids:
+                    return True
+                pending.extend(item for item in required_ids if item in entries)
+            return False
+
+        eligible = []
+        for statework_id in sorted(candidates):
+            if statework_id in active_ids:
+                continue
+            manifest = dict(entries[statework_id].get("manifest") or {})
+            composition = dict(manifest.get("composition") or {})
+            required = set(composition.get("requires") or ())
+            conflicts = set(composition.get("conflicts") or ())
+            exclusive_group = str(composition.get("group") or "")
+            independent_group_conflict = False
+            # A declared prerequisite chain may include related members of an
+            # exclusive group. Independent roots in that group remain mutually
+            # exclusive, matching the resolver's composition rule.
+            for active_manifest in active_manifests:
+                active_id = str(active_manifest.get("id") or "")
+                active_composition = dict(active_manifest.get("composition") or {})
+                active_group = str(active_composition.get("group") or "")
+                if (exclusive_group and exclusive_group == active_group
+                        and not depends_on(statework_id, active_id)
+                        and not depends_on(active_id, statework_id)):
+                    independent_group_conflict = True
+                    break
+            if (not required.issubset(active_ids)
+                    or conflicts.intersection(active_ids)
+                    or independent_group_conflict):
+                continue
+            eligible.append({
+                "statework_id": statework_id,
+                "domain": str(manifest.get("domain") or ""),
+                "purpose": str(manifest.get("purpose") or ""),
+                "behavior_tags": list(manifest.get("behavior_tags") or ()),
+            })
+
+        body = {"registry_hash": compiled["registry_hash"],
+                "active_workflows": active,
+                "eligible_stateworks": eligible}
+        snapshot_id = hashlib.sha256(json.dumps(
+            body, sort_keys=True, separators=(",", ":"), default=str
+        ).encode("utf-8")).hexdigest()
+        return {"snapshot_id": snapshot_id, **body}
+
     def _identity_key(self, identity: WorkflowIdentity) -> str:
         return self.state_store.key(identity.__dict__)
 
