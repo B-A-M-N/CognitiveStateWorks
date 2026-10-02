@@ -8,6 +8,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.workflow_engines import EngineRegistry
+from scripts.registry import CompiledRegistry
 from scripts.control_plane import (EvidenceStore, EvidenceValidatorRegistry,
                                    FreshnessValidatorRegistry, TransitionError)
 
@@ -76,6 +77,23 @@ def test_engine_entry_point_load_requires_an_explicit_source_pin(tmp_path: Path)
     assert loaded == ("demo",)
     assert registry.identities["demo"] == digest
     assert entry_point.load_count == 1
+
+
+def test_compiled_registry_owns_validated_flow_contract_and_metadata():
+    import yaml
+
+    root = Path(__file__).resolve().parents[1]
+    manifest = yaml.safe_load((root / "infrae" / "manifest.yaml").read_text(
+        encoding="utf-8"))
+    compiled = CompiledRegistry({"stateworks": [{
+        "id": "infrae", "bundle_root": str(root / "infrae"), "manifest": manifest,
+    }]}, root=root)
+
+    contract = compiled.flow_contract("infrae")
+
+    assert contract["policy"] == manifest["flow_selection"]
+    assert contract["flows"]["design"]["flow"] == "design"
+    assert compiled.flow_metadata("infrae") == contract["flows"]
 
 
 def test_engine_entry_point_hash_is_checked_before_import(tmp_path: Path):

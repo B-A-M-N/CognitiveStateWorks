@@ -49,6 +49,9 @@ def validate_flow_file(flow_path: Path, *, flow_schema: Mapping[str, Any],
                 f"non-state-machine flow {flow_path.parent.name!r} cannot declare states")
         if "when" in flow_meta:
             FlowSelector.validate_predicate(flow_meta["when"])
+        elif flow_meta.get("fallback") is not True:
+            raise TransitionError(
+                f"StateWork flow {flow_path.parent.name!r} needs when or fallback=true")
     except (ValueError, jsonschema.ValidationError, yaml.YAMLError) as exc:
         raise TransitionError(
             f"StateWork flow {flow_path.parent.name!r} is invalid: {exc}") from exc

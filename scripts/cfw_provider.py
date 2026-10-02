@@ -18,7 +18,7 @@ class CognitiveStateWorkProvider:
     def __init__(self, root: Path):
         self.root = Path(root).resolve()
         self._control: Any = None
-        self._compiled: Optional[Dict[str, Any]] = None
+        self._compiled: Optional[Any] = None
 
     @staticmethod
     def default_root() -> Path:
@@ -46,17 +46,48 @@ class CognitiveStateWorkProvider:
         return CFWAuthorityAdapter(
             self.root, control_plane_module=self._control_plane(), **options)
 
-    def _compiled_registry(self) -> Dict[str, Any]:
+    def _compiled_registry(self) -> Any:
         if self._compiled is None:
             try:
-                data = self._control_plane().load_compiled_registry(self.root)
+                opener = getattr(self._control_plane(), "open_compiled_registry", None)
+                if not callable(opener):
+                    raise CognitiveStateWorkProviderError(
+                        "CognitiveStateWork lacks the canonical compiled-registry flow API")
+                data = opener(self.root)
             except Exception as exc:
+                if isinstance(exc, CognitiveStateWorkProviderError):
+                    raise
                 raise CognitiveStateWorkProviderError(
                     f"compiled StateWork registry is invalid: {exc}") from exc
             if not isinstance(data, Mapping):
                 raise CognitiveStateWorkProviderError("compiled StateWork registry is invalid")
-            self._compiled = dict(data)
+            # Keep the canonical CompiledRegistry service object intact.
+            # Converting it to dict discards flow_contract()/flow_metadata(),
+            # forcing the adapter to reimplement CSW validation details.
+            self._compiled = data
         return self._compiled
+
+    def _workflow_planner(self) -> Any:
+        from .workflow_planner import WorkflowPlanner
+
+        compiled = self._compiled_registry()
+        return WorkflowPlanner(
+            compiled, self.root,
+            packet_store_factory=lambda packets: self._control_plane().PacketStore(
+                packets, packet_registry_data=compiled.get("packet_registry") or {},
+                packet_schemas=compiled.get("packet_schemas") or {}))
+
+    def eligible_routes(self, *, runtime_identity: Mapping[str, Any],
+                        task_context: Mapping[str, Any]) -> Dict[str, Any]:
+        """Return workflow choices authorized by the compiled CSW registry."""
+        return self._workflow_planner().eligible_routes(runtime_identity, task_context)
+
+    def resolve_workflows(self, *, runtime_identity: Mapping[str, Any],
+                          task_context: Mapping[str, Any],
+                          routing_adjustments: Iterable[Mapping[str, Any]]) -> Dict[str, Any]:
+        """Resolve the final legal workflow plan after bounded host preferences."""
+        return self._workflow_planner().resolve_workflows(
+            runtime_identity, task_context, routing_adjustments)
 
     def load_stateworks(self) -> list[dict[str, Any]]:
         compiled = self._compiled_registry()
@@ -120,70 +151,21 @@ class CognitiveStateWorkProvider:
 
     def validate_flow_contracts(self, statework_id: str, *,
                                 owner_root: Optional[Path] = None) -> None:
-        flows_dir = (owner_root or self.bundle_root(statework_id)) / "flows"
-        paths = sorted(flows_dir.glob("*/flow.md")) if flows_dir.is_dir() else []
-        if not paths:
-            return
-        entry = next((item for item in self._compiled_registry().get("stateworks", ())
-                      if item.get("id") == statework_id), None)
-        if entry is None:
+        compiled = self._compiled_registry()
+        expected_root = self.bundle_root(statework_id).resolve()
+        if owner_root is not None and Path(owner_root).resolve() != expected_root:
             raise CognitiveStateWorkProviderError(
-                f"compiled StateWork {statework_id!r} is unavailable")
-        policy = dict((entry.get("manifest") or {}).get("flow_selection") or {})
-        selector = self.flow_selector()
-        fallbacks = []
-        for path in paths:
-            name = path.parent.name
-            pieces = path.read_text(encoding="utf-8").split("---", 2)
-            if len(pieces) != 3 or pieces[0].strip():
-                raise CognitiveStateWorkProviderError(
-                    f"StateWork {statework_id!r} flow {name!r} lacks machine-readable frontmatter")
-            try:
-                meta = yaml.safe_load(pieces[1]) or {}
-            except Exception as exc:
-                raise CognitiveStateWorkProviderError(
-                    f"StateWork {statework_id!r} flow {name!r} has invalid frontmatter") from exc
-            if not isinstance(meta, Mapping) or meta.get("flow") != name:
-                raise CognitiveStateWorkProviderError(
-                    f"StateWork {statework_id!r} flow {name!r} metadata is invalid")
-            if "when" in meta:
-                try:
-                    selector.validate_predicate(meta["when"])
-                except Exception as exc:
-                    raise CognitiveStateWorkProviderError(
-                        f"StateWork {statework_id!r} flow {name!r} selector is invalid") from exc
-            elif meta.get("fallback") is not True:
-                raise CognitiveStateWorkProviderError(
-                    f"StateWork {statework_id!r} flow {name!r} needs when or fallback=true")
-            if meta.get("fallback") is True:
-                fallbacks.append(name)
-        fallback_policy = str(policy.get("fallback") or "")
-        if ((fallback_policy == "required" and len(fallbacks) != 1)
-                or (fallback_policy == "optional" and len(fallbacks) > 1)
-                or (fallback_policy == "forbidden" and fallbacks)):
+                f"StateWork {statework_id!r} flow root differs from the compiled registry")
+        try:
+            compiled.flow_contract(statework_id)
+        except Exception as exc:
             raise CognitiveStateWorkProviderError(
-                f"StateWork {statework_id!r} fallback policy {fallback_policy!r} "
-                f"does not match declared flows {fallbacks}")
+                f"StateWork {statework_id!r} flow contract is invalid: {exc}") from exc
 
     def flow_metadata(self, statework: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
         statework_id = str(statework.get("id") or "")
-        owner_root = self.bundle_root(statework)
-        self.validate_flow_contracts(statework_id, owner_root=owner_root)
-        flows_dir = owner_root / "flows"
-        result: Dict[str, Dict[str, Any]] = {}
-        for path in sorted(flows_dir.glob("*/flow.md")) if flows_dir.is_dir() else ():
-            name = path.parent.name
-            try:
-                pieces = path.read_text(encoding="utf-8").split("---", 2)
-                meta = yaml.safe_load(pieces[1]) or {}
-            except Exception as exc:
-                raise CognitiveStateWorkProviderError(
-                    f"StateWork {statework_id!r} flow {name!r} has invalid frontmatter") from exc
-            if not isinstance(meta, Mapping) or meta.get("flow") != name:
-                raise CognitiveStateWorkProviderError(
-                    f"StateWork {statework_id!r} flow {name!r} metadata is invalid")
-            result[name] = dict(meta)
-        return result
+        self.validate_flow_contracts(statework_id, owner_root=self.bundle_root(statework))
+        return self._compiled_registry().flow_metadata(statework_id)
 
     def flow_selector(self) -> Any:
         return self._control_plane().FlowSelector

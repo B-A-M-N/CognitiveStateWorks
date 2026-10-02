@@ -225,12 +225,44 @@ def test_dp_activation_has_session_scoped_expiring_provenance(tmp_path):
             expected_control_session_id="dp-session-1",
             expected_intervention_id="another-session")
 
-    still_active = authority.behavioral_snapshot(
-        workflow_scope=scope, host_action_index=1)
+    still_active = authority.behavioral_snapshot(workflow_scope=scope)
     assert still_active["active_workflows"][0]["identity"]["statework_id"] == "gitter"
-    expired = authority.behavioral_snapshot(
+    assert still_active["selection_revision"] == selected["revision"]
+
+    unchanged = authority.expire_workflow_leases(
+        workflow_scope=scope, host_action_index=1)
+    assert unchanged["revision"] == selected["revision"]
+    before_expiry = authority.behavioral_snapshot(workflow_scope=scope)
+    assert before_expiry["active_workflows"]
+
+    expired_selection = authority.expire_workflow_leases(
         workflow_scope=scope, host_action_index=2)
+    assert expired_selection["revision"] == selected["revision"] + 1
+    assert expired_selection["active_workflows"] == {}
+    expired = authority.behavioral_snapshot(workflow_scope=scope)
     assert expired["active_workflows"] == []
+
+
+def test_expiring_dp_workflow_preserves_an_independent_host_workflow(tmp_path):
+    authority = _authority(tmp_path)
+    scope = _scope("partial-expiry")
+    dp_identity, dp_contract = _identity(authority, scope, "infrae")
+    selected = authority.activate_workflow(
+        dp_identity, contract_hash=dp_contract["contract_hash"],
+        expected_selection_revision=0,
+        activation_owner="digitalpsychology", control_session_id="dp-session-a",
+        intervention_id="dp-intervention-a", expires_at_action=2)
+    host_identity, host_contract = _identity(authority, scope, "tuid")
+    selected = authority.activate_workflow(
+        host_identity, contract_hash=host_contract["contract_hash"],
+        expected_selection_revision=selected["revision"],
+        activation_owner="host")
+
+    expired = authority.expire_workflow_leases(
+        workflow_scope=scope, host_action_index=2)
+
+    assert set(expired["active_workflows"]) == {"tuid"}
+    assert expired["active_workflows"]["tuid"]["activation_owner"] == "host"
 
 
 def test_legacy_selection_rows_remain_permanent_host_activations(tmp_path):
@@ -248,6 +280,5 @@ def test_legacy_selection_rows_remain_permanent_host_activations(tmp_path):
         }},
     }), encoding="utf-8")
 
-    snapshot = authority.behavioral_snapshot(
-        workflow_scope=scope, host_action_index=100)
+    snapshot = authority.behavioral_snapshot(workflow_scope=scope)
     assert snapshot["active_workflows"][0]["identity"]["statework_id"] == "gitter"

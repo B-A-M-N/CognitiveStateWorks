@@ -263,6 +263,68 @@ class RegistryCompiler:
         return result
 
 
+class CompiledRegistry(Mapping[str, Any]):
+    """Verified compiled registry with canonical StateWork flow services."""
+
+    def __init__(self, data: Mapping[str, Any], *, root: Path):
+        if not isinstance(data, Mapping):
+            raise TypeError("compiled registry data must be a mapping")
+        self._data = dict(data)
+        self.root = Path(root).resolve()
+
+    def __getitem__(self, key: str) -> Any:
+        return self._data[key]
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def _entry(self, statework_id: str) -> Mapping[str, Any]:
+        entry = next((item for item in self._data.get("stateworks", ())
+                      if isinstance(item, Mapping) and item.get("id") == statework_id), None)
+        if entry is None:
+            raise TransitionError(f"compiled StateWork {statework_id!r} is unavailable")
+        return entry
+
+    def flow_metadata(self, statework_id: str) -> dict[str, dict[str, Any]]:
+        """Return validated frontmatter for every declared flow in a StateWork."""
+        entry = self._entry(str(statework_id))
+        bundle_root = Path(str(entry.get("bundle_root") or ""))
+        if not bundle_root.is_dir():
+            raise TransitionError(f"compiled StateWork {statework_id!r} source root is missing")
+        schema_path = self.root / "schemas" / "statework-flow.schema.json"
+        flow_schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        engine_kind = str((entry.get("manifest") or {}).get("engine", {}).get("kind") or "")
+        flows_dir = bundle_root / "flows"
+        result: dict[str, dict[str, Any]] = {}
+        for path in sorted(flows_dir.glob("*/flow.md")) if flows_dir.is_dir() else ():
+            result[path.parent.name] = validate_flow_file(
+                path, flow_schema=flow_schema, engine_kind=engine_kind)
+        return result
+
+    def flow_contract(self, statework_id: str) -> dict[str, Any]:
+        """Return and validate a StateWork's flow-selection policy and flows."""
+        entry = self._entry(str(statework_id))
+        manifest = entry.get("manifest") or {}
+        policy = manifest.get("flow_selection") or {}
+        if not isinstance(policy, Mapping):
+            raise TransitionError(f"StateWork {statework_id!r} flow policy is malformed")
+        flows = self.flow_metadata(str(statework_id))
+        fallbacks = sorted(name for name, metadata in flows.items()
+                           if metadata.get("fallback") is True)
+        fallback_policy = str(policy.get("fallback") or "")
+        if ((fallback_policy == "required" and len(fallbacks) != 1)
+                or (fallback_policy == "optional" and len(fallbacks) > 1)
+                or (fallback_policy == "forbidden" and fallbacks)):
+            raise TransitionError(
+                f"StateWork {statework_id!r} fallback policy {fallback_policy!r} "
+                f"does not match declared flows {fallbacks}")
+        return {"statework_id": str(statework_id), "policy": dict(policy),
+                "flows": flows}
+
+
 def load_compiled_registry(root: Optional[Path] = None, *,
                            verify_bundles: bool = True) -> dict[str, Any]:
     """Load the immutable compile artifact and verify its complete source hashes."""
@@ -304,3 +366,12 @@ def load_compiled_registry(root: Optional[Path] = None, *,
                 raise TransitionError(f"compiled StateWork {item.get('id')!r} bundle hash changed")
         item["bundle_root"] = str(bundle_root)
     return result
+
+
+def open_compiled_registry(root: Optional[Path] = None, *,
+                           verify_bundles: bool = True) -> CompiledRegistry:
+    """Load the verified registry and expose its canonical flow services."""
+    registry_root = Path(root or ROOT).resolve()
+    return CompiledRegistry(
+        load_compiled_registry(registry_root, verify_bundles=verify_bundles),
+        root=registry_root)
