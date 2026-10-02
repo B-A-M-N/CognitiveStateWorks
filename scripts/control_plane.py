@@ -1102,6 +1102,19 @@ class WorkflowAuthority:
             workflow_scope, expected_revision=expected_selection_revision,
             active_workflows=active)
 
+    def workflow_activation_metadata(self, *, workflow_scope: Mapping[str, Any],
+                                     statework_id: str) -> Optional[dict[str, Any]]:
+        """Return CSW-recorded activation ownership for host reconciliation."""
+        selection = self.selection_store.get(workflow_scope)
+        row = selection["active_workflows"].get(statework_id)
+        if row is None:
+            return None
+        WorkflowSelectionStore._validate_activation_row(
+            row, max_revision=int(selection["revision"]))
+        return {name: row[name] for name in (
+            "activation_owner", "control_session_id", "intervention_id",
+            "activation_revision", "expires_at_action")}
+
     def behavioral_snapshot(
             self, *, workflow_scope: Mapping[str, Any],
             candidate_statework_ids: Optional[Iterable[str]] = None,

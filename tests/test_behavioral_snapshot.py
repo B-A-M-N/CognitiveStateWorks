@@ -143,6 +143,8 @@ def test_dp_activation_has_session_scoped_expiring_provenance(tmp_path):
     authority = _authority(tmp_path)
     scope = _scope()
     identity, contract = _identity(authority, scope, "gitter")
+    assert authority.workflow_activation_metadata(
+        workflow_scope=scope, statework_id="gitter") is None
     selected = authority.activate_workflow(
         identity, contract_hash=contract["contract_hash"],
         expected_selection_revision=0,
@@ -156,6 +158,14 @@ def test_dp_activation_has_session_scoped_expiring_provenance(tmp_path):
     assert row["control_session_id"] == "dp-session-1"
     assert row["intervention_id"] == "intervention-1"
     assert row["activation_revision"] == selected["revision"] == 1
+    assert authority.workflow_activation_metadata(
+        workflow_scope=scope, statework_id="gitter") == {
+            "activation_owner": "digitalpsychology",
+            "control_session_id": "dp-session-1",
+            "intervention_id": "intervention-1",
+            "activation_revision": 1,
+            "expires_at_action": 2,
+        }
 
     with pytest.raises(TransitionError, match="activation intervention_id does not match"):
         authority.deactivate_workflow(
