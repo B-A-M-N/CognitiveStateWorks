@@ -13,6 +13,9 @@ dependencies = ["jsonschema>=4.18", "PyYAML>=6.0"]
 [project.scripts]
 cognitive-statework-compile-registry = "cognitive_statework.cli:compile_registry"
 
+[project.entry-points."cognitiveframeworks.statework_providers"]
+csw = "cognitive_statework.cfw_provider:CognitiveStateWorkProvider"
+
 [tool.setuptools]
 packages = [
   "cognitive_statework",

@@ -108,6 +108,11 @@ The complete three-system deployment adds adaptation while preserving CSW as
 the only authority that can activate eligible StateWorks or commit legal
 workflow transitions.
 
+CFW discovers this integration through the optional
+`cognitiveframeworks.statework_providers` Python entry point included in the
+CSW package. Installing CSW does not require CFW; CFW-only deployments use an
+empty provider and do not import CSW.
+
 The host calls `WorkflowAuthority.behavioral_snapshot(...)` with the workflow
 scope and an optional bounded candidate list. It does not supply active
 workflow identities: CSW reads those from its own revisioned selection store.
