@@ -135,6 +135,12 @@ requested StateWork became active without CSW confirmation.
 
 The top-level architecture diagram is a combined deployment view, not a statement that CFW is required for CSW execution. The standalone quickstart above is the canonical CSW entry point.
 
+The three-system host sends sequenced task, action, workflow, validator, and
+completion observations to DP. DP requests bounded StateWork lease changes
+through CSW's revision-checked API; CSW owns whether each activation or release
+is legal. CFW and CSW can also run together without DP, and either remains
+independently usable when the other systems are absent.
+
 ## The larger architecture
 
 | System | Primary question |
