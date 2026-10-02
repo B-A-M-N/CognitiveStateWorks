@@ -1070,11 +1070,24 @@ class WorkflowAuthority:
                             expected_activation_owner: Optional[str] = None,
                             expected_control_session_id: Optional[str] = None,
                             expected_intervention_id: Optional[str] = None) -> dict[str, Any]:
-        """Remove an active workflow unless another active workflow requires it."""
+        """Release an activation only when its recorded owner proves the request.
+
+        DP leases additionally require their session and intervention identity.
+        Persistent host activations remain releasable by an explicit host-owned
+        request; omitting the owner is never treated as permission.
+        """
+        if expected_activation_owner is None:
+            raise TransitionError("workflow release requires an activation owner")
+        if expected_activation_owner not in {"host", "digitalpsychology"}:
+            raise TransitionError("workflow release owner is invalid")
         if (expected_activation_owner == "digitalpsychology"
                 and (not expected_control_session_id or not expected_intervention_id)):
             raise TransitionError(
                 "DigitalPsychology release requires its control session and intervention ID")
+        if (expected_activation_owner == "host"
+                and (expected_control_session_id is not None
+                     or expected_intervention_id is not None)):
+            raise TransitionError("host workflow release cannot carry a DP lease identity")
         selection = self.selection_store.get(workflow_scope)
         if int(selection["revision"]) != int(expected_selection_revision):
             raise TransitionError(
