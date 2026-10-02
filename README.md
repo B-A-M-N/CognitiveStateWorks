@@ -29,6 +29,8 @@ The enforcing runtime includes:
 - Bounded, data-only flow predicates with explicit fallback, ambiguity, and no-match policy.
 - Runtime capsules generated from the compiled manifest and workflow contract, with optional `guidance.md` text.
 
+The control-plane module remains a compatibility facade for existing imports. Its resource loaders live in `scripts/resources.py`, trusted evidence validators, freshness evaluation, and attested storage live in `scripts/evidence.py`, and shared exceptions live in `scripts/errors.py`.
+
 The Python wheel includes the core, schemas, and the built-in Gitter, Getter, TUID, and Infrae bundles. Install it and compile its packaged built-ins with:
 
 ```bash

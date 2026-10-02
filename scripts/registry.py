@@ -51,10 +51,14 @@ class RegistryCompiler:
         registry_bytes = Path(__file__).read_bytes()
         bundle_bytes = Path(__file__).with_name("bundles.py").read_bytes()
         contract_bytes = Path(__file__).with_name("contracts.py").read_bytes()
+        evidence_bytes = Path(__file__).with_name("evidence.py").read_bytes()
+        resources_bytes = Path(__file__).with_name("resources.py").read_bytes()
+        errors_bytes = Path(__file__).with_name("errors.py").read_bytes()
         return {
             "state_machine": hashlib.sha256(
                 engine_bytes + control_bytes + registry_bytes
-                + bundle_bytes + contract_bytes).hexdigest(),
+                + bundle_bytes + contract_bytes + evidence_bytes
+                + resources_bytes + errors_bytes).hexdigest(),
             "milestone": hashlib.sha256(engine_bytes).hexdigest(),
             "flow_selector": hashlib.sha256(selector_bytes).hexdigest(),
         }

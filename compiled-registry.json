@@ -2,7 +2,7 @@
   "builtin_engine_hashes": {
     "flow_selector": "33f50a692126cfc2ca8237fb40d5cb4c9998afa0e30ee53d2b03c91881ba33d1",
     "milestone": "70b8da14e606c650788c474e7a3732fc7599d61819be13a01adc92ee204ee223",
-    "state_machine": "78117d0fc700b9b4d38c0f36057d5838291437b1ccf4fdeb5190657c396e2b4e"
+    "state_machine": "167a2be0a53e8682c88b297f4c49b6fc756c91d40ac898ed13e38bb57233b78d"
   },
   "evidence_registry": {
     "kinds": {
@@ -1065,11 +1065,11 @@
     }
   },
   "registry_config_hash": "d4efe61d7c37394e7e4d7fd0406b5d83c94e2b0941cf56f7c2e57a881693ef85",
-  "registry_hash": "8a96927f53f35125334316e3628c97a952f490fbe5756c78a7e1ecb0470c2871",
+  "registry_hash": "7747ffd21ee7d8748eb992d917aa0f13fbe18de16e3b491773dda44d8234ef84",
   "registry_version": "2.0.0",
   "stateworks": [
     {
-      "bundle_hash": "7ad1e84e274b35ac757b24c7281ae0542082b04f1d8b9505f08d20a3920f1060",
+      "bundle_hash": "b657011cfad50a732b60ed77897b3282a62459a7e97e9eb7cbb2d5dab5a7bd28",
       "bundle_ref": "infrae",
       "contracts": {
         "evidence": [
@@ -1414,20 +1414,20 @@
         "flows/scale/flow.md": "81e4ecd1945403d0dda28dac6731f12de5a8eac790ee58ed19920a18cd0f14dd",
         "flows/validate/flow.md": "fe391362f9ecf2b2780debecd2ec4e4a57c81988286d47c7efa59c8bbe68122f",
         "manifest.yaml": "1f1a1cc69ca5b716266cc0fe00113bd3ae5c21bfccea3ce3e3344a482f128fb4",
-        "policies/concurrency/README.md": "4eb0b4c369eb79d439a0c357799f059792b2901f25b4069433ef0ba4b7e6998b",
-        "policies/destructive-change/README.md": "478803fe1c0045d6e3ca2e9861750a27645faf5bfc0c552ac86dc76e20e9a7fb",
-        "policies/evidence-thresholds/README.md": "3c866f7cf8a37712b458802be17fa48cb9232a48c41bff29568285c4528619d4",
-        "policies/mutation-gates/README.md": "e99d61bdae6d92f63b62298fcea8f1d68ba4681097f30356f9305c53a047533b",
-        "policies/production-safety/README.md": "2004d2733e7473543bcfec0fcbc9b701027236d2bb33f682bf6e70c5232ac595",
-        "primitives/blast-radius/README.md": "b9a200fb229cacbcb7ca945dd9be49005a8d58eb5975982aa7d1ad5ed53e3498",
-        "primitives/dependency-graph/README.md": "3381e03b47d6ccbcb9c40f7b6e594f5435f5005865b2785331a926636dca3759",
-        "primitives/evidence/README.md": "9d3c0d9aa0e7c86f7ac625b597ea60051ca1ec9c063fd3704b6b002e950cf292",
-        "primitives/failure-domain/README.md": "b2c571f264467340bcc7b394d03c34e68b45cf1db91465c704f0b87fad86abbc",
-        "primitives/health-model/README.md": "d49d1161cff1fddb1cbd6a2291b0c3ee1032b875844b03df93c8783976ea6c01",
-        "primitives/invariants/README.md": "de946e78b97ede1ed89812cf256dc92fdeae1195e2e5a4526520652cc74ef720",
-        "primitives/rollback/README.md": "7f52d127f045b28fb4daee3778aef6acd82b3ccd881c5bc15869f8efd156ae82",
-        "primitives/state-ownership/README.md": "10b0d00a89dcacff38e0fa3911e59eb5c36516499912c7b3c765ad7b46da0e2d",
-        "primitives/topology/README.md": "35b751b031acc537a926a7d47706aba274073b1ce45e5397efabc8eb30980b76",
+        "policies/concurrency/README.md": "a7ee95c4092b4aaa51d4cdd6106c58992c6d12d8b80e779c16624de30b8e582b",
+        "policies/destructive-change/README.md": "2de83432f0892c684acdeb5e737120ccdf909d752d4a375a70433aca9c1af5f2",
+        "policies/evidence-thresholds/README.md": "23f22a02422cda728343bafedd3ddff20dc08563a7ac77820a33801e6d6b4332",
+        "policies/mutation-gates/README.md": "ea32692837b9d14974a41bb2ffa00ba9cdb317078a0a6bd2e1f9c0b90bc17481",
+        "policies/production-safety/README.md": "5e2825ce91fcf77929cd61adea60832d59f05b8a6df7298771b942b57efccc07",
+        "primitives/blast-radius/README.md": "12335a83f85885547d694637f20aae7dfc57f60a40e2f3b5657abc42a2c08d3d",
+        "primitives/dependency-graph/README.md": "761e062881cd8b44f1e19b2b99789e4aae4ec235e90b7af9d928edf0583d9ded",
+        "primitives/evidence/README.md": "6a76e175f4e4d0b167f4b2dbda4e35b74ef0856d4c2f4a6ddab298c35db6d029",
+        "primitives/failure-domain/README.md": "0f19dadeb02265ba475e33c5609aa0d9575cde31ae5a08bcb4a545c4d14aafbd",
+        "primitives/health-model/README.md": "45e31b9ca8d5461a2ec929f9feb6d40ee4a4814cb8bf9cb434d0181236cca53a",
+        "primitives/invariants/README.md": "3d18eaf098221237f6f058f8a4709064eff47bab25e44dba0c81b75dec3f40af",
+        "primitives/rollback/README.md": "5eb131335c26de13c1708e66a52d6838642d60678915dad945f0b2493be061f4",
+        "primitives/state-ownership/README.md": "cde4434f806596af1331db2156db2fe11ab732bba93c382050ae4b1f5638205d",
+        "primitives/topology/README.md": "88f4729bb025efdc18aeddf047d9a4d8bfd72df5600e78a653bb3c371c056a6d",
         "runtime.md": "5368f2c02ba9960683f3a6649be36ceaf3e819f520cb4cda21558735d0facdba",
         "transitions.yaml": "c13cee78f99d5e1dca2fb054fa8a09b665c62d79614615ae4371f650d006bc70"
       },
