@@ -40,9 +40,11 @@ class CognitiveStateWorkProvider:
         self._control = module
         return self._control
 
-    def control_plane(self) -> Any:
-        """Expose the CSW authority API through the optional provider contract."""
-        return self._control_plane()
+    def create_state_authority(self, **options: Any) -> Any:
+        """Build the CSW-owned adapter for CFW's neutral StateAuthority port."""
+        from .cfw_authority import CFWAuthorityAdapter
+        return CFWAuthorityAdapter(
+            self.root, control_plane_module=self._control_plane(), **options)
 
     def _compiled_registry(self) -> Dict[str, Any]:
         if self._compiled is None:
@@ -81,11 +83,28 @@ class CognitiveStateWorkProvider:
         data = self._compiled_registry().get("packet_registry") or {}
         return dict(data) if isinstance(data, Mapping) else {"packets": {}}
 
-    def packet_store(self, packets: Optional[Iterable[Dict[str, Any]]]) -> Any:
+    def packet_store(self, packets: Optional[Iterable[Dict[str, Any]]], *,
+                     storage_path: Optional[Path] = None) -> Any:
         compiled = self._compiled_registry()
         return self._control_plane().PacketStore(
             packets, packet_registry_data=compiled.get("packet_registry") or {},
-            packet_schemas=compiled.get("packet_schemas") or {})
+            packet_schemas=compiled.get("packet_schemas") or {},
+            storage_path=storage_path)
+
+    def packet_metadata(self, packet_type: str) -> Dict[str, Any]:
+        registry = self.packet_registry()
+        packets = registry.get("packets") if isinstance(registry, Mapping) else None
+        value = packets.get(str(packet_type)) if isinstance(packets, Mapping) else None
+        return dict(value) if isinstance(value, Mapping) else {}
+
+    def evidence_kind_registry(self) -> Dict[str, Any]:
+        return self._control_plane().load_evidence_kind_registry(
+            self.root / "schemas" / "evidence-kinds.yaml")
+
+    def validate_repository_truth(self, packet: Mapping[str, Any],
+                                  observation_context: Mapping[str, Any]) -> bool:
+        return bool(self.packet_store(None).validate_current(
+            dict(packet), observation_context=dict(observation_context)))
 
     def bundle_root(self, statework: Any) -> Path:
         if isinstance(statework, Mapping) and statework.get("_bundle_root"):
@@ -168,25 +187,6 @@ class CognitiveStateWorkProvider:
 
     def flow_selector(self) -> Any:
         return self._control_plane().FlowSelector
-
-    def runtime_hash_paths(self) -> list[Path]:
-        module_root = Path(self._control_plane().__file__).resolve().parent
-        paths = [module_root / "control_plane.py",
-                 module_root / "workflow_engines.py",
-                 module_root / "flow_selectors.py",
-                 self.root / "compiled-registry.json",
-                 self.root / "registry.yaml"]
-        paths.extend((self.root / "schemas").glob("*.json"))
-        paths.extend((self.root / "schemas").glob("*.yaml"))
-        return paths
-
-    def behavior_hash_paths(self) -> list[Path]:
-        if not (self.root / "registry.yaml").is_file():
-            return []
-        module_root = Path(self._control_plane().__file__).resolve().parent
-        return [module_root / "control_plane.py",
-                module_root / "workflow_engines.py",
-                module_root / "flow_selectors.py"]
 
     def registry_document(self) -> Dict[str, Any]:
         try:

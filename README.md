@@ -111,7 +111,10 @@ workflow transitions.
 CFW discovers this integration through the optional
 `cognitiveframeworks.statework_providers` Python entry point included in the
 CSW package. Installing CSW does not require CFW; CFW-only deployments use an
-empty provider and do not import CSW.
+empty provider and do not import CSW. When requested by CFW, this provider
+constructs CSW's `CFWAuthorityAdapter` for CFW's neutral `StateAuthority` port;
+workflow storage, evidence handling, scope binding, and legal transitions
+remain implemented here.
 
 The host calls `WorkflowAuthority.behavioral_snapshot(...)` with the workflow
 scope and an optional bounded candidate list. It does not supply active
