@@ -10,3 +10,9 @@ Create a starter bundle with `python3 scripts/new_statework.py <id> --domain
 workflows that should not invent state names. Edit the generated contracts, then
 run `python3 scripts/compile-registry.py` to validate and pin the finished
 bundle.
+
+## FreeInference Acknowledgement
+
+This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
+
+These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.

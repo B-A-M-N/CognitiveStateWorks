@@ -54,3 +54,9 @@ easy" and "it worked in dev" do not satisfy a gate. Risk classification
 (HIGH/CRITICAL) strengthens the evidence a gate demands; it never waives it.
 CRITICAL findings (deleting production state, replacing trust roots, global
 routing, destructive migration) do not pass — isolate or recover first.
+
+## FreeInference Acknowledgement
+
+This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
+
+These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.

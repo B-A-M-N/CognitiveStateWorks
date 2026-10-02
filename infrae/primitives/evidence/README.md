@@ -55,3 +55,9 @@ status:       { readiness: next_action: }
 Unknown values are reported as unknown. This packet is the handoff contract
 (element 13) to other flows, StateWorks (Getter for landing, Gitter for the
 repository side), or the operator.
+
+## FreeInference Acknowledgement
+
+This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
+
+These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.

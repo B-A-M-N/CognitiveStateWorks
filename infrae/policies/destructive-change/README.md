@@ -31,3 +31,9 @@ Removing infrastructure follows the Decommission flow's gate. "It's just
 cleanup" is how unknown consumers get destroyed. A decommission ends in
 BLOCKED when consumers are unknown — that is a successful gate outcome, not a
 failed decommission.
+
+## FreeInference Acknowledgement
+
+This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
+
+These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.

@@ -14,3 +14,9 @@ differently has different failure and capacity behavior.
 - Placement carries semantics: two replicas on one host, one rack, or one region are different systems.
 - Record what a model was built from and when. Topology is a snapshot of evidence, not permanent truth.
 - Vendor-neutral: the topology of a Kubernetes cluster, a systemd fleet, and a bare-metal stack are described with the same vocabulary — placement, connection, dependency, failure domain.
+
+## FreeInference Acknowledgement
+
+This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
+
+These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.

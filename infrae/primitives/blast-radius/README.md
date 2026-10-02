@@ -39,3 +39,9 @@ Blast radius is what your change can break; failure domains are what reality
 can break. A change touches a failure domain boundary when it modifies: shared
 storage, control plane, identity, routing, DNS, trust roots, deployment
 pipeline — these are automatically at least BROAD, often SYSTEMIC.
+
+## FreeInference Acknowledgement
+
+This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
+
+These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.

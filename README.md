@@ -96,6 +96,8 @@ That product contains the controller, schemas, compiled StateWork bundles, flows
 | --- | --- | --- |
 | **CSW alone** | Workflow selection, durable subject state, evidence, and legal transitions | None |
 | **CFW alone** | Not loaded | CFW resolves components and action enforcement independently |
+| **CSW + DP** | Authoritative workflow state, eligibility, evidence, and transition enforcement | DP may request an eligible StateWork through the private host control bridge |
+| **CFW + DP** | Not loaded | DP can adapt without CSW; CFW independently enforces any separately enabled action gates |
 | **CFW + CSW** | Authoritative workflow state and evidence | CFW supplies task components and action guards; DP is not required |
 | **CFW + CSW + DP** | Authoritative workflow state, candidate eligibility, and transition enforcement | DP coordinates behavioral interventions; CFW supplies signals and validates component directives |
 

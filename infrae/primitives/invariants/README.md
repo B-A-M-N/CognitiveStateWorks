@@ -32,3 +32,9 @@ Changes often have pairs: the target invariant (what becomes true) and the
 preservation invariant (what must not become false). Validation checks both —
 a migration that achieves cutover while breaking read-after-write has
 satisfied the target and violated the preservation invariant.
+
+## FreeInference Acknowledgement
+
+This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
+
+These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.

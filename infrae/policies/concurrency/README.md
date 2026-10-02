@@ -22,3 +22,9 @@ global enough that accidental agent concurrency can be destructive.
 - Another worker's reported state is evidence requiring verification, not fact on assertion.
 - "It looked fine a moment ago" is not evidence — state moves between messages.
 - Operator observations ("traffic is hitting the wrong machine," "that node shouldn't be receiving traffic") are state-invalidating: re-observe before continuing, including mid-mutation.
+
+## FreeInference Acknowledgement
+
+This work benefited in some way from inference provided by [freeinference.org](https://freeinference.org/).
+
+These are independent developments that are not reviewed, endorsed, or sponsored by FreeInference. If you find these projects useful, please consider donating to or sponsoring FreeInference, which provides a vital inference service.
