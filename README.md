@@ -384,7 +384,7 @@ python3 scripts/test-concurrent-state.py
 
 They verify registry integrity, transition legality, evidence provenance, durable state, restart recovery, and concurrent revision safety. The enforcing package is tested by `install-stateworks.py --enforcing-runtime`.
 
-CSW is a domain-state runtime, not a general database or policy language. Trusted hosts must provide evidence validators and deployment-specific freshness context. The automated three-project release gate is in the sibling CFW repository; real-agent reasoning claims require CFW's external-agent qualification harness.
+CSW is a domain-state runtime, not a general database or policy language. Trusted hosts must provide evidence validators and deployment-specific freshness context. The automated three-project release gate is in the sibling CFW repository. The current CFW task benchmark does not establish improvement from the full system; that claim requires host-verified baseline, CFW, CFW+CSW, CFW+CSW+DP, and CFW+CSW+DP+Laya cohorts on the same task distribution.
 
 ## License and contribution
 
