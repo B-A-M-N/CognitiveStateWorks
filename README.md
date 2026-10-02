@@ -116,7 +116,12 @@ plus only registered, composition-compatible StateWorks with bounded
 `behavior_tags`. DP may rank those candidates; tags are descriptive hints and
 do not grant activation or transition authority. Activation uses
 `WorkflowAuthority.activate_workflow(...)` with a contract hash and expected
-selection revision. Applying any workflow step still uses
+selection revision. Independent host activations are permanent unless the host
+explicitly releases them. A DP activation must include its control-session and
+intervention IDs plus an action-index expiry; only that matching DP owner can
+release it. CSW expires due DP leases during a behavioral snapshot when the
+host supplies the current action index, while preserving composition-required
+dependencies and independently owned selections. Applying any workflow step still uses
 `WorkflowAuthority.apply_step(...)` with evidence and an expected workflow
 revision.
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import sys
 
 import pytest
@@ -116,3 +117,77 @@ def test_required_workflow_cannot_be_deactivated_while_dependent_is_active(tmp_p
         authority.deactivate_workflow(
             workflow_scope=scope, statework_id="gitter",
             expected_selection_revision=selected["revision"])
+
+
+def test_dp_release_cannot_remove_an_independently_activated_workflow(tmp_path):
+    authority = _authority(tmp_path)
+    scope = _scope()
+    identity, contract = _identity(authority, scope, "gitter")
+    selected = authority.activate_workflow(
+        identity, contract_hash=contract["contract_hash"],
+        expected_selection_revision=0)
+
+    with pytest.raises(TransitionError, match="activation activation_owner does not match"):
+        authority.deactivate_workflow(
+            workflow_scope=scope, statework_id="gitter",
+            expected_selection_revision=selected["revision"],
+            expected_activation_owner="digitalpsychology",
+            expected_control_session_id="dp-session-1",
+            expected_intervention_id="intervention-1")
+
+    snapshot = authority.behavioral_snapshot(workflow_scope=scope)
+    assert snapshot["active_workflows"][0]["identity"]["statework_id"] == "gitter"
+
+
+def test_dp_activation_has_session_scoped_expiring_provenance(tmp_path):
+    authority = _authority(tmp_path)
+    scope = _scope()
+    identity, contract = _identity(authority, scope, "gitter")
+    selected = authority.activate_workflow(
+        identity, contract_hash=contract["contract_hash"],
+        expected_selection_revision=0,
+        activation_owner="digitalpsychology",
+        control_session_id="dp-session-1",
+        intervention_id="intervention-1",
+        expires_at_action=2)
+
+    row = selected["active_workflows"]["gitter"]
+    assert row["activation_owner"] == "digitalpsychology"
+    assert row["control_session_id"] == "dp-session-1"
+    assert row["intervention_id"] == "intervention-1"
+    assert row["activation_revision"] == selected["revision"] == 1
+
+    with pytest.raises(TransitionError, match="activation intervention_id does not match"):
+        authority.deactivate_workflow(
+            workflow_scope=scope, statework_id="gitter",
+            expected_selection_revision=selected["revision"],
+            expected_activation_owner="digitalpsychology",
+            expected_control_session_id="dp-session-1",
+            expected_intervention_id="another-intervention")
+
+    still_active = authority.behavioral_snapshot(
+        workflow_scope=scope, host_action_index=1)
+    assert still_active["active_workflows"][0]["identity"]["statework_id"] == "gitter"
+    expired = authority.behavioral_snapshot(
+        workflow_scope=scope, host_action_index=2)
+    assert expired["active_workflows"] == []
+
+
+def test_legacy_selection_rows_remain_permanent_host_activations(tmp_path):
+    authority = _authority(tmp_path)
+    scope = _scope()
+    identity, contract = _identity(authority, scope, "gitter")
+    selection_path = tmp_path / "selections.json"
+    scope_key = json.dumps(scope, sort_keys=True, separators=(",", ":"))
+    selection_path.write_text(json.dumps({
+        "version": 1,
+        "scopes": {scope_key: {
+            "scope": scope, "revision": 1,
+            "active_workflows": {"gitter": {
+                "identity": identity, "contract_hash": contract["contract_hash"]}}
+        }},
+    }), encoding="utf-8")
+
+    snapshot = authority.behavioral_snapshot(
+        workflow_scope=scope, host_action_index=100)
+    assert snapshot["active_workflows"][0]["identity"]["statework_id"] == "gitter"

@@ -759,14 +759,33 @@ class WorkflowSelectionStore:
 
     def _read_unlocked(self) -> dict[str, Any]:
         if not self.path.exists():
-            return {"version": 1, "scopes": {}}
+            return {"version": 2, "scopes": {}}
         try:
             value = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise TransitionError("workflow selection store is unreadable") from exc
-        if (not isinstance(value, dict) or value.get("version") != 1
+        if (not isinstance(value, dict) or value.get("version") not in {1, 2}
                 or not isinstance(value.get("scopes"), dict)):
             raise TransitionError("workflow selection store has invalid structure")
+        # Older selections were host-owned and permanent. Preserve that
+        # authority when reading them after the lease-aware format is deployed.
+        if value["version"] == 1:
+            for selection in value["scopes"].values():
+                if not isinstance(selection, dict):
+                    raise TransitionError("workflow selection record has invalid structure")
+                revision = int(selection.get("revision", 0))
+                active = selection.get("active_workflows")
+                if not isinstance(active, dict):
+                    raise TransitionError("workflow selection record has invalid structure")
+                for statework_id, row in tuple(active.items()):
+                    if not isinstance(row, dict) or set(row) != {"identity", "contract_hash"}:
+                        raise TransitionError("legacy active workflow row is malformed")
+                    active[statework_id] = {
+                        **row, "activation_owner": "host",
+                        "control_session_id": None, "intervention_id": None,
+                        "activation_revision": revision, "expires_at_action": None,
+                    }
+            value["version"] = 2
         return value
 
     def get(self, scope: Mapping[str, Any]) -> dict[str, Any]:
@@ -792,9 +811,13 @@ class WorkflowSelectionStore:
         candidate = copy.deepcopy(dict(active_workflows))
         if any(not isinstance(statework_id, str) or not statework_id
                or not isinstance(row, Mapping)
-               or set(row) != {"identity", "contract_hash"}
+               or set(row) != {"identity", "contract_hash", "activation_owner",
+                               "control_session_id", "intervention_id",
+                               "activation_revision", "expires_at_action"}
                for statework_id, row in candidate.items()):
             raise TransitionError("active workflow set is malformed")
+        for row in candidate.values():
+            self._validate_activation_row(row, max_revision=expected_revision + 1)
         self.lock_path.touch(mode=0o600, exist_ok=True)
         with self.lock_path.open("r+", encoding="utf-8") as lock:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
@@ -811,6 +834,7 @@ class WorkflowSelectionStore:
                        "revision": int(expected_revision) + 1,
                        "active_workflows": candidate}
             data["scopes"][key] = updated
+            data["version"] = 2
             fd, temporary = tempfile.mkstemp(dir=str(self.path.parent),
                                              prefix=f".{self.path.name}.", suffix=".tmp")
             try:
@@ -823,6 +847,28 @@ class WorkflowSelectionStore:
                 if os.path.exists(temporary):
                     os.unlink(temporary)
             return copy.deepcopy(updated)
+
+    @staticmethod
+    def _validate_activation_row(row: Mapping[str, Any], *, max_revision: int) -> None:
+        owner = row.get("activation_owner")
+        if owner not in {"host", "digitalpsychology"}:
+            raise TransitionError("workflow activation owner is invalid")
+        control_session_id = row.get("control_session_id")
+        intervention_id = row.get("intervention_id")
+        expiry = row.get("expires_at_action")
+        activation_revision = row.get("activation_revision")
+        if (type(activation_revision) is not int or activation_revision < 0
+                or activation_revision > max_revision):
+            raise TransitionError("workflow activation revision is invalid")
+        if owner == "host":
+            if control_session_id is not None or intervention_id is not None or expiry is not None:
+                raise TransitionError("host activation cannot carry a DP lease")
+        elif (not isinstance(control_session_id, str) or not control_session_id
+              or len(control_session_id) > 256
+              or not isinstance(intervention_id, str) or not intervention_id
+              or len(intervention_id) > 128
+              or type(expiry) is not int or expiry < 0):
+            raise TransitionError("DigitalPsychology workflow lease is malformed")
 
 
 class WorkflowAuthority:
@@ -963,8 +1009,22 @@ class WorkflowAuthority:
 
     def activate_workflow(self, identity: WorkflowIdentity | Mapping[str, Any], *,
                           contract_hash: str,
-                          expected_selection_revision: int) -> dict[str, Any]:
+                          expected_selection_revision: int,
+                          activation_owner: str = "host",
+                          control_session_id: Optional[str] = None,
+                          intervention_id: Optional[str] = None,
+                          expires_at_action: Optional[int] = None) -> dict[str, Any]:
         """Activate a StateWork only after CSW checks registration and composition."""
+        lease = {
+            "activation_owner": activation_owner,
+            "control_session_id": control_session_id,
+            "intervention_id": intervention_id,
+            "expires_at_action": expires_at_action,
+        }
+        WorkflowSelectionStore._validate_activation_row(
+            {**lease, "identity": {}, "contract_hash": contract_hash,
+             "activation_revision": expected_selection_revision + 1},
+            max_revision=expected_selection_revision + 1)
         identity = self._identity(identity)
         statework_id = identity.statework_id
         manifest, _contract, digest, engine, _evidence = self._bundle(
@@ -980,8 +1040,11 @@ class WorkflowAuthority:
         active = dict(selection["active_workflows"])
         if statework_id in active:
             row = active[statework_id]
-            if row != {"identity": dict(identity.__dict__), "contract_hash": digest}:
-                raise TransitionError("active workflow identity differs from the current request")
+            if (row.get("identity") != dict(identity.__dict__)
+                    or row.get("contract_hash") != digest
+                    or any(row.get(key) != value for key, value in lease.items())):
+                raise TransitionError(
+                    "active workflow identity or lease differs from the current request")
             return selection
         if len(active) >= 16:
             raise TransitionError("active workflow set exceeds its bounds")
@@ -993,16 +1056,25 @@ class WorkflowAuthority:
         # the active selection. An interrupted activation can leave an
         # initialized but inactive subject, never an active uninitialized one.
         self.inspect_workflow(identity, contract_hash=digest)
-        active[statework_id] = {"identity": dict(identity.__dict__),
-                                "contract_hash": digest}
+        active[statework_id] = {
+            "identity": dict(identity.__dict__), "contract_hash": digest,
+            **lease, "activation_revision": expected_selection_revision + 1,
+        }
         return self.selection_store.replace(
             scope, expected_revision=expected_selection_revision,
             active_workflows=active)
 
     def deactivate_workflow(self, *, workflow_scope: Mapping[str, Any],
                             statework_id: str,
-                            expected_selection_revision: int) -> dict[str, Any]:
+                            expected_selection_revision: int,
+                            expected_activation_owner: Optional[str] = None,
+                            expected_control_session_id: Optional[str] = None,
+                            expected_intervention_id: Optional[str] = None) -> dict[str, Any]:
         """Remove an active workflow unless another active workflow requires it."""
+        if (expected_activation_owner == "digitalpsychology"
+                and (not expected_control_session_id or not expected_intervention_id)):
+            raise TransitionError(
+                "DigitalPsychology release requires its control session and intervention ID")
         selection = self.selection_store.get(workflow_scope)
         if int(selection["revision"]) != int(expected_selection_revision):
             raise TransitionError(
@@ -1011,6 +1083,14 @@ class WorkflowAuthority:
         active = dict(selection["active_workflows"])
         if statework_id not in active:
             raise TransitionError(f"StateWork {statework_id!r} is not active")
+        row = active[statework_id]
+        for name, expected in (
+                ("activation_owner", expected_activation_owner),
+                ("control_session_id", expected_control_session_id),
+                ("intervention_id", expected_intervention_id)):
+            if expected is not None and row.get(name) != expected:
+                raise TransitionError(
+                    f"StateWork {statework_id!r} activation {name} does not match")
         compiled = load_compiled_registry(self.root)
         entries = {str(item.get("id")): item for item in compiled.get("stateworks") or ()}
         for other_id in set(active) - {statework_id}:
@@ -1025,6 +1105,7 @@ class WorkflowAuthority:
     def behavioral_snapshot(
             self, *, workflow_scope: Mapping[str, Any],
             candidate_statework_ids: Optional[Iterable[str]] = None,
+            host_action_index: Optional[int] = None,
             ) -> dict[str, Any]:
         """Return bounded state and legal choices from CSW-owned workflow selection.
 
@@ -1032,9 +1113,6 @@ class WorkflowAuthority:
         or deactivates them and applies their legal, evidence-bound transitions.
         """
         selection = self.selection_store.get(workflow_scope)
-        active_rows = selection["active_workflows"]
-        if len(active_rows) > 16:
-            raise TransitionError("active workflow set exceeds its bounds")
         candidates = (list(candidate_statework_ids) if candidate_statework_ids is not None
                       else None)
         if candidates is not None and len(candidates) > 32:
@@ -1043,13 +1121,26 @@ class WorkflowAuthority:
         compiled = load_compiled_registry(self.root)
         entries = {str(item.get("id")): item
                    for item in compiled.get("stateworks") or ()}
+        if host_action_index is not None:
+            if type(host_action_index) is not int or host_action_index < 0:
+                raise TransitionError("host action index must be non-negative")
+            selection = self._expire_workflow_leases(
+                workflow_scope, selection, entries, host_action_index)
+        active_rows = selection["active_workflows"]
+        if len(active_rows) > 16:
+            raise TransitionError("active workflow set exceeds its bounds")
         active_ids: set[str] = set()
         active: list[dict[str, Any]] = []
         scope_key = WorkflowSelectionStore._scope_key(workflow_scope)
         expected_scope = json.loads(scope_key)
         for statework_id, row in sorted(active_rows.items()):
-            if not isinstance(row, Mapping) or set(row) != {"identity", "contract_hash"}:
+            expected_fields = {"identity", "contract_hash", "activation_owner",
+                               "control_session_id", "intervention_id",
+                               "activation_revision", "expires_at_action"}
+            if not isinstance(row, Mapping) or set(row) != expected_fields:
                 raise TransitionError("stored active workflow row is malformed")
+            WorkflowSelectionStore._validate_activation_row(
+                row, max_revision=int(selection["revision"]))
             raw_identity = row.get("identity")
             contract_hash = row.get("contract_hash")
             if not isinstance(raw_identity, Mapping):
@@ -1114,6 +1205,41 @@ class WorkflowAuthority:
             body, sort_keys=True, separators=(",", ":"), default=str
         ).encode("utf-8")).hexdigest()
         return {"snapshot_id": snapshot_id, **body}
+
+    def _expire_workflow_leases(self, workflow_scope: Mapping[str, Any],
+                                selection: Mapping[str, Any],
+                                entries: Mapping[str, Mapping[str, Any]],
+                                host_action_index: int) -> dict[str, Any]:
+        """Release expired DP leases while retaining independently owned workflows."""
+        active = dict(selection["active_workflows"])
+        expired = {
+            statework_id for statework_id, row in active.items()
+            if row.get("activation_owner") == "digitalpsychology"
+            and row.get("expires_at_action") is not None
+            and int(row["expires_at_action"]) <= host_action_index
+        }
+        removed = False
+        # Remove expired leaves first, then their now-unneeded dependencies.
+        # If a non-expired workflow still depends on an expired lease, retain
+        # that lease until the dependent can be released without breaking the
+        # selected composition.
+        while expired:
+            releasable = [statework_id for statework_id in expired
+                          if not any(
+                              other_id != statework_id
+                              and self._depends_on(entries, other_id, statework_id)
+                              for other_id in active)]
+            if not releasable:
+                break
+            for statework_id in releasable:
+                active.pop(statework_id, None)
+                expired.discard(statework_id)
+                removed = True
+        if not removed:
+            return dict(selection)
+        return self.selection_store.replace(
+            workflow_scope, expected_revision=int(selection["revision"]),
+            active_workflows=active)
 
     def _identity_key(self, identity: WorkflowIdentity) -> str:
         return self.state_store.key(identity.__dict__)
