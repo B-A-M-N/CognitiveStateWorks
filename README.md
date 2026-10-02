@@ -141,6 +141,30 @@ the expected selection revision for either operation and returns the new
 authoritative snapshot. DP cannot infer eligibility from tags or claim that a
 requested StateWork became active without CSW confirmation.
 
+For a DP host that does not use CFW to discover workflows, CSW provides
+`cognitive_statework.host_binding.resolve_bindings(authority,
+runtime_identity, task_context)`. It returns immutable contract pins for the
+scope's active workflows and the registered candidates CSW says are currently
+composition-compatible. The host passes them to DP's structural adapter:
+
+```python
+from cognitive_statework.host_binding import resolve_bindings
+from digital_psychology.runtime.adapters import CSWRuntimeAdapter
+
+workflow_bindings = resolve_bindings(
+    csw_authority, runtime_identity, {"domains": task_domains})
+csw_port = CSWRuntimeAdapter(
+    csw_authority,
+    identity=runtime_identity,
+    bindings={item.identity["statework_id"]: item
+              for item in workflow_bindings},
+)
+```
+
+The resolver imports no CFW or DP code. It gets registered entries and
+composition decisions from CSW, binds each result to the exact runtime scope,
+and rejects unknown IDs or task-context attempts to replace that scope.
+
 The top-level architecture diagram is a combined deployment view, not a statement that CFW is required for CSW execution. The standalone quickstart above is the canonical CSW entry point.
 
 The three-system host sends sequenced task, action, workflow, validator, and
