@@ -8,12 +8,22 @@ from typing import Any, Dict, Iterable, Mapping, Optional
 
 try:
     from .flow_selectors import FlowSelector
+    from .composition_rules import composition_for, validate_selection
 except ImportError:
     from flow_selectors import FlowSelector
+    from composition_rules import composition_for, validate_selection
 
 
 class WorkflowPlanError(ValueError):
     """A requested workflow plan is ambiguous, invalid, or not composable."""
+
+
+class AmbiguousWorkflowMatch(WorkflowPlanError):
+    """A domain matched multiple equally ranked StateWork roots."""
+
+    def __init__(self, message: str, candidates: Iterable[str]):
+        self.candidates = tuple(sorted(set(str(item) for item in candidates)))
+        super().__init__(message)
 
 
 def _norm(value: str) -> str:
@@ -87,7 +97,15 @@ class WorkflowPlanner:
                          if abs(score - top) < 1e-9)
         return (winners[0], []) if len(winners) == 1 else (None, winners)
 
-    def _roots(self, domains: Iterable[str], phase: Optional[str]) -> list[dict[str, Any]]:
+    def _roots(self, domains: Iterable[str], phase: Optional[str],
+               requested_ids: Optional[Iterable[str]] = None) -> list[dict[str, Any]]:
+        if requested_ids is not None:
+            ids = tuple(sorted(set(str(item) for item in requested_ids)))
+            missing = set(ids) - set(self.manifests)
+            if missing:
+                raise WorkflowPlanError(
+                    f"requested StateWork roots are unavailable: {sorted(missing)}")
+            return [self.manifests[statework_id] for statework_id in ids]
         domain_list = [str(value) for value in domains]
         roots: dict[str, dict[str, Any]] = {}
         ambiguous: set[str] = set()
@@ -97,9 +115,9 @@ class WorkflowPlanner:
             if statework_id:
                 roots[statework_id] = self.manifests[statework_id]
         if ambiguous:
-            raise WorkflowPlanError(
+            raise AmbiguousWorkflowMatch(
                 f"ambiguous StateWork match for domain(s) {domain_list}; "
-                f"candidates: {sorted(ambiguous)}")
+                f"candidates: {sorted(ambiguous)}", ambiguous)
         return [roots[key] for key in sorted(roots)]
 
     @staticmethod
@@ -182,53 +200,17 @@ class WorkflowPlanner:
             visit(str(root.get("id") or ""))
 
         active_ids = {str(item.get("id") or "") for item in ordered}
-        for manifest in ordered:
-            composition = manifest.get("composition") or {}
-            conflicts = active_ids.intersection(
-                str(item) for item in composition.get("conflicts") or ())
-            if conflicts:
-                raise WorkflowPlanError(
-                    f"StateWork {manifest.get('id')!r} conflicts with {sorted(conflicts)}")
-
-        groups: dict[str, list[tuple[str, str]]] = {}
-        for root in roots:
-            composition = root.get("composition") or {}
-            group = str(composition.get("group") or "")
-            if group:
-                groups.setdefault(group, []).append((
-                    str(root.get("id") or ""),
-                    str(composition.get("mode") or "composable")))
-
-        for group, members in groups.items():
-            if len(members) < 2 or not any(mode == "exclusive" for _, mode in members):
-                continue
-            def is_dependency(consumer_id: str, required_id: str) -> bool:
-                pending = [consumer_id]
-                seen: set[str] = set()
-                while pending:
-                    current = pending.pop()
-                    if current in seen:
-                        continue
-                    seen.add(current)
-                    required_ids = set(str(value) for value in
-                                       (self.manifests.get(current, {}).get("composition")
-                                        or {}).get("requires") or ())
-                    if required_id in required_ids:
-                        return True
-                    pending.extend(required_ids)
-                return False
-
-            for index, (left, _left_mode) in enumerate(members):
-                for right, _right_mode in members[index + 1:]:
-                    if not is_dependency(left, right) and not is_dependency(right, left):
-                        raise WorkflowPlanError(
-                            f"exclusive StateWork group {group!r} contains independent roots "
-                            f"{sorted((left, right))}")
+        try:
+            validate_selection(self.manifests, active_ids)
+        except ValueError as exc:
+            raise WorkflowPlanError(str(exc)) from exc
         return ordered
 
     def eligible_routes(self, runtime_identity: Mapping[str, Any],
                         task_context: Mapping[str, Any]) -> dict[str, Any]:
-        roots = self._roots(task_context.get("domains") or (), task_context.get("phase"))
+        roots = self._roots(
+            task_context.get("domains") or (), task_context.get("phase"),
+            task_context.get("requested_statework_ids"))
         planning_context = dict(task_context)
         planning_context["missing_required"] = None
         self._ordered_dependencies(roots, planning_context, runtime_identity)
@@ -298,7 +280,9 @@ class WorkflowPlanner:
     def resolve_workflows(self, runtime_identity: Mapping[str, Any],
                           task_context: Mapping[str, Any],
                           routing_adjustments: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
-        roots = self._roots(task_context.get("domains") or (), task_context.get("phase"))
+        roots = self._roots(
+            task_context.get("domains") or (), task_context.get("phase"),
+            task_context.get("requested_statework_ids"))
         adjustments = list(routing_adjustments)
         root_ids = {str(item.get("id") or "") for item in roots}
         for item in adjustments:
@@ -382,6 +366,7 @@ class WorkflowPlanner:
                 != capsule_hash):
             raise WorkflowPlanError(f"StateWork {statework_id!r} runtime capsule is invalid")
         capsules = {f"statework:{statework_id}": (capsule_text, capsule_hash)}
+        composition = composition_for(manifest)
         item = {
             "id": statework_id,
             "version": str(manifest.get("version") or "0.0.0"),
@@ -394,7 +379,14 @@ class WorkflowPlanner:
             "workflow_contract_hash": str(engine.get("contract_hash") or ""),
             "runtime_hash": capsule_hash,
             "flow_selection": dict(manifest.get("flow_selection") or {}),
-            "composition": dict(manifest.get("composition") or {}),
+            "composition": {
+                "group": composition["group"],
+                "mode": composition["mode"],
+                "requires": sorted(composition["requires"]),
+                "conflicts": sorted(composition["conflicts"]),
+            },
+            "exclusive_group": (composition["group"]
+                                if composition["mode"] == "exclusive" else None),
             "integrations": dict(manifest.get("integrations") or {}),
             "selected_flow": None,
         }

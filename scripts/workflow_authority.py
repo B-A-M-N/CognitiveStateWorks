@@ -18,6 +18,7 @@ if __package__:
                                    StateMachineWorkflowEngine, WorkflowDecision,
                                    WorkflowIdentity, WorkflowProgressFact,
                                    WorkflowSnapshot)
+    from .composition_rules import validate_selection
 else:
     from errors import TransitionError
     from evidence import EvidenceStore
@@ -30,6 +31,10 @@ else:
                                   StateMachineWorkflowEngine, WorkflowDecision,
                                   WorkflowIdentity, WorkflowProgressFact,
                                   WorkflowSnapshot)
+    from composition_rules import validate_selection
+
+
+WORKFLOW_PORT_VERSION = "1.1.0"
 
 
 def load_compiled_registry(root: Optional[Path] = None, *,
@@ -47,6 +52,8 @@ class WorkflowAuthority:
     Engine choice and step semantics stay inside CSW. Consumers inspect a
     normalized snapshot and submit an engine-neutral step identifier.
     """
+    workflow_port_version = WORKFLOW_PORT_VERSION
+
     def __init__(self, *, root: Optional[Path] = None,
                  state_store: Optional[SubjectStateStore] = None,
                  evidence_store: Optional[EvidenceStore] = None,
@@ -160,21 +167,13 @@ class WorkflowAuthority:
     @classmethod
     def _selection_compatible(cls, entries: Mapping[str, Mapping[str, Any]],
                               statework_id: str, active_ids: set[str]) -> bool:
-        manifest = dict(entries[statework_id].get("manifest") or {})
-        composition = dict(manifest.get("composition") or {})
-        if not set(composition.get("requires") or ()).issubset(active_ids):
+        selected = set(active_ids) | {statework_id}
+        manifests = {key: dict(entries[key].get("manifest") or {})
+                     for key in selected if key in entries}
+        try:
+            validate_selection(manifests, selected)
+        except ValueError:
             return False
-        if set(composition.get("conflicts") or ()).intersection(active_ids):
-            return False
-        group = str(composition.get("group") or "")
-        for active_id in active_ids:
-            active_manifest = dict(entries[active_id].get("manifest") or {})
-            active_composition = dict(active_manifest.get("composition") or {})
-            active_group = str(active_composition.get("group") or "")
-            if (group and group == active_group
-                    and not cls._depends_on(entries, statework_id, active_id)
-                    and not cls._depends_on(entries, active_id, statework_id)):
-                return False
         return True
 
     def activate_workflow(self, identity: WorkflowIdentity | Mapping[str, Any], *,
