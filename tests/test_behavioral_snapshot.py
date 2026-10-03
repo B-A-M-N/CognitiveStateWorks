@@ -229,14 +229,23 @@ def test_dp_activation_has_session_scoped_expiring_provenance(tmp_path):
     assert still_active["active_workflows"][0]["identity"]["statework_id"] == "gitter"
     assert still_active["selection_revision"] == selected["revision"]
 
+    # Shared lease-boundary convention: expires_at_action = 1 is effective
+    # through action 1 and released once the index reaches 2. CSW and CFW must
+    # release on the same action.
     unchanged = authority.expire_workflow_leases(
         workflow_scope=scope, host_action_index=1)
     assert unchanged["revision"] == selected["revision"]
     before_expiry = authority.behavioral_snapshot(workflow_scope=scope)
     assert before_expiry["active_workflows"]
 
-    expired_selection = authority.expire_workflow_leases(
+    # expires_at_action = 2 is effective through action 2 and released at 3.
+    still_held = authority.expire_workflow_leases(
         workflow_scope=scope, host_action_index=2)
+    assert still_held["revision"] == selected["revision"]
+    assert still_held["active_workflows"]
+
+    expired_selection = authority.expire_workflow_leases(
+        workflow_scope=scope, host_action_index=3)
     assert expired_selection["revision"] == selected["revision"] + 1
     assert expired_selection["active_workflows"] == {}
     expired = authority.behavioral_snapshot(workflow_scope=scope)
@@ -258,8 +267,11 @@ def test_expiring_dp_workflow_preserves_an_independent_host_workflow(tmp_path):
         expected_selection_revision=selected["revision"],
         activation_owner="host")
 
+    # Under the shared lease-boundary convention a lease with
+    # expires_at_action = 2 is still effective at action 2 and is released
+    # once the index reaches 3.
     expired = authority.expire_workflow_leases(
-        workflow_scope=scope, host_action_index=2)
+        workflow_scope=scope, host_action_index=3)
 
     assert set(expired["active_workflows"]) == {"tuid"}
     assert expired["active_workflows"]["tuid"]["activation_owner"] == "host"

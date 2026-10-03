@@ -412,13 +412,25 @@ class WorkflowAuthority:
                                 selection: Mapping[str, Any],
                                 entries: Mapping[str, Mapping[str, Any]],
                                 host_action_index: int) -> dict[str, Any]:
-        """Release expired DP leases while retaining independently owned workflows."""
+        """Release expired DP leases while retaining independently owned workflows.
+
+        Lease boundary convention, shared with CFW and DP:
+
+            A lease with ``expires_at_action = N`` is effective for every action
+            ``<= N`` and has been released once the action index reaches
+            ``N + 1``.
+
+        The boundary is inclusive of N so that CFW's component overlay and CSW's
+        workflow selection release on the same action. Treating N as already
+        expired released CSW one action before CFW, which left a framework lease
+        holding a control whose StateWork was gone.
+        """
         active = dict(selection["active_workflows"])
         expired = {
             statework_id for statework_id, row in active.items()
             if row.get("activation_owner") == "digitalpsychology"
             and row.get("expires_at_action") is not None
-            and int(row["expires_at_action"]) <= host_action_index
+            and int(row["expires_at_action"]) < host_action_index
         }
         removed = False
         # Remove expired leaves first, then their now-unneeded dependencies.
