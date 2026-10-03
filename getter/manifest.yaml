@@ -23,7 +23,6 @@ inputs:
 emits:
 - repository_evidence_packet
 context_budget: low
-exclusive_group: repository_state
 handoff: repository_evidence_packet
 version: 1.1.0
 bundle_schema_version: 2

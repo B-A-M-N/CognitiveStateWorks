@@ -1065,11 +1065,11 @@
     }
   },
   "registry_config_hash": "d4efe61d7c37394e7e4d7fd0406b5d83c94e2b0941cf56f7c2e57a881693ef85",
-  "registry_hash": "c41b53929701a78858f134b41407db02751cfd1df2094c32a392bf16a40a63ab",
+  "registry_hash": "bd462e3cc389e2f3c80542fff17279c2e13b4bf06f8f5555a3a75dda269b24b4",
   "registry_version": "2.0.0",
   "stateworks": [
     {
-      "bundle_hash": "b657011cfad50a732b60ed77897b3282a62459a7e97e9eb7cbb2d5dab5a7bd28",
+      "bundle_hash": "d0f732135484969d7327a1a16b73631f5e39fc74733e1da99ad7deb5b7699d72",
       "bundle_ref": "infrae",
       "contracts": {
         "evidence": [
@@ -1413,7 +1413,7 @@
         "flows/recover/flow.md": "7f908b0f99a163ab4b66d7a5f03b5af1d29a7a8e101b777e0233bf2f4bfc6938",
         "flows/scale/flow.md": "81e4ecd1945403d0dda28dac6731f12de5a8eac790ee58ed19920a18cd0f14dd",
         "flows/validate/flow.md": "fe391362f9ecf2b2780debecd2ec4e4a57c81988286d47c7efa59c8bbe68122f",
-        "manifest.yaml": "1f1a1cc69ca5b716266cc0fe00113bd3ae5c21bfccea3ce3e3344a482f128fb4",
+        "manifest.yaml": "d845a3a6fbe6914c0c051214d41b930659ef02775c4caf436a77a0b8002b07a6",
         "policies/concurrency/README.md": "a7ee95c4092b4aaa51d4cdd6106c58992c6d12d8b80e779c16624de30b8e582b",
         "policies/destructive-change/README.md": "2de83432f0892c684acdeb5e737120ccdf909d752d4a375a70433aca9c1af5f2",
         "policies/evidence-thresholds/README.md": "23f22a02422cda728343bafedd3ddff20dc08563a7ac77820a33801e6d6b4332",
@@ -1467,7 +1467,6 @@
           "kind": "state_machine"
         },
         "entrypoint": "infrae/STATEWORK.md",
-        "exclusive_group": "infrastructure_state",
         "flow_selection": {
           "ambiguity": "error",
           "fallback": "required",
@@ -1515,7 +1514,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "2ad7ef21391ffae546a6a8086bc20f06b95095f504cc140c9d5e577aa3cd37e0",
+      "bundle_hash": "529ea6dc98ae3f121ecc058faf75b0a0100363644553399e4b37a64f94bebe85",
       "bundle_ref": "gitter",
       "contracts": {
         "evidence": [
@@ -1597,7 +1596,7 @@
         "contracts/evidence-kinds.yaml": "cf2eda40054573c778ea341ffbad6e382bb5d397cec4fd3e691b6852e3da5503",
         "contracts/packets.yaml": "fcc9787d417c11a98e9d1df88179bf12a241ae90b8bb308fa6a0b7ea55bef957",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
-        "manifest.yaml": "da4e23f3e621288d3075007a3172e4eae7f88aedb61922343e98f23c393db9eb",
+        "manifest.yaml": "dead61e49f56c3c4b6e79707ea299158b5fd451f5129e5e4e2a3ca315dd1b4bc",
         "runtime.md": "43b5a0f6068ed5f9a4b26ffb4e1a58370819ad5d8a179a2caccf370ebc9dbc61",
         "transitions.yaml": "4d89a2ae88062b30d2ecda41b016d05616efaae8cddbcc1ca520452c257b8088"
       },
@@ -1635,7 +1634,6 @@
           "kind": "state_machine"
         },
         "entrypoint": "gitter/SKILL.md",
-        "exclusive_group": "repository_state",
         "flow_selection": {
           "ambiguity": "error",
           "fallback": "forbidden",
@@ -1681,7 +1679,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "74b77426a09b8e168af3152a4e4cadff8c0285e139dbcadb0e16aa9dfaecbccf",
+      "bundle_hash": "33e3f478208873d900103b90b7cc62f685e7639dfec8bdca541be729f5f0cd97",
       "bundle_ref": "getter",
       "contracts": {
         "evidence": [
@@ -1838,7 +1836,7 @@
         "contracts/packets.yaml": "19db12dfb5fef646a4e9db5cf9ece1a78e97a8c6c53d83af5218d2f24eab08f8",
         "contracts/schemas/repository-evidence-packet.schema.json": "5508e285ebbcbb525819b8c344e56af6c94a06e081af0e9a7f173aa4b62e27ba",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
-        "manifest.yaml": "fe9107f03cb2b54487d1c782185f5da45c00be350337b3c130908e63b03d45dd",
+        "manifest.yaml": "559bc2649a7492e0dd7d5d9e27a8272ae60a1d03cf32002ac5164f1b03b547dc",
         "runtime.md": "e75f62fa7dfe1ade1adbb6c2408adab234c3022b7f968c646fb589f157603e0e",
         "transitions.yaml": "0673a2735ada5e9e9bd5499ae33aac6138341f090a951a8998ac0f50d9bdd026"
       },
@@ -1878,7 +1876,6 @@
           "kind": "state_machine"
         },
         "entrypoint": "getter/SKILL.md",
-        "exclusive_group": "repository_state",
         "flow_selection": {
           "ambiguity": "error",
           "fallback": "forbidden",
@@ -1929,7 +1926,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "69a64ae6545343277cb00a4baf53e6b9d36a90e5bfd20c85798b071620cd2129",
+      "bundle_hash": "d58178e6b85e36a6624e52d33a04c5bf3bb9c3cec837f74fd31c7ef92ee0c716",
       "bundle_ref": "tuid",
       "contracts": {
         "evidence": [
@@ -2274,7 +2271,7 @@
         "frameworks/ink-typescript/framework.md": "1dc4662124c72ada4810f16b209a93f5d841a9cff8cd6a333d720f78dcf494b4",
         "frameworks/ratatui-rust/framework.md": "a6470e80eb124ac1e439be5e12fff2d1c19f1d1866e22ccae49e3ff428b493f0",
         "frameworks/textual-python/framework.md": "4bfdcc3fcdd332c7d975e45356c71e918e4b37928cdf48312013b011907b84cc",
-        "manifest.yaml": "baaf4217ec9d8bfbb750af4a4196ad902acb08abeb2912c9827cad6c4a54d439",
+        "manifest.yaml": "e42d9a15fd3dd31ff8d19c9046d81ea5dbd65e0216cd07ed166c19fb73251029",
         "patterns/command-center/pattern.md": "d96757a3047ee87d26be92f1d55701000d6cee8fb8256758a4e2332b691fe2ce",
         "patterns/dashboard/pattern.md": "9914c4ea67ff944d53e230c9a17878b3870f53e4a160e292869e5e8524bfb89a",
         "patterns/data-browser/pattern.md": "0471747940677b8e66c7a045a9d8acdfa2b759a72c6567f84baaf64d3b0928dd",
@@ -2351,7 +2348,6 @@
           "kind": "state_machine"
         },
         "entrypoint": "tuid/SKILL.md",
-        "exclusive_group": "tui_state",
         "flow_selection": {
           "ambiguity": "error",
           "fallback": "required",

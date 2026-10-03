@@ -27,8 +27,8 @@ def composition_for(manifest: Mapping[str, Any]) -> dict[str, Any]:
             "requires": frozenset(requires), "conflicts": frozenset(conflicts)}
 
 
-def _depends_on(manifests: Mapping[str, Mapping[str, Any]],
-                consumer_id: str, required_id: str) -> bool:
+def depends_on(manifests: Mapping[str, Mapping[str, Any]],
+               consumer_id: str, required_id: str) -> bool:
     pending = [consumer_id]
     visited: set[str] = set()
     while pending:
@@ -78,11 +78,11 @@ def validate_selection(manifests: Mapping[str, Mapping[str, Any]],
             if (left_composition["mode"] != "exclusive"
                     and right_composition["mode"] != "exclusive"):
                 continue
-            if not _depends_on(manifests, left, right) and not _depends_on(
+            if not depends_on(manifests, left, right) and not depends_on(
                     manifests, right, left):
                 raise ValueError(
                     f"exclusive StateWork group {left_composition['group']!r} "
                     f"contains independent members {left!r} and {right!r}")
 
 
-__all__ = ["composition_for", "validate_selection"]
+__all__ = ["composition_for", "depends_on", "validate_selection"]

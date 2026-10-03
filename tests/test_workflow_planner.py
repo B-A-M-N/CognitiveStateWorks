@@ -209,3 +209,96 @@ def test_exclusive_group_allows_only_dependency_members_to_compose():
         assert "exclusive StateWork group" in str(exc)
     else:
         raise AssertionError("independent members of an exclusive group composed")
+
+
+def test_planner_and_runtime_activation_agree_on_composition_pairs(tmp_path):
+    from scripts.workflow_authority import WorkflowAuthority
+    from scripts.workflow_planner import WorkflowPlanner, WorkflowPlanError
+
+    class EmptyPacketStore:
+        @staticmethod
+        def get_current(*_args, **_kwargs):
+            return None
+
+    def check_pair(manifests, roots, *, dynamic_sequence, should_plan):
+        compiled = {"stateworks": [
+            {"id": statework_id, "manifest": manifest,
+             "bundle_root": str(tmp_path / statework_id)}
+            for statework_id, manifest in manifests.items()],
+            "packet_registry": {"packets": {}},
+        }
+        planner = WorkflowPlanner(
+            compiled, tmp_path,
+            packet_store_factory=lambda _packets: EmptyPacketStore())
+        if should_plan:
+            ordered = planner._ordered_dependencies(
+                [manifests[item] for item in roots],
+                {"packet_records": (), "observation_context": {},
+                 "allow_missing_required": False},
+                {"task_id": "composition", "subject_ref": "repo:composition"},
+            )
+            assert {item["id"] for item in ordered} == set(should_plan)
+        else:
+            try:
+                planner._ordered_dependencies(
+                    [manifests[item] for item in roots],
+                    {"packet_records": (), "observation_context": {},
+                     "allow_missing_required": False},
+                    {"task_id": "composition", "subject_ref": "repo:composition"},
+                )
+            except WorkflowPlanError:
+                pass
+            else:
+                raise AssertionError("planner accepted an invalid active set")
+
+        entries = {key: {"manifest": value} for key, value in manifests.items()}
+        active: set[str] = set()
+        for statework_id, should_activate in dynamic_sequence:
+            compatible = WorkflowAuthority._selection_compatible(
+                entries, statework_id, active)
+            assert compatible is should_activate
+            if compatible:
+                active.add(statework_id)
+
+    composable = {
+        item: {"id": item, "composition": {
+            "group": "shared", "mode": "composable", "requires": [],
+            "conflicts": []}}
+        for item in ("alpha", "beta")}
+    check_pair(composable, ("alpha", "beta"),
+               dynamic_sequence=(("alpha", True), ("beta", True)),
+               should_plan=("alpha", "beta"))
+
+    exclusive = {
+        item: {"id": item, "composition": {
+            "group": "shared", "mode": "exclusive", "requires": [],
+            "conflicts": []}}
+        for item in ("alpha", "beta")}
+    check_pair(exclusive, ("alpha", "beta"),
+               dynamic_sequence=(("alpha", True), ("beta", False)),
+               should_plan=())
+
+    asymmetric_conflict = {
+        "alpha": {"id": "alpha", "composition": {
+            "group": "", "mode": "composable", "requires": [],
+            "conflicts": ["beta"]}},
+        "beta": {"id": "beta", "composition": {
+            "group": "", "mode": "composable", "requires": [],
+            "conflicts": []}},
+    }
+    check_pair(asymmetric_conflict, ("alpha", "beta"),
+               dynamic_sequence=(("alpha", True), ("beta", False)),
+               should_plan=())
+
+    dependency = {
+        "base": {"id": "base", "composition": {
+            "group": "shared", "mode": "exclusive", "requires": [],
+            "conflicts": []}},
+        "consumer": {"id": "consumer", "composition": {
+            "group": "shared", "mode": "composable", "requires": ["base"],
+            "conflicts": []}},
+    }
+    check_pair(dependency, ("consumer",),
+               dynamic_sequence=(("consumer", False), ("base", True),
+                                 ("consumer", True)),
+               should_plan=("base", "consumer"))

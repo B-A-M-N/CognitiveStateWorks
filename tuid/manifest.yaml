@@ -33,7 +33,6 @@ inputs:
 emits:
 - tui_validation_packet
 context_budget: medium
-exclusive_group: tui_state
 runtime:
   specialists:
     required: []

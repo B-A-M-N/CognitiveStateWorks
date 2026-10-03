@@ -143,7 +143,9 @@
       "additionalProperties": false
     },
     "exclusive_group": {
-      "type": "string"
+      "type": "string",
+      "deprecated": true,
+      "description": "Deprecated. Use composition.group with composition.mode set to exclusive."
     },
     "handoff": {
       "type": "string"

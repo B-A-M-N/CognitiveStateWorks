@@ -18,7 +18,7 @@ if __package__:
                                    StateMachineWorkflowEngine, WorkflowDecision,
                                    WorkflowIdentity, WorkflowProgressFact,
                                    WorkflowSnapshot)
-    from .composition_rules import validate_selection
+    from .composition_rules import depends_on, validate_selection
 else:
     from errors import TransitionError
     from evidence import EvidenceStore
@@ -31,7 +31,7 @@ else:
                                   StateMachineWorkflowEngine, WorkflowDecision,
                                   WorkflowIdentity, WorkflowProgressFact,
                                   WorkflowSnapshot)
-    from composition_rules import validate_selection
+    from composition_rules import depends_on, validate_selection
 
 
 WORKFLOW_PORT_VERSION = "1.1.0"
@@ -147,23 +147,6 @@ class WorkflowAuthority:
         return {name: str(getattr(identity, name))
                 for name in WorkflowSelectionStore.SCOPE_FIELDS}
 
-    @staticmethod
-    def _depends_on(entries: Mapping[str, Mapping[str, Any]],
-                    statework_id: str, target_id: str) -> bool:
-        pending = [statework_id]
-        visited: set[str] = set()
-        while pending:
-            current = pending.pop()
-            if current in visited:
-                continue
-            visited.add(current)
-            manifest = dict(entries[current].get("manifest") or {})
-            required_ids = set((manifest.get("composition") or {}).get("requires") or ())
-            if target_id in required_ids:
-                return True
-            pending.extend(item for item in required_ids if item in entries)
-        return False
-
     @classmethod
     def _selection_compatible(cls, entries: Mapping[str, Mapping[str, Any]],
                               statework_id: str, active_ids: set[str]) -> bool:
@@ -275,8 +258,10 @@ class WorkflowAuthority:
                     f"StateWork {statework_id!r} activation {name} does not match")
         compiled = load_compiled_registry(self.root)
         entries = {str(item.get("id")): item for item in compiled.get("stateworks") or ()}
+        manifests = {key: item.get("manifest") or item
+                     for key, item in entries.items()}
         for other_id in set(active) - {statework_id}:
-            if self._depends_on(entries, other_id, statework_id):
+            if depends_on(manifests, other_id, statework_id):
                 raise TransitionError(
                     f"StateWork {statework_id!r} is required by active {other_id!r}")
         active.pop(statework_id)
@@ -425,6 +410,8 @@ class WorkflowAuthority:
         holding a control whose StateWork was gone.
         """
         active = dict(selection["active_workflows"])
+        manifests = {key: item.get("manifest") or item
+                     for key, item in entries.items()}
         expired = {
             statework_id for statework_id, row in active.items()
             if row.get("activation_owner") == "digitalpsychology"
@@ -440,7 +427,7 @@ class WorkflowAuthority:
             releasable = [statework_id for statework_id in expired
                           if not any(
                               other_id != statework_id
-                              and self._depends_on(entries, other_id, statework_id)
+                              and depends_on(manifests, other_id, statework_id)
                               for other_id in active)]
             if not releasable:
                 break
