@@ -67,6 +67,11 @@ class WorkflowAuthority:
         self.selection_store = selection_store or WorkflowSelectionStore(
             self.root / "state" / "workflow-selections.json")
         self._controllers: Dict[str, StandaloneStateWorkController] = {}
+        # Bundle contracts are verified once against the pinned compiled
+        # registry. Snapshot calls can then reuse parsed engine definitions
+        # without reopening every source YAML file.
+        self._bundle_cache: Dict[str, tuple[dict[str, Any], dict[str, Any],
+                                            str, Any, dict[str, Any]]] = {}
         # The registry is a process-lifetime trust pin. Authority calls never
         # re-read it implicitly, so one request cannot mix registry versions.
         self._compiled_registry = load_compiled_registry(self.root)
@@ -85,6 +90,7 @@ class WorkflowAuthority:
         self._compiled_registry = compiled
         self._registry_hash = actual
         self._controllers.clear()
+        self._bundle_cache.clear()
         return actual
 
     def _bundle(self, statework_id: str, contract_hash: Optional[str] = None
@@ -94,6 +100,13 @@ class WorkflowAuthority:
                       if item.get("id") == statework_id), None)
         if entry is None:
             raise TransitionError(f"StateWork {statework_id!r} is unavailable")
+        cached = self._bundle_cache.get(statework_id)
+        if cached is not None:
+            manifest, contract, digest, engine, evidence_registry = cached
+            if contract_hash and contract_hash != digest:
+                raise TransitionError("workflow contract differs from the CFW policy pin")
+            return (dict(manifest), dict(contract), digest, engine,
+                    dict(evidence_registry))
         manifest = dict(entry.get("manifest") or {})
         engine_decl = manifest.get("engine") or {
             "kind": "state_machine", "contract": "transitions.yaml",
@@ -140,6 +153,9 @@ class WorkflowAuthority:
                 raise TransitionError(
                     f"workflow engine {kind!r} differs from the compiled host trust pin")
         engine.validate_contract(contract)
+        self._bundle_cache[statework_id] = (
+            dict(manifest), dict(contract), digest, engine,
+            dict(evidence_registry))
         return manifest, dict(contract), digest, engine, evidence_registry
 
     @staticmethod

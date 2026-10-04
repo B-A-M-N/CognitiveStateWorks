@@ -93,6 +93,45 @@ def test_authority_pins_compiled_registry_until_explicit_reload(tmp_path, monkey
     assert authority.registry_hash == pinned_hash
 
 
+def test_active_bundle_contracts_are_read_once_across_repeated_snapshots(
+        tmp_path, monkeypatch):
+    import workflow_authority
+
+    authority = _authority(tmp_path)
+    scope = _scope("bundle-cache")
+    original = workflow_authority._load_yaml
+    reads = []
+
+    def counted(path):
+        reads.append(Path(path))
+        return original(path)
+
+    monkeypatch.setattr(workflow_authority, "_load_yaml", counted)
+    gitter, gitter_contract = _identity(authority, scope, "gitter")
+    selected = authority.activate_workflow(
+        gitter, contract_hash=gitter_contract["contract_hash"],
+        expected_selection_revision=0)
+    getter, getter_contract = _identity(authority, scope, "getter")
+    selected = authority.activate_workflow(
+        getter, contract_hash=getter_contract["contract_hash"],
+        expected_selection_revision=selected["revision"])
+
+    assert len(reads) == 2
+    pinned_read_count = len(reads)
+    for _ in range(100):
+        snapshot = authority.behavioral_snapshot(workflow_scope=scope)
+        assert len(snapshot["active_workflows"]) == 2
+    assert len(reads) == pinned_read_count
+
+    registry_hash = authority.registry_hash
+    authority.reload_registry(expected_registry_hash=registry_hash)
+    authority.behavioral_snapshot(workflow_scope=scope)
+    assert len(reads) == pinned_read_count + 2
+    for _ in range(10):
+        authority.behavioral_snapshot(workflow_scope=scope)
+    assert len(reads) == pinned_read_count + 2
+
+
 def test_csw_rejects_unknown_or_composition_ineligible_activation(tmp_path):
     authority = _authority(tmp_path)
     scope = _scope()
