@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import copy
-import fcntl
 import json
 import os
-import tempfile
+import sqlite3
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -21,34 +20,63 @@ class WorkflowSelectionStore:
                     "workflow_id", "subject_ref")
 
     def __init__(self, path: Path) -> None:
-        self.path = Path(path)
-        self.lock_path = self.path.with_name(self.path.name + ".lock")
+        self.legacy_path = Path(path)
+        self.path = (self.legacy_path.with_suffix(".sqlite3")
+                     if self.legacy_path.suffix.lower() == ".json"
+                     else self.legacy_path)
         self.path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+        self._initialize()
 
-    @classmethod
-    def _scope_key(cls, scope: Mapping[str, Any]) -> str:
-        if not isinstance(scope, Mapping) or set(scope) != set(cls.SCOPE_FIELDS):
-            raise TransitionError("workflow selection scope has missing or unknown fields")
-        normalized = {}
-        for name in cls.SCOPE_FIELDS:
-            value = scope.get(name)
-            if not isinstance(value, str) or not value.strip() or len(value) > 256:
-                raise TransitionError(f"workflow selection scope {name} is invalid")
-            normalized[name] = value
-        return json.dumps(normalized, sort_keys=True, separators=(",", ":"))
+    def _connect(self) -> sqlite3.Connection:
+        database = sqlite3.connect(self.path, timeout=5.0)
+        database.row_factory = sqlite3.Row
+        database.execute("PRAGMA busy_timeout=5000")
+        return database
 
-    def _read_unlocked(self) -> dict[str, Any]:
-        if not self.path.exists():
+    def _initialize(self) -> None:
+        with self._connect() as database:
+            database.execute("PRAGMA journal_mode=WAL")
+            database.executescript("""
+                CREATE TABLE IF NOT EXISTS store_metadata (
+                    key TEXT PRIMARY KEY, value TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS workflow_selections (
+                    scope_key TEXT PRIMARY KEY,
+                    revision INTEGER NOT NULL,
+                    record_json TEXT NOT NULL
+                );
+            """)
+            database.execute("BEGIN IMMEDIATE")
+            migrated = database.execute(
+                "SELECT value FROM store_metadata WHERE key='legacy_json_import_v1'").fetchone()
+            if migrated is None:
+                try:
+                    legacy = self._read_legacy()
+                    for key, record in legacy["scopes"].items():
+                        database.execute(
+                            "INSERT OR IGNORE INTO workflow_selections "
+                            "(scope_key, revision, record_json) VALUES (?, ?, ?)",
+                            (key, int(record.get("revision", 0)),
+                             json.dumps(record, sort_keys=True, separators=(",", ":"))))
+                    database.execute(
+                        "INSERT INTO store_metadata(key, value) VALUES (?, ?)",
+                        ("legacy_json_import_v1", "complete"))
+                except Exception:
+                    database.rollback()
+                    raise
+            database.commit()
+        os.chmod(self.path, 0o600)
+
+    def _read_legacy(self) -> dict[str, Any]:
+        if not self.legacy_path.exists():
             return {"version": 2, "scopes": {}}
         try:
-            value = json.loads(self.path.read_text(encoding="utf-8"))
+            value = json.loads(self.legacy_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise TransitionError("workflow selection store is unreadable") from exc
         if (not isinstance(value, dict) or value.get("version") not in {1, 2}
                 or not isinstance(value.get("scopes"), dict)):
             raise TransitionError("workflow selection store has invalid structure")
-        # Older selections were host-owned and permanent. Preserve that
-        # authority when reading them after the lease-aware format is deployed.
         if value["version"] == 1:
             for selection in value["scopes"].values():
                 if not isinstance(selection, dict):
@@ -68,20 +96,33 @@ class WorkflowSelectionStore:
             value["version"] = 2
         return value
 
+    @classmethod
+    def _scope_key(cls, scope: Mapping[str, Any]) -> str:
+        if not isinstance(scope, Mapping) or set(scope) != set(cls.SCOPE_FIELDS):
+            raise TransitionError("workflow selection scope has missing or unknown fields")
+        normalized = {}
+        for name in cls.SCOPE_FIELDS:
+            value = scope.get(name)
+            if not isinstance(value, str) or not value.strip() or len(value) > 256:
+                raise TransitionError(f"workflow selection scope {name} is invalid")
+            normalized[name] = value
+        return json.dumps(normalized, sort_keys=True, separators=(",", ":"))
+
     def get(self, scope: Mapping[str, Any]) -> dict[str, Any]:
         key = self._scope_key(scope)
-        self.lock_path.touch(mode=0o600, exist_ok=True)
-        with self.lock_path.open("r", encoding="utf-8") as lock:
-            fcntl.flock(lock.fileno(), fcntl.LOCK_SH)
-            record = self._read_unlocked()["scopes"].get(key) or {
-                "scope": {name: scope[name] for name in self.SCOPE_FIELDS},
-                "revision": 0, "active_workflows": {},
-            }
-            if (not isinstance(record, dict)
-                    or not isinstance(record.get("active_workflows"), dict)
-                    or not isinstance(record.get("revision"), int)):
-                raise TransitionError("workflow selection record has invalid structure")
-            return copy.deepcopy(record)
+        with self._connect() as database:
+            row = database.execute(
+                "SELECT record_json FROM workflow_selections WHERE scope_key=?", (key,)
+            ).fetchone()
+        record = (json.loads(row[0]) if row is not None else {
+            "scope": {name: scope[name] for name in self.SCOPE_FIELDS},
+            "revision": 0, "active_workflows": {},
+        })
+        if (not isinstance(record, dict)
+                or not isinstance(record.get("active_workflows"), dict)
+                or not isinstance(record.get("revision"), int)):
+            raise TransitionError("workflow selection record has invalid structure")
+        return copy.deepcopy(record)
 
     def replace(self, scope: Mapping[str, Any], *, expected_revision: int,
                 active_workflows: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
@@ -98,40 +139,36 @@ class WorkflowSelectionStore:
             raise TransitionError("active workflow set is malformed")
         for row in candidate.values():
             self._validate_activation_row(row, max_revision=expected_revision + 1)
-        self.lock_path.touch(mode=0o600, exist_ok=True)
-        with self.lock_path.open("r+", encoding="utf-8") as lock:
-            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            data = self._read_unlocked()
-            prior = data["scopes"].get(key) or {
+        with self._connect() as database:
+            database.execute("BEGIN IMMEDIATE")
+            row = database.execute(
+                "SELECT record_json FROM workflow_selections WHERE scope_key=?", (key,)
+            ).fetchone()
+            prior = json.loads(row[0]) if row is not None else {
                 "scope": {name: scope[name] for name in self.SCOPE_FIELDS},
                 "revision": 0, "active_workflows": {},
             }
             if int(prior.get("revision", 0)) != int(expected_revision):
+                database.rollback()
                 raise TransitionError(
                     f"workflow selection revision conflict: expected {expected_revision}, "
                     f"found {prior.get('revision', 0)}; re-inspect required")
             updated = {"scope": {name: scope[name] for name in self.SCOPE_FIELDS},
                        "revision": int(expected_revision) + 1,
                        "active_workflows": candidate}
-            data["scopes"][key] = updated
-            data["version"] = 2
-            fd, temporary = tempfile.mkstemp(dir=str(self.path.parent),
-                                             prefix=f".{self.path.name}.", suffix=".tmp")
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as stream:
-                    json.dump(data, stream, sort_keys=True, separators=(",", ":"))
-                    stream.write("\n"); stream.flush(); os.fsync(stream.fileno())
-                os.chmod(temporary, 0o600)
-                os.replace(temporary, self.path)
-            finally:
-                if os.path.exists(temporary):
-                    os.unlink(temporary)
-            return copy.deepcopy(updated)
+            database.execute(
+                "INSERT INTO workflow_selections(scope_key, revision, record_json) "
+                "VALUES (?, ?, ?) ON CONFLICT(scope_key) DO UPDATE SET "
+                "revision=excluded.revision, record_json=excluded.record_json",
+                (key, updated["revision"],
+                 json.dumps(updated, sort_keys=True, separators=(",", ":"))))
+            database.commit()
+        return copy.deepcopy(updated)
 
     @staticmethod
     def _validate_activation_row(row: Mapping[str, Any], *, max_revision: int) -> None:
         owner = row.get("activation_owner")
-        if owner not in {"host", "digitalpsychology"}:
+        if owner not in {"host", "digitalpsychology", "dependency"}:
             raise TransitionError("workflow activation owner is invalid")
         control_session_id = row.get("control_session_id")
         intervention_id = row.get("intervention_id")
@@ -143,6 +180,11 @@ class WorkflowSelectionStore:
         if owner == "host":
             if control_session_id is not None or intervention_id is not None or expiry is not None:
                 raise TransitionError("host activation cannot carry a DP lease")
+        elif owner == "dependency":
+            if (control_session_id is not None or intervention_id is not None
+                    or expiry is not None):
+                raise TransitionError(
+                    "dependency-retained activation cannot carry an expired DP lease")
         elif (not isinstance(control_session_id, str) or not control_session_id
               or len(control_session_id) > 256
               or not isinstance(intervention_id, str) or not intervention_id

@@ -33,7 +33,6 @@ class StandaloneStateWorkController:
         self.evidence_store = evidence_store
         self.engine = TransitionEngine(dict(contract), evidence_registry=evidence_registry,
                                        require_registered=True, evidence_store=evidence_store)
-        self.entry_times: Dict[str, str] = {}
         initial = contract.get("initial_state")
         if not isinstance(initial, str) or not initial:
             raise TransitionError("standalone StateWork contract requires initial_state")
@@ -50,15 +49,6 @@ class StandaloneStateWorkController:
                 if snapshot.get("state") is None:
                     raise
         current = state_store.get(identity)
-        for item in reversed(state_store._data.get("history") or []):
-            identity_key = state_store.key(identity)
-            if state_store.key(item.get("identity") or {}) != identity_key:
-                continue
-            state_name = str(item.get("to_state") or "")
-            recorded_at = str(item.get("recorded_at") or "")
-            if state_name and recorded_at:
-                self.entry_times[state_name] = recorded_at
-        self.entry_times[str(current.get("state") or initial)] = str(current.get("updated_at") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
     def inspect(self) -> Dict[str, Any]:
         return self.state_store.get(self.identity)
@@ -75,7 +65,7 @@ class StandaloneStateWorkController:
         resolved = self.evidence_store.resolve(references)
         edges = self.engine.matching_edges(from_state, to_state, trigger)
         freshness = (edges[0].get("evidence_freshness") if len(edges) == 1 else {}) or {}
-        entry = self.entry_times.get(from_state) or snapshot.get("updated_at")
+        entry = snapshot.get("updated_at")
         required_kinds = set(edges[0].get("required_evidence") or []) if len(edges) == 1 else set()
         relevant = [item for item in resolved if item.get("kind") in required_kinds]
         if freshness.get("mode") == "after_state_entry" and entry:
@@ -109,6 +99,4 @@ class StandaloneStateWorkController:
         self.state_store.commit(
             self.identity, expected_revision=expected_revision, new_state=to_state,
             transition=transition_record)
-        committed = self.state_store.get(self.identity)
-        self.entry_times[to_state] = str(committed.get("updated_at") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
         return decision

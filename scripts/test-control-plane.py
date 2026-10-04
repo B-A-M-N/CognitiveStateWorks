@@ -179,8 +179,9 @@ def main() -> int:
         freshness_contract = {"initial_state": "UNKNOWN", "states": ["UNKNOWN", "CHANGING"], "transitions": [edge("UNKNOWN", "CHANGING", "mutate", ["authority"], progress="FORWARD_PROGRESS", consequential=True, evidence_freshness={"mode": "after_state_entry", "max_age_seconds": 60})]}
         fresh_controller = StandaloneStateWorkController(contract=freshness_contract, identity=identity, state_store=freshness_store, evidence_store=freshness_evidence, evidence_registry={"kinds": {"authority": {"authoritative": True, "allowed_issuers": ["host:authorization"], "validator": "host-authorization-v1", "schema": "authority-record-v1"}}})
         check("freshness rejects evidence predating state entry", not fresh_controller.request_transition(to_state="CHANGING", trigger="mutate", evidence_refs=["fresh-old"], expected_revision=fresh_controller.inspect()["revision"]).allowed)
-        entry = datetime.now(timezone.utc).replace(microsecond=0)
-        fresh_controller.entry_times["UNKNOWN"] = entry.isoformat().replace("+00:00", "Z")
+        entered = datetime.fromisoformat(
+            fresh_controller.inspect()["updated_at"].replace("Z", "+00:00"))
+        entry = entered + timedelta(seconds=1)
         offset_observed = entry.astimezone(timezone(timedelta(hours=-5))).isoformat()
         freshness_evidence.create({"ref": "fresh-offset", "kind": "authority", "subject_ref": "repo",
                                   "observed_at": offset_observed, "issuer": "host:authorization",

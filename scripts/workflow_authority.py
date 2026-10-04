@@ -34,7 +34,7 @@ else:
     from composition_rules import depends_on, validate_selection
 
 
-WORKFLOW_PORT_VERSION = "1.1.0"
+WORKFLOW_PORT_VERSION = "1.2.0"
 
 
 def load_compiled_registry(root: Optional[Path] = None, *,
@@ -67,10 +67,29 @@ class WorkflowAuthority:
         self.selection_store = selection_store or WorkflowSelectionStore(
             self.root / "state" / "workflow-selections.json")
         self._controllers: Dict[str, StandaloneStateWorkController] = {}
+        # The registry is a process-lifetime trust pin. Authority calls never
+        # re-read it implicitly, so one request cannot mix registry versions.
+        self._compiled_registry = load_compiled_registry(self.root)
+        self._registry_hash = str(self._compiled_registry["registry_hash"])
+
+    @property
+    def registry_hash(self) -> str:
+        return self._registry_hash
+
+    def reload_registry(self, *, expected_registry_hash: str) -> str:
+        """Explicitly replace the process pin after the caller names its hash."""
+        compiled = load_compiled_registry(self.root)
+        actual = str(compiled.get("registry_hash") or "")
+        if actual != expected_registry_hash:
+            raise TransitionError("compiled registry hash does not match the requested pin")
+        self._compiled_registry = compiled
+        self._registry_hash = actual
+        self._controllers.clear()
+        return actual
 
     def _bundle(self, statework_id: str, contract_hash: Optional[str] = None
                 ) -> tuple[dict[str, Any], dict[str, Any], str, Any, dict[str, Any]]:
-        compiled = load_compiled_registry(self.root)
+        compiled = self._compiled_registry
         entry = next((item for item in compiled.get("stateworks") or ()
                       if item.get("id") == statework_id), None)
         if entry is None:
@@ -200,7 +219,7 @@ class WorkflowAuthority:
             return selection
         if len(active) >= 16:
             raise TransitionError("active workflow set exceeds its bounds")
-        compiled = load_compiled_registry(self.root)
+        compiled = self._compiled_registry
         entries = {str(item.get("id")): item for item in compiled.get("stateworks") or ()}
         if not self._selection_compatible(entries, statework_id, set(active)):
             raise TransitionError("StateWork is not composition-compatible with the active set")
@@ -222,7 +241,7 @@ class WorkflowAuthority:
                             expected_activation_owner: Optional[str] = None,
                             expected_control_session_id: Optional[str] = None,
                             expected_intervention_id: Optional[str] = None) -> dict[str, Any]:
-        """Release an activation only when its recorded owner proves the request.
+        """Release an activation and report dependency retention explicitly.
 
         DP leases additionally require their session and intervention identity.
         Persistent host activations remain releasable by an explicit host-owned
@@ -247,27 +266,88 @@ class WorkflowAuthority:
                 f"found {selection['revision']}; re-inspect required")
         active = dict(selection["active_workflows"])
         if statework_id not in active:
-            raise TransitionError(f"StateWork {statework_id!r} is not active")
-        row = active[statework_id]
+            return {**selection, "disposition": "already_inactive",
+                    "statework_id": statework_id, "required_by": [],
+                    "released_stateworks": []}
+        row = dict(active[statework_id])
+        compiled = self._compiled_registry
+        entries = {str(item.get("id")): item for item in compiled.get("stateworks") or ()}
+        manifests = {key: item.get("manifest") or item
+                     for key, item in entries.items()}
+        required_by = sorted(other_id for other_id in set(active) - {statework_id}
+                             if depends_on(manifests, other_id, statework_id))
+        if row.get("activation_owner") == "dependency":
+            if required_by:
+                return {**selection, "disposition": "retained_required",
+                        "statework_id": statework_id, "required_by": required_by,
+                        "released_stateworks": []}
+            active.pop(statework_id)
+            released = {statework_id}
+            changed = True
+            while changed:
+                changed = False
+                for retained_id, retained_row in tuple(active.items()):
+                    if retained_row.get("activation_owner") != "dependency":
+                        continue
+                    dependents = [other_id for other_id in active
+                                  if other_id != retained_id
+                                  and depends_on(manifests, other_id, retained_id)]
+                    if not dependents:
+                        active.pop(retained_id)
+                        released.add(retained_id)
+                        changed = True
+            updated = self.selection_store.replace(
+                workflow_scope, expected_revision=expected_selection_revision,
+                active_workflows=active)
+            return {**updated, "disposition": "released",
+                    "statework_id": statework_id, "required_by": [],
+                    "released_stateworks": sorted(released)}
         for name, expected in (
                 ("activation_owner", expected_activation_owner),
                 ("control_session_id", expected_control_session_id),
                 ("intervention_id", expected_intervention_id)):
             if expected is not None and row.get(name) != expected:
-                raise TransitionError(
-                    f"StateWork {statework_id!r} activation {name} does not match")
-        compiled = load_compiled_registry(self.root)
-        entries = {str(item.get("id")): item for item in compiled.get("stateworks") or ()}
-        manifests = {key: item.get("manifest") or item
-                     for key, item in entries.items()}
-        for other_id in set(active) - {statework_id}:
-            if depends_on(manifests, other_id, statework_id):
-                raise TransitionError(
-                    f"StateWork {statework_id!r} is required by active {other_id!r}")
+                return {**selection, "disposition": "owner_mismatch",
+                        "statework_id": statework_id, "required_by": [],
+                        "released_stateworks": []}
+        if required_by:
+            # Retain legal composition after the causal DP lease ends. The
+            # dependency has its own owner and no longer advertises a live DP
+            # intervention or expiry.
+            active[statework_id] = {
+                **row, "activation_owner": "dependency",
+                "control_session_id": None, "intervention_id": None,
+                "expires_at_action": None,
+            }
+            updated = self.selection_store.replace(
+                workflow_scope, expected_revision=expected_selection_revision,
+                active_workflows=active)
+            return {**updated, "disposition": "retained_required",
+                    "statework_id": statework_id, "required_by": required_by,
+                    "released_stateworks": []}
+
+        released = {statework_id}
         active.pop(statework_id)
-        return self.selection_store.replace(
+        # Dependency-owned ancestors release when their final dependent goes.
+        changed = True
+        while changed:
+            changed = False
+            for retained_id, retained_row in tuple(active.items()):
+                if retained_row.get("activation_owner") != "dependency":
+                    continue
+                dependents = [other_id for other_id in active
+                              if other_id != retained_id
+                              and depends_on(manifests, other_id, retained_id)]
+                if not dependents:
+                    active.pop(retained_id)
+                    released.add(retained_id)
+                    changed = True
+        updated = self.selection_store.replace(
             workflow_scope, expected_revision=expected_selection_revision,
             active_workflows=active)
+        return {**updated, "disposition": "released",
+                "statework_id": statework_id, "required_by": [],
+                "released_stateworks": sorted(released)}
 
     def workflow_activation_metadata(self, *, workflow_scope: Mapping[str, Any],
                                      statework_id: str) -> Optional[dict[str, Any]]:
@@ -278,9 +358,18 @@ class WorkflowAuthority:
             return None
         WorkflowSelectionStore._validate_activation_row(
             row, max_revision=int(selection["revision"]))
-        return {name: row[name] for name in (
+        metadata = {name: row[name] for name in (
             "activation_owner", "control_session_id", "intervention_id",
             "activation_revision", "expires_at_action")}
+        if row["activation_owner"] == "dependency":
+            compiled = self._compiled_registry
+            manifests = {str(item.get("id")): item.get("manifest") or item
+                         for item in compiled.get("stateworks") or ()}
+            metadata["required_by"] = sorted(
+                other_id for other_id in selection["active_workflows"]
+                if other_id != statework_id
+                and depends_on(manifests, other_id, statework_id))
+        return metadata
 
     def behavioral_snapshot(
             self, *, workflow_scope: Mapping[str, Any],
@@ -297,7 +386,7 @@ class WorkflowAuthority:
         if candidates is not None and len(candidates) > 32:
             raise TransitionError("behavioral snapshot request exceeds its bounds")
 
-        compiled = load_compiled_registry(self.root)
+        compiled = self._compiled_registry
         entries = {str(item.get("id")): item
                    for item in compiled.get("stateworks") or ()}
         active_rows = selection["active_workflows"]
@@ -336,6 +425,9 @@ class WorkflowAuthority:
             active.append({
                 "identity": dict(identity.__dict__),
                 "contract_hash": str(contract_hash),
+                "activation_owner": row["activation_owner"],
+                "dependency_required_by": self._dependency_required_by(
+                    statework_id, active_rows, entries),
                 "engine_kind": snapshot.engine_kind,
                 "revision": snapshot.revision,
                 "current_state": snapshot.current_state,
@@ -386,11 +478,19 @@ class WorkflowAuthority:
         if type(host_action_index) is not int or host_action_index < 0:
             raise TransitionError("host action index must be non-negative")
         selection = self.selection_store.get(workflow_scope)
-        compiled = load_compiled_registry(self.root)
+        compiled = self._compiled_registry
         entries = {str(item.get("id")): item
                    for item in compiled.get("stateworks") or ()}
         return self._expire_workflow_leases(
             workflow_scope, selection, entries, host_action_index)
+
+    @staticmethod
+    def _dependency_required_by(
+            statework_id: str, active: Mapping[str, Mapping[str, Any]],
+            entries: Mapping[str, Mapping[str, Any]]) -> list[str]:
+        manifests = {key: item.get("manifest") or item for key, item in entries.items()}
+        return sorted(other_id for other_id in active if other_id != statework_id
+                      and depends_on(manifests, other_id, statework_id))
 
     def _expire_workflow_leases(self, workflow_scope: Mapping[str, Any],
                                 selection: Mapping[str, Any],
@@ -419,16 +519,28 @@ class WorkflowAuthority:
             and int(row["expires_at_action"]) < host_action_index
         }
         removed = False
-        # Remove expired leaves first, then their now-unneeded dependencies.
-        # If a non-expired workflow still depends on an expired lease, retain
-        # that lease until the dependent can be released without breaking the
-        # selected composition.
-        while expired:
-            releasable = [statework_id for statework_id in expired
-                          if not any(
-                              other_id != statework_id
-                              and depends_on(manifests, other_id, statework_id)
-                              for other_id in active)]
+        # Expired DP-owned prerequisites transition to dependency ownership;
+        # they no longer claim a live intervention or lease.
+        for statework_id in tuple(expired):
+            if self._dependency_required_by(statework_id, active, entries):
+                row = dict(active[statework_id])
+                active[statework_id] = {
+                    **row, "activation_owner": "dependency",
+                    "control_session_id": None, "intervention_id": None,
+                    "expires_at_action": None,
+                }
+                expired.remove(statework_id)
+                removed = True
+
+        # Remove expired leaves first, then dependency-owned ancestors whose
+        # final dependent has gone.
+        while True:
+            candidates = set(expired) | {
+                statework_id for statework_id, row in active.items()
+                if row.get("activation_owner") == "dependency"}
+            releasable = [statework_id for statework_id in candidates
+                          if not self._dependency_required_by(
+                              statework_id, active, entries)]
             if not releasable:
                 break
             for statework_id in releasable:

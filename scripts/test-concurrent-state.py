@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import sqlite3
 import tempfile
 from pathlib import Path
 
@@ -21,8 +22,8 @@ def main() -> int:
         storage = root / "store.json"
         first = copy.deepcopy(fixture)
         second = copy.deepcopy(fixture)
-        first["packet_id"] = "concurrent-a"
-        second["packet_id"] = "concurrent-b"
+        first["packet_id"] = "concurrent-z"
+        second["packet_id"] = "concurrent-a"
         a = PacketStore(packet_registry_path=ROOT / "schemas" / "packet-registry.yaml",
                         storage_path=storage)
         b = PacketStore(packet_registry_path=ROOT / "schemas" / "packet-registry.yaml",
@@ -31,11 +32,20 @@ def main() -> int:
         try:
             b.put(second)
         except PacketValidationError:
-            assert b.get("concurrent-b") is None
+            assert b.get("concurrent-a") is None
             b.reload()
         else:
             raise AssertionError("stale writer unexpectedly committed")
-        assert a.get("concurrent-a") is not None
+        with sqlite3.connect(root / "store.sqlite3") as database:
+            prior_rowid = database.execute(
+                "SELECT rowid FROM stored_packets WHERE packet_id='concurrent-z'").fetchone()[0]
+        b.put(second)
+        with sqlite3.connect(root / "store.sqlite3") as database:
+            next_rowid = database.execute(
+                "SELECT rowid FROM stored_packets WHERE packet_id='concurrent-z'").fetchone()[0]
+        assert prior_rowid == next_rowid, "adding a packet rewrote existing packet rows"
+        assert a.get("concurrent-z") is not None
+        assert b.get("concurrent-a") is not None
         parent = root / "caller-owned"
         parent.mkdir()
         mode_before = parent.stat().st_mode

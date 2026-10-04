@@ -23,6 +23,7 @@ The enforcing runtime includes:
 - `StandaloneHostInterface` for resolving StateWorks, starting or resuming subjects, submitting attested observations, requesting workflow steps, and recovering from invalidation.
 - `SubjectStateStore` for durable state keyed by namespace, application, subject, StateWork, and contract version.
 - Revision compare-and-swap updates and append-only transition history so stale writers re-inspect instead of overwriting newer state.
+- SQLite WAL persistence for subject state, transition history, packets, and workflow selections. Existing JSON stores are imported once into adjacent `.sqlite3` files; later reads and compare-and-swap writes use SQLite transactions.
 - `EvidenceStore` for trusted evidence references, attestation integrity, persistence, and restart recovery.
 - Explicit consequential transition markers and registered provenance for authorization, mutation, verification, and terminal-state transitions.
 - A compiled bundle registry with local packet/evidence contracts, freshness rules, and trusted engine pins.
@@ -38,7 +39,7 @@ python3 -m pip install .
 cognitive-statework-compile-registry
 ```
 
-The compiler writes the immutable registry beside the packaged built-ins. Trusted data-only bundles can then be added through a host-owned registry configuration.
+The compiler writes the immutable registry beside the packaged built-ins. Each `WorkflowAuthority` pins the verified compiled registry for its lifetime; an explicit `reload_registry(expected_registry_hash=...)` replaces it only after the requested hash matches. Trusted data-only bundles can then be added through a host-owned registry configuration.
 
 External executable extensions use the `cognitive_statework.engines`, `cognitive_statework.evidence_validators`, and `cognitive_statework.freshness_validators` entry-point groups. A host must explicitly adopt each distribution/version/entry-point identity and pin its distribution Python-source SHA-256 through the corresponding registry's `load_trusted_entry_points(...)` method. The pin is checked before loading; compiled registries also pin the adopted implementation hashes. Data-only bundles cannot trigger Python imports.
 
@@ -132,6 +133,13 @@ host supplies the current action index, while preserving composition-required
 dependencies and independently owned selections. Applying any workflow step still uses
 `WorkflowAuthority.apply_step(...)` with evidence and an expected workflow
 revision.
+
+When the final direct lease on a prerequisite is released while active
+dependents still require it, CSW retains the prerequisite as a dependency-owned
+selection and reports a typed `retained` disposition. It releases that
+selection after the last dependent closes. Snapshot freshness is checked from
+the persisted workflow `updated_at` value, including after restart, and
+selection updates remain revision-checked under concurrent writers.
 
 In the three-system runtime, DP receives a CSW snapshot containing the current
 selection revision, active workflow states, legal steps, and only registered,

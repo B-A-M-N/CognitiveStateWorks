@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import copy
-import fcntl
 import hashlib
 import json
 import jsonschema
 import os
-import tempfile
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Optional
@@ -32,32 +31,79 @@ class SubjectStateStore:
     overwrite a newer state.
     """
     def __init__(self, path: Path) -> None:
-        self.path = Path(path)
-        self.lock_path = self.path.with_name(self.path.name + ".lock")
+        self.legacy_path = Path(path)
+        self.path = (self.legacy_path.with_suffix(".sqlite3")
+                     if self.legacy_path.suffix.lower() == ".json"
+                     else self.legacy_path)
         self.path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
-        self._load()
+        self._initialize()
 
-    def _load(self) -> None:
-        if not self.path.exists():
-            self._data = {"version": 1, "revision": 0, "subjects": {}, "history": []}
-            return
+    def _connect(self) -> sqlite3.Connection:
+        database = sqlite3.connect(self.path, timeout=5.0)
+        database.row_factory = sqlite3.Row
+        database.execute("PRAGMA busy_timeout=5000")
+        return database
+
+    def _initialize(self) -> None:
+        with self._connect() as database:
+            database.execute("PRAGMA journal_mode=WAL")
+            database.executescript("""
+                CREATE TABLE IF NOT EXISTS store_metadata (
+                    key TEXT PRIMARY KEY, value TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS subjects (
+                    subject_key TEXT PRIMARY KEY,
+                    revision INTEGER NOT NULL,
+                    record_json TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS subject_history (
+                    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    subject_key TEXT,
+                    event_json TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS subject_history_scope_order
+                    ON subject_history(subject_key, event_id);
+            """)
+            database.execute("BEGIN IMMEDIATE")
+            migrated = database.execute(
+                "SELECT value FROM store_metadata WHERE key='legacy_json_import_v1'").fetchone()
+            if migrated is None:
+                try:
+                    legacy = self._read_legacy()
+                    for key, record in legacy["subjects"].items():
+                        database.execute(
+                            "INSERT OR IGNORE INTO subjects "
+                            "(subject_key, revision, record_json) VALUES (?, ?, ?)",
+                            (key, int(record.get("revision", 0)),
+                             json.dumps(record, sort_keys=True, separators=(",", ":"))))
+                    for event in legacy.get("history", ()):
+                        identity = event.get("identity") if isinstance(event, dict) else None
+                        subject_key = (self.key(identity) if isinstance(identity, Mapping)
+                                       else None)
+                        database.execute(
+                            "INSERT INTO subject_history(subject_key, event_json) VALUES (?, ?)",
+                            (subject_key, json.dumps(event, sort_keys=True,
+                                                     separators=(",", ":"))))
+                    database.execute(
+                        "INSERT INTO store_metadata(key, value) VALUES (?, ?)",
+                        ("legacy_json_import_v1", "complete"))
+                except Exception:
+                    database.rollback()
+                    raise
+            database.commit()
+        os.chmod(self.path, 0o600)
+
+    def _read_legacy(self) -> dict[str, Any]:
+        if not self.legacy_path.exists():
+            return {"version": 1, "subjects": {}, "history": []}
         try:
-            data = json.loads(self.path.read_text(encoding="utf-8"))
+            data = json.loads(self.legacy_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise TransitionError("subject state store is unreadable") from exc
-        if not isinstance(data, dict) or not isinstance(data.get("subjects"), dict):
+        if (not isinstance(data, dict) or not isinstance(data.get("subjects"), dict)
+                or not isinstance(data.get("history", []), list)):
             raise TransitionError("subject state store has invalid structure")
-        self._data = data
-
-    def _save(self) -> None:
-        fd, temporary = tempfile.mkstemp(dir=str(self.path.parent), prefix=f".{self.path.name}.", suffix=".tmp")
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as stream:
-                json.dump(self._data, stream, sort_keys=True, separators=(",", ":"))
-                stream.write("\n"); stream.flush(); os.fsync(stream.fileno())
-            os.chmod(temporary, 0o600); os.replace(temporary, self.path)
-        finally:
-            if os.path.exists(temporary): os.unlink(temporary)
+        return data
 
     @staticmethod
     def key(identity: Mapping[str, Any]) -> str:
@@ -73,48 +119,56 @@ class SubjectStateStore:
             "workflow_id", "subject_ref", "statework_id", "contract_version"), fields)),
             sort_keys=True, separators=(",", ":"))
 
-    def _refresh(self) -> None:
-        if self.path.exists():
-            self._load()
-
     def get(self, identity: Mapping[str, Any]) -> Dict[str, Any]:
-        self._refresh()
-        return dict(self._data["subjects"].get(self.key(identity)) or {"state": None, "revision": 0})
+        key = self.key(identity)
+        with self._connect() as database:
+            row = database.execute(
+                "SELECT record_json FROM subjects WHERE subject_key=?", (key,)
+            ).fetchone()
+        return (dict(json.loads(row[0])) if row is not None
+                else {"state": None, "revision": 0})
 
     def initialize_workflow(self, identity: Mapping[str, Any], *, engine_kind: str,
                             initial_data: Mapping[str, Any]) -> Dict[str, Any]:
         key = self.key(identity)
-        self.lock_path.touch(mode=0o600, exist_ok=True)
-        with self.lock_path.open("r+", encoding="utf-8") as lock:
-            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            self._refresh()
-            current = self._data["subjects"].get(key)
+        with self._connect() as database:
+            database.execute("BEGIN IMMEDIATE")
+            row = database.execute(
+                "SELECT record_json FROM subjects WHERE subject_key=?", (key,)
+            ).fetchone()
+            current = json.loads(row[0]) if row is not None else None
             if current is None:
                 current = dict(identity)
                 current.update({"engine_kind": engine_kind,
                                 "workflow_data": copy.deepcopy(dict(initial_data)),
                                 "revision": 0,
                                 "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")})
-                self._data["subjects"][key] = current
-                self._save()
+                database.execute(
+                    "INSERT INTO subjects(subject_key, revision, record_json) VALUES (?, ?, ?)",
+                    (key, 0, json.dumps(current, sort_keys=True, separators=(",", ":"))))
             elif current.get("engine_kind", engine_kind) != engine_kind:
+                database.rollback()
                 raise TransitionError("workflow engine kind differs from persisted identity")
+            database.commit()
             return dict(current)
 
     def commit_workflow(self, identity: Mapping[str, Any], *, expected_revision: int,
                         engine_kind: str, workflow_data: Mapping[str, Any],
                         transition: Mapping[str, Any]) -> Dict[str, Any]:
         key = self.key(identity)
-        self.lock_path.touch(mode=0o600, exist_ok=True)
-        with self.lock_path.open("r+", encoding="utf-8") as lock:
-            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            self._refresh()
-            current = self._data["subjects"].get(key) or {"revision": 0}
+        with self._connect() as database:
+            database.execute("BEGIN IMMEDIATE")
+            row = database.execute(
+                "SELECT record_json FROM subjects WHERE subject_key=?", (key,)
+            ).fetchone()
+            current = json.loads(row[0]) if row is not None else {"revision": 0}
             if int(current.get("revision", 0)) != int(expected_revision):
+                database.rollback()
                 raise TransitionError(
                     f"workflow revision conflict: expected {expected_revision}, "
                     f"found {current.get('revision', 0)}; re-inspect required")
             if current.get("engine_kind", engine_kind) != engine_kind:
+                database.rollback()
                 raise TransitionError("workflow engine kind differs from persisted identity")
             revision = int(expected_revision) + 1
             updated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -122,29 +176,48 @@ class SubjectStateStore:
             record.update({"engine_kind": engine_kind,
                            "workflow_data": copy.deepcopy(dict(workflow_data)),
                            "revision": revision, "updated_at": updated_at})
-            self._data["subjects"][key] = record
-            self._data["history"].append({
+            event = {
                 "identity": dict(identity), "engine_kind": engine_kind,
                 "revision": revision, "recorded_at": updated_at,
-                "transition": copy.deepcopy(dict(transition))})
-            self._save()
+                "transition": copy.deepcopy(dict(transition))}
+            database.execute(
+                "INSERT INTO subjects(subject_key, revision, record_json) VALUES (?, ?, ?) "
+                "ON CONFLICT(subject_key) DO UPDATE SET revision=excluded.revision, "
+                "record_json=excluded.record_json",
+                (key, revision, json.dumps(record, sort_keys=True, separators=(",", ":"))))
+            database.execute(
+                "INSERT INTO subject_history(subject_key, event_json) VALUES (?, ?)",
+                (key, json.dumps(event, sort_keys=True, separators=(",", ":"))))
+            database.commit()
             return dict(record)
 
     def commit(self, identity: Mapping[str, Any], *, expected_revision: int, new_state: str, transition: Mapping[str, Any]) -> Dict[str, Any]:
         key = self.key(identity)
-        self.lock_path.touch(mode=0o600, exist_ok=True)
-        with self.lock_path.open("r+", encoding="utf-8") as lock:
-            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            self._refresh()
-            current = self._data["subjects"].get(key) or {"state": None, "revision": 0}
+        with self._connect() as database:
+            database.execute("BEGIN IMMEDIATE")
+            row = database.execute(
+                "SELECT record_json FROM subjects WHERE subject_key=?", (key,)
+            ).fetchone()
+            current = (json.loads(row[0]) if row is not None
+                       else {"state": None, "revision": 0})
             if int(current.get("revision", 0)) != int(expected_revision):
+                database.rollback()
                 raise TransitionError(f"subject state revision conflict: expected {expected_revision}, found {current.get('revision', 0)}; re-inspect required")
             revision = int(expected_revision) + 1
             record = dict(identity); record.update({"state": new_state, "revision": revision, "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")})
-            self._data["subjects"][key] = record
             recorded_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-            self._data["history"].append({"identity": dict(identity), "from_state": current.get("state"), "to_state": new_state, "revision": revision, "recorded_at": recorded_at, "transition": dict(transition)})
-            self._save()
+            event = {"identity": dict(identity), "from_state": current.get("state"),
+                     "to_state": new_state, "revision": revision,
+                     "recorded_at": recorded_at, "transition": dict(transition)}
+            database.execute(
+                "INSERT INTO subjects(subject_key, revision, record_json) VALUES (?, ?, ?) "
+                "ON CONFLICT(subject_key) DO UPDATE SET revision=excluded.revision, "
+                "record_json=excluded.record_json",
+                (key, revision, json.dumps(record, sort_keys=True, separators=(",", ":"))))
+            database.execute(
+                "INSERT INTO subject_history(subject_key, event_json) VALUES (?, ?)",
+                (key, json.dumps(event, sort_keys=True, separators=(",", ":"))))
+            database.commit()
             return record
 
 class PacketStore:
@@ -177,20 +250,16 @@ class PacketStore:
         self._packets: Dict[str, Dict[str, Any]] = {}
         self._digests: Dict[str, str] = {}
         self.revision = 0
-        self.storage_path = Path(storage_path) if storage_path else None
+        self.legacy_storage_path = Path(storage_path) if storage_path else None
+        self.storage_path = (
+            self.legacy_storage_path.with_suffix(".sqlite3")
+            if self.legacy_storage_path is not None
+            and self.legacy_storage_path.suffix.lower() == ".json"
+            else self.legacy_storage_path)
         self.secure_storage_dir = bool(secure_storage_dir)
-        if self.storage_path is not None and self.storage_path.exists():
-            try:
-                stored = json.loads(self.storage_path.read_text(encoding="utf-8"))
-                self.revision = int(stored.get("revision", 0) or 0)
-                stored_packets = stored.get("packets", [])
-                if isinstance(stored_packets, dict):
-                    stored_packets = list(stored_packets.values())
-                for packet in stored_packets:
-                    self.put(packet, persist=False)
-            except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
-                raise PacketValidationError(
-                    f"persistent packet authority is unreadable: {self.storage_path}") from exc
+        if self.storage_path is not None:
+            self._initialize_persistence()
+            self._load_persistent()
         for packet in packets or []:
             self.put(packet)
 
@@ -221,63 +290,150 @@ class PacketStore:
         except Exception as exc:
             raise PacketValidationError(f"invalid observed_at: {exc}") from exc
         return packet
+
+    @staticmethod
+    def _packet_digest(packet: Mapping[str, Any]) -> str:
+        return hashlib.sha256(json.dumps(
+            packet, sort_keys=True, separators=(",", ":"), default=str
+        ).encode("utf-8")).hexdigest()
+
+    def _connect(self) -> sqlite3.Connection:
+        if self.storage_path is None:
+            raise PacketValidationError("packet store has no durable database")
+        database = sqlite3.connect(self.storage_path, timeout=5.0)
+        database.row_factory = sqlite3.Row
+        database.execute("PRAGMA busy_timeout=5000")
+        return database
+
+    def _initialize_persistence(self) -> None:
+        assert self.storage_path is not None
+        self.storage_path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+        if self.secure_storage_dir:
+            os.chmod(self.storage_path.parent, 0o700)
+        with self._connect() as database:
+            database.execute("PRAGMA journal_mode=WAL")
+            database.executescript("""
+                CREATE TABLE IF NOT EXISTS packet_store_metadata (
+                    key TEXT PRIMARY KEY, value TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS stored_packets (
+                    packet_id TEXT PRIMARY KEY,
+                    packet_json TEXT NOT NULL,
+                    content_digest TEXT NOT NULL
+                );
+            """)
+            database.execute("BEGIN IMMEDIATE")
+            imported = database.execute(
+                "SELECT value FROM packet_store_metadata WHERE key='legacy_json_import_v1'").fetchone()
+            if imported is None:
+                try:
+                    revision = 0
+                    legacy_path = self.legacy_storage_path
+                    if legacy_path is not None and legacy_path.exists():
+                        try:
+                            stored = json.loads(legacy_path.read_text(encoding="utf-8"))
+                            revision = int(stored.get("revision", 0) or 0)
+                            packets = stored.get("packets", [])
+                            if isinstance(packets, dict):
+                                packets = list(packets.values())
+                            for raw_packet in packets:
+                                packet = self._validate(copy.deepcopy(raw_packet))
+                                digest = self._packet_digest(packet)
+                                database.execute(
+                                    "INSERT OR IGNORE INTO stored_packets "
+                                    "(packet_id, packet_json, content_digest) VALUES (?, ?, ?)",
+                                    (packet["packet_id"], json.dumps(
+                                        packet, sort_keys=True, separators=(",", ":")), digest))
+                        except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
+                            raise PacketValidationError(
+                                f"persistent packet authority is unreadable: {legacy_path}") from exc
+                    database.execute(
+                        "INSERT INTO packet_store_metadata(key, value) VALUES ('revision', ?)",
+                        (str(revision),))
+                    database.execute(
+                        "INSERT INTO packet_store_metadata(key, value) VALUES (?, ?)",
+                        ("legacy_json_import_v1", "complete"))
+                except Exception:
+                    database.rollback()
+                    raise
+            database.commit()
+        os.chmod(self.storage_path, 0o600)
+
+    def _load_persistent(self) -> None:
+        assert self.storage_path is not None
+        try:
+            with self._connect() as database:
+                row = database.execute(
+                    "SELECT value FROM packet_store_metadata WHERE key='revision'").fetchone()
+                self.revision = int(row[0]) if row is not None else 0
+                packets = database.execute(
+                    "SELECT packet_json, content_digest FROM stored_packets ORDER BY packet_id"
+                ).fetchall()
+            loaded_packets: Dict[str, Dict[str, Any]] = {}
+            loaded_digests: Dict[str, str] = {}
+            for row in packets:
+                packet = self._validate(json.loads(row["packet_json"]))
+                digest = self._packet_digest(packet)
+                if digest != row["content_digest"]:
+                    raise PacketValidationError("persistent packet content digest is invalid")
+                loaded_packets[packet["packet_id"]] = packet
+                loaded_digests[packet["packet_id"]] = digest
+            self._packets, self._digests = loaded_packets, loaded_digests
+        except (OSError, sqlite3.Error, json.JSONDecodeError, TypeError, ValueError) as exc:
+            if isinstance(exc, PacketValidationError):
+                raise
+            raise PacketValidationError(
+                f"persistent packet authority is unreadable: {self.storage_path}") from exc
+
     def _persist(self, packets: Mapping[str, Dict[str, Any]],
                  digests: Mapping[str, str], expected_revision: int) -> int:
         if self.storage_path is None:
             return expected_revision
+        if (not set(self._packets).issubset(packets)
+                or any(digests.get(key) != digest
+                       for key, digest in self._digests.items())):
+            raise PacketValidationError(
+                "packet store entries are immutable and cannot be removed or replaced")
         self.storage_path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
         if self.secure_storage_dir:
             os.chmod(self.storage_path.parent, 0o700)
-        lock_path = self.storage_path.with_name(self.storage_path.name + ".lock")
-        with lock_path.open("a+", encoding="utf-8") as lock:
-            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            try:
-                current_revision = 0
-                if self.storage_path.exists():
-                    try:
-                        current = json.loads(self.storage_path.read_text(encoding="utf-8"))
-                        current_revision = int(current.get("revision", 0) or 0)
-                    except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
-                        raise PacketValidationError(
-                            f"persistent packet authority is unreadable: {self.storage_path}") from exc
-                if current_revision != expected_revision:
-                    raise PacketValidationError(
-                        f"packet store revision conflict: expected {expected_revision}, "
-                        f"found {current_revision}; reload before writing")
-                fd, temporary = tempfile.mkstemp(dir=str(self.storage_path.parent),
-                                                 prefix=f".{self.storage_path.name}.", suffix=".tmp")
-                try:
-                    with os.fdopen(fd, "w", encoding="utf-8") as stream:
-                        json.dump({"revision": expected_revision + 1,
-                                   "packets": [packets[key] for key in sorted(packets)],
-                                   "digests": {key: digests[key] for key in sorted(digests)}},
-                                  stream, sort_keys=True, separators=(",", ":"))
-                        stream.write("\n")
-                        stream.flush()
-                        os.fsync(stream.fileno())
-                    os.chmod(temporary, 0o600)
-                    os.replace(temporary, self.storage_path)
-                    directory_fd = os.open(self.storage_path.parent, os.O_RDONLY)
-                    try:
-                        os.fsync(directory_fd)
-                    finally:
-                        os.close(directory_fd)
-                finally:
-                    if os.path.exists(temporary):
-                        os.unlink(temporary)
-            finally:
-                fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+        with self._connect() as database:
+            database.execute("BEGIN IMMEDIATE")
+            row = database.execute(
+                "SELECT value FROM packet_store_metadata WHERE key='revision'").fetchone()
+            current_revision = int(row[0]) if row is not None else 0
+            if current_revision != expected_revision:
+                database.rollback()
+                raise PacketValidationError(
+                    f"packet store revision conflict: expected {expected_revision}, "
+                    f"found {current_revision}; reload before writing")
+            durable = {row["packet_id"]: row["content_digest"]
+                       for row in database.execute(
+                           "SELECT packet_id, content_digest FROM stored_packets")}
+            if (not set(durable).issubset(packets)
+                    or any(digests.get(key) != digest
+                           for key, digest in durable.items())):
+                database.rollback()
+                raise PacketValidationError(
+                    "durable packet entries are immutable and cannot be removed or replaced")
+            additions = [key for key in packets if key not in durable]
+            database.executemany(
+                "INSERT INTO stored_packets(packet_id, packet_json, content_digest) "
+                "VALUES (?, ?, ?)",
+                [(key, json.dumps(packets[key], sort_keys=True, separators=(",", ":")),
+                  digests[key]) for key in additions])
+            database.execute(
+                "UPDATE packet_store_metadata SET value=? WHERE key='revision'",
+                (str(expected_revision + 1),))
+            database.commit()
         os.chmod(self.storage_path, 0o600)
-        os.chmod(lock_path, 0o600)
         return expected_revision + 1
 
     def put(self, packet: Dict[str, Any], *, persist: bool = True) -> str:
         candidate = copy.deepcopy(packet)
         self._validate(candidate)
         packet_id = candidate["packet_id"]
-        digest = hashlib.sha256(json.dumps(
-            candidate, sort_keys=True, separators=(",", ":"), default=str
-        ).encode("utf-8")).hexdigest()
+        digest = self._packet_digest(candidate)
         if packet_id in self._packets and self._digests[packet_id] != digest:
             raise PacketValidationError(f"conflicting packet id {packet_id!r}")
         candidate_packets = copy.deepcopy(self._packets)
@@ -298,23 +454,7 @@ class PacketStore:
         """Replace live state from durable storage after a conflict."""
         if self.storage_path is None or not self.storage_path.exists():
             raise PacketValidationError("packet store has no durable state to reload")
-        stored = json.loads(self.storage_path.read_text(encoding="utf-8"))
-        revision = int(stored.get("revision", 0) or 0)
-        packets = stored.get("packets", [])
-        if isinstance(packets, dict):
-            packets = list(packets.values())
-        loaded_packets: Dict[str, Dict[str, Any]] = {}
-        loaded_digests: Dict[str, str] = {}
-        for packet in packets:
-            candidate = copy.deepcopy(packet)
-            self._validate(candidate)
-            packet_id = candidate["packet_id"]
-            digest = hashlib.sha256(json.dumps(
-                candidate, sort_keys=True, separators=(",", ":"), default=str
-            ).encode("utf-8")).hexdigest()
-            loaded_packets[packet_id] = candidate
-            loaded_digests[packet_id] = digest
-        self._packets, self._digests, self.revision = loaded_packets, loaded_digests, revision
+        self._load_persistent()
 
     def get(self, packet_id: str) -> Optional[Dict[str, Any]]:
         """Read a previously validated typed packet by immutable identity."""

@@ -69,6 +69,30 @@ def test_snapshot_cannot_be_forged_by_host_supplied_active_ids(tmp_path):
         "gitter", "infrae", "tuid"}
 
 
+def test_authority_pins_compiled_registry_until_explicit_reload(tmp_path, monkeypatch):
+    import workflow_authority
+
+    original = workflow_authority.load_compiled_registry
+    loads = []
+
+    def counted(root=None, *, verify_bundles=True):
+        loads.append(root)
+        return original(root, verify_bundles=verify_bundles)
+
+    monkeypatch.setattr(workflow_authority, "load_compiled_registry", counted)
+    authority = _authority(tmp_path)
+    pinned_hash = authority.registry_hash
+    for _ in range(20):
+        authority.behavioral_snapshot(workflow_scope=_scope())
+        authority.workflow_contract_identity("gitter")
+    assert len(loads) == 1
+    assert authority.reload_registry(expected_registry_hash=pinned_hash) == pinned_hash
+    assert len(loads) == 2
+    with pytest.raises(TransitionError, match="does not match"):
+        authority.reload_registry(expected_registry_hash="0" * 64)
+    assert authority.registry_hash == pinned_hash
+
+
 def test_csw_rejects_unknown_or_composition_ineligible_activation(tmp_path):
     authority = _authority(tmp_path)
     scope = _scope()
@@ -113,11 +137,13 @@ def test_required_workflow_cannot_be_deactivated_while_dependent_is_active(tmp_p
         getter, contract_hash=getter_contract["contract_hash"],
         expected_selection_revision=selected["revision"])
 
-    with pytest.raises(TransitionError, match="required by active"):
-        authority.deactivate_workflow(
-            workflow_scope=scope, statework_id="gitter",
-            expected_selection_revision=selected["revision"],
-            expected_activation_owner="host")
+    retained = authority.deactivate_workflow(
+        workflow_scope=scope, statework_id="gitter",
+        expected_selection_revision=selected["revision"],
+        expected_activation_owner="host")
+    assert retained["disposition"] == "retained_required"
+    assert retained["required_by"] == ["getter"]
+    assert retained["active_workflows"]["gitter"]["activation_owner"] == "dependency"
 
 
 def test_dp_release_cannot_remove_an_independently_activated_workflow(tmp_path):
@@ -128,13 +154,13 @@ def test_dp_release_cannot_remove_an_independently_activated_workflow(tmp_path):
         identity, contract_hash=contract["contract_hash"],
         expected_selection_revision=0)
 
-    with pytest.raises(TransitionError, match="activation activation_owner does not match"):
-        authority.deactivate_workflow(
-            workflow_scope=scope, statework_id="gitter",
-            expected_selection_revision=selected["revision"],
-            expected_activation_owner="digitalpsychology",
-            expected_control_session_id="dp-session-1",
-            expected_intervention_id="intervention-1")
+    mismatch = authority.deactivate_workflow(
+        workflow_scope=scope, statework_id="gitter",
+        expected_selection_revision=selected["revision"],
+        expected_activation_owner="digitalpsychology",
+        expected_control_session_id="dp-session-1",
+        expected_intervention_id="intervention-1")
+    assert mismatch["disposition"] == "owner_mismatch"
 
     with pytest.raises(TransitionError, match="requires an activation owner"):
         authority.deactivate_workflow(
@@ -163,13 +189,13 @@ def test_dp_owner_can_release_only_its_matching_temporary_activation(tmp_path):
         intervention_id="intervention-1",
         expires_at_action=5)
 
-    with pytest.raises(TransitionError, match="control_session_id does not match"):
-        authority.deactivate_workflow(
-            workflow_scope=scope, statework_id="gitter",
-            expected_selection_revision=selected["revision"],
-            expected_activation_owner="digitalpsychology",
-            expected_control_session_id="unrelated-session",
-            expected_intervention_id="intervention-1")
+    mismatch = authority.deactivate_workflow(
+        workflow_scope=scope, statework_id="gitter",
+        expected_selection_revision=selected["revision"],
+        expected_activation_owner="digitalpsychology",
+        expected_control_session_id="unrelated-session",
+        expected_intervention_id="intervention-1")
+    assert mismatch["disposition"] == "owner_mismatch"
 
     released = authority.deactivate_workflow(
         workflow_scope=scope, statework_id="gitter",
@@ -209,21 +235,20 @@ def test_dp_activation_has_session_scoped_expiring_provenance(tmp_path):
             "expires_at_action": 2,
         }
 
-    with pytest.raises(TransitionError, match="activation intervention_id does not match"):
-        authority.deactivate_workflow(
-            workflow_scope=scope, statework_id="gitter",
-            expected_selection_revision=selected["revision"],
-            expected_activation_owner="digitalpsychology",
-            expected_control_session_id="dp-session-1",
-            expected_intervention_id="another-intervention")
-
-    with pytest.raises(TransitionError, match="activation intervention_id does not match"):
-        authority.deactivate_workflow(
-            workflow_scope=scope, statework_id="gitter",
-            expected_selection_revision=selected["revision"],
-            expected_activation_owner="digitalpsychology",
-            expected_control_session_id="dp-session-1",
-            expected_intervention_id="another-session")
+    wrong_intervention = authority.deactivate_workflow(
+        workflow_scope=scope, statework_id="gitter",
+        expected_selection_revision=selected["revision"],
+        expected_activation_owner="digitalpsychology",
+        expected_control_session_id="dp-session-1",
+        expected_intervention_id="another-intervention")
+    assert wrong_intervention["disposition"] == "owner_mismatch"
+    wrong_session = authority.deactivate_workflow(
+        workflow_scope=scope, statework_id="gitter",
+        expected_selection_revision=selected["revision"],
+        expected_activation_owner="digitalpsychology",
+        expected_control_session_id="dp-session-1",
+        expected_intervention_id="another-session")
+    assert wrong_session["disposition"] == "owner_mismatch"
 
     still_active = authority.behavioral_snapshot(workflow_scope=scope)
     assert still_active["active_workflows"][0]["identity"]["statework_id"] == "gitter"
@@ -252,6 +277,53 @@ def test_dp_activation_has_session_scoped_expiring_provenance(tmp_path):
     assert expired["active_workflows"] == []
 
 
+def test_expired_dp_dependency_lease_is_retained_and_later_released(tmp_path):
+    authority = _authority(tmp_path)
+    scope = _scope("dependency-retention")
+    required_identity, required_contract = _identity(authority, scope, "gitter")
+    selected = authority.activate_workflow(
+        required_identity, contract_hash=required_contract["contract_hash"],
+        expected_selection_revision=0, activation_owner="digitalpsychology",
+        control_session_id="dp-session-1", intervention_id="intervention-gitter",
+        expires_at_action=1)
+    consumer_identity, consumer_contract = _identity(authority, scope, "getter")
+    selected = authority.activate_workflow(
+        consumer_identity, contract_hash=consumer_contract["contract_hash"],
+        expected_selection_revision=selected["revision"],
+        activation_owner="digitalpsychology", control_session_id="dp-session-1",
+        intervention_id="intervention-getter", expires_at_action=5)
+
+    expired = authority.expire_workflow_leases(
+        workflow_scope=scope, host_action_index=2)
+    assert set(expired["active_workflows"]) == {"gitter", "getter"}
+    metadata = authority.workflow_activation_metadata(
+        workflow_scope=scope, statework_id="gitter")
+    assert metadata["activation_owner"] == "dependency"
+    assert metadata["control_session_id"] is None
+    assert metadata["intervention_id"] is None
+    assert metadata["expires_at_action"] is None
+    assert metadata["required_by"] == ["getter"]
+
+    retained = authority.deactivate_workflow(
+        workflow_scope=scope, statework_id="gitter",
+        expected_selection_revision=expired["revision"],
+        expected_activation_owner="digitalpsychology",
+        expected_control_session_id="dp-session-1",
+        expected_intervention_id="intervention-gitter")
+    assert retained["disposition"] == "retained_required"
+    assert retained["required_by"] == ["getter"]
+    assert retained["revision"] == expired["revision"]
+
+    released = authority.deactivate_workflow(
+        workflow_scope=scope, statework_id="getter",
+        expected_selection_revision=retained["revision"],
+        expected_activation_owner="digitalpsychology",
+        expected_control_session_id="dp-session-1",
+        expected_intervention_id="intervention-getter")
+    assert released["disposition"] == "released"
+    assert set(released["released_stateworks"]) == {"gitter", "getter"}
+    assert released["active_workflows"] == {}
+
 def test_expiring_dp_workflow_preserves_an_independent_host_workflow(tmp_path):
     authority = _authority(tmp_path)
     scope = _scope("partial-expiry")
@@ -278,7 +350,7 @@ def test_expiring_dp_workflow_preserves_an_independent_host_workflow(tmp_path):
 
 
 def test_legacy_selection_rows_remain_permanent_host_activations(tmp_path):
-    authority = _authority(tmp_path)
+    authority = _authority(tmp_path / "contract-source")
     scope = _scope()
     identity, contract = _identity(authority, scope, "gitter")
     selection_path = tmp_path / "selections.json"
@@ -292,5 +364,23 @@ def test_legacy_selection_rows_remain_permanent_host_activations(tmp_path):
         }},
     }), encoding="utf-8")
 
+    authority = WorkflowAuthority(
+        root=ROOT, state_store=SubjectStateStore(tmp_path / "subjects.json"),
+        evidence_store=EvidenceStore(),
+        selection_store=WorkflowSelectionStore(selection_path))
+
     snapshot = authority.behavioral_snapshot(workflow_scope=scope)
     assert snapshot["active_workflows"][0]["identity"]["statework_id"] == "gitter"
+
+
+def test_sqlite_selection_store_persists_scoped_compare_and_swap(tmp_path):
+    first = WorkflowSelectionStore(tmp_path / "selections.json")
+    scope = _scope("sqlite")
+    assert first.get(scope)["revision"] == 0
+    updated = first.replace(scope, expected_revision=0, active_workflows={})
+    assert updated["revision"] == 1
+    second = WorkflowSelectionStore(tmp_path / "selections.json")
+    assert second.get(scope)["revision"] == 1
+    with pytest.raises(TransitionError, match="revision conflict"):
+        first.replace(scope, expected_revision=0, active_workflows={})
+    assert (tmp_path / "selections.sqlite3").is_file()
