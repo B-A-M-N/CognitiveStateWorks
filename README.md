@@ -25,6 +25,7 @@ The enforcing runtime includes:
 - Revision compare-and-swap updates and append-only transition history so stale writers re-inspect instead of overwriting newer state.
 - SQLite WAL persistence for subject state, transition history, packets, and workflow selections. Existing JSON stores are imported once into adjacent `.sqlite3` files; later reads and compare-and-swap writes use SQLite transactions.
 - `EvidenceStore` for trusted evidence references, attestation integrity, persistence, and restart recovery.
+- An engine-neutral workflow fact ledger. Completion is derived from required facts backed by valid evidence; invalidating a terminal receipt reopens completion, and state corrections commit with their revised facts and history.
 - Explicit consequential transition markers and registered provenance for authorization, mutation, verification, and terminal-state transitions.
 - A compiled bundle registry with local packet/evidence contracts, freshness rules, and trusted engine pins.
 - Bounded, data-only flow predicates with explicit fallback, ambiguity, and no-match policy.
@@ -42,6 +43,8 @@ cognitive-statework-compile-registry
 The compiler writes the immutable registry beside the packaged built-ins. Each `WorkflowAuthority` pins the verified compiled registry for its lifetime; an explicit `reload_registry(expected_registry_hash=...)` replaces it only after the requested hash matches. Trusted data-only bundles can then be added through a host-owned registry configuration.
 
 External executable extensions use the `cognitive_statework.engines`, `cognitive_statework.evidence_validators`, and `cognitive_statework.freshness_validators` entry-point groups. A host must explicitly adopt each distribution/version/entry-point identity and pin its distribution Python-source SHA-256 through the corresponding registry's `load_trusted_entry_points(...)` method. The pin is checked before loading; compiled registries also pin the adopted implementation hashes. Data-only bundles cannot trigger Python imports.
+
+Workflow completion is evidence-derived, not an absorbing status flag. State-machine and milestone inspection replay required facts against current evidence. If a required terminal fact is invalidated, the workflow becomes incomplete again; a later correction records replacement facts and transition history in the same durable update.
 
 Use the advisory product for documentation and workflow guidance:
 
@@ -108,6 +111,18 @@ CSW's standalone runtime and its CFW integration remain usable without DP.
 The complete three-system deployment adds adaptation while preserving CSW as
 the only authority that can activate eligible StateWorks or commit legal
 workflow transitions.
+
+The trusted host owns the overall execution session. CSW owns durable domain
+state, workflow eligibility and selection, evidence, and legal transitions;
+CFW owns component-local runtime state and action enforcement; DP owns adaptive
+`BehaviorState` when enabled.
+
+The host verifies that CFW and DP adapters refer to the same stable CSW
+authority identity, including the registry, storage, workflow scope, and
+contract pin. Selection changes use expected-revision compare-and-swap. A host
+can checkpoint the exact selection before a DP control tick, restore it after
+an aborted transaction if the revision still matches, or finalize the
+checkpoint after commit.
 
 CFW discovers this integration through the optional
 `cognitiveframeworks.statework_providers` Python entry point included in the
@@ -190,20 +205,20 @@ independently usable when the other systems are absent.
 | **DigitalPsychology** | **How should behavior adapt, and did the intervention improve progress?** |
 
 ```text
-                    DigitalPsychology runtime host
-                 observes and selects a bounded intervention
-                          ↙                       ↘
-          CFW signals and directives       CSW state and eligible choices
-          CFW validates controls           CSW validates workflow operations
-                          ↘                       ↙
-                                     Agent
-                                       │
-                        actions, artifacts, host evidence
-                                       │
-                                       ▼
-                      independent DP outcome evaluator
-                                       │
-                  retain, relax, reverse, or refine policy
+       DigitalPsychology (optional external behavior controller)
+                            │ private bounded decisions
+                            ▼
+                     Trusted execution host
+                       /                 \
+                      ▼                   ▼
+             CFW components and      CSW workflow and
+             action enforcement     durable state authority
+                      \                   /
+                       \                 /
+                         Controlled agent
+                                │
+                    host actions and evidence
+                                └──────────────► DP outcome evaluation
 ```
 
 CFW provides cognitive components and action enforcement. CSW provides **authoritative domain workflow state**. DigitalPsychology owns cross-system behavioral adaptation and measures progress against the user's objective.
@@ -268,7 +283,7 @@ registry.yaml
           └── optional guidance.md
 ```
 
-Registration means **this StateWork is available to CSW's resolver**. It does not mean **load this StateWork into every agent**. DP may rank options from a CSW snapshot; only CSW can activate the composition-compatible selection for its workflow scope.
+Registration means **this StateWork is available to CSW's resolver**. It does not mean **load this StateWork into every agent**. CSW resolves eligibility and composition compatibility. The trusted host or DP may choose among the returned legal candidates; CSW validates the request and commits the active selection for its workflow scope.
 
 Create a data-only extension starter with:
 
@@ -366,7 +381,22 @@ For example, CFW/FUSE may require verification to exercise the changed infrastru
 
 DigitalPsychology observes agents traversing StateWorks and can ask whether they skip `MODELED`, create unnecessary recovery loops, misuse specialists, declare completion immediately after `VERIFIED`, or incur more correction cycles in one flow than another.
 
-DP may influence future optional composition, but it cannot rewrite StateWork invariants or declare `CHANGING → STABLE` legal because the verification phase is inconvenient.
+DP may request a current-task activation or release from CSW's eligible,
+composition-compatible choices. CSW validates and commits that request against
+the selection revision. DP cannot create eligibility, rewrite StateWork
+invariants, or declare `CHANGING → STABLE` legal because verification is
+inconvenient.
+
+## Direct Codex integration evidence
+
+The regular packaged Codex App Server matrix recorded 10/10 CFW+CSW trials at
+4/4 criteria, with 10/10 completion permits. The run used one coding fixture,
+`deepseek-v4-flash`, and the FreeInference external-provider Responses route;
+ChatGPT-mode attempts had stopped at workspace-routing discovery before the
+host or model turn began. This dirty-tree result establishes integration and
+non-regression for that fixture. It does not establish general efficacy. See
+the [CFW live-results index](https://github.com/B-A-M-N/CognitiveFrameWorks/blob/master/evaluation_fixtures/live-results/README.md)
+for the run record and its limitations.
 
 ## Validation
 
