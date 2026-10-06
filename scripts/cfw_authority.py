@@ -21,14 +21,46 @@ class CFWAuthorityAdapter:
                  namespace_id: str = "default", application_id: str = "cognitiveframeworks-runtime",
                  application_instance_id: str = "cognitiveframeworks-runtime",
                  workflow_id: str = "default-workflow",
-                 statework_memberships: Optional[Mapping[str, Mapping[str, Any]]] = None) -> None:
-        self.root = Path(root)
+                 statework_memberships: Optional[Mapping[str, Mapping[str, Any]]] = None,
+                 workflow_authority: Any = None) -> None:
+        self.root = Path(root).resolve()
         self.control = control_plane_module or _default_control_plane()
         self.compiled_registry = self.control.load_compiled_registry(self.root)
-        self.state_store = self.control.SubjectStateStore(
-            Path(state_path) if state_path else self.root / "state" / "subjects.json")
-        self.evidence_store = self.control.EvidenceStore()
-        self.evidence_path = Path(evidence_path) if evidence_path else self.root / "state" / "evidence.json"
+        if workflow_authority is not None:
+            authority_root = Path(getattr(workflow_authority, "root", "")).resolve()
+            if authority_root != self.root:
+                raise ValueError("shared WorkflowAuthority root differs from the CFW registry root")
+            if (str(getattr(workflow_authority, "registry_hash", ""))
+                    != str(self.compiled_registry.get("registry_hash") or "")):
+                raise ValueError(
+                    "shared WorkflowAuthority registry pin differs from the CFW registry")
+            authority_state_store = getattr(workflow_authority, "state_store", None)
+            authority_evidence_store = getattr(workflow_authority, "evidence_store", None)
+            if authority_state_store is None or authority_evidence_store is None:
+                raise TypeError("shared WorkflowAuthority omitted its state or evidence store")
+            if (state_path is not None
+                    and Path(state_path).resolve() != Path(authority_state_store.path).resolve()):
+                raise ValueError("CFW state path differs from the shared WorkflowAuthority")
+            self.state_store = authority_state_store
+            self.evidence_store = authority_evidence_store
+            storage_components = dict(getattr(workflow_authority,
+                                              "storage_components", {}) or {})
+            pinned_evidence = storage_components.get("evidence_store")
+            if (not isinstance(pinned_evidence, str)
+                    or pinned_evidence.startswith(("memory:", "opaque:"))):
+                raise ValueError(
+                    "shared WorkflowAuthority must pin its evidence storage identity")
+            selected_evidence_path = Path(evidence_path) if evidence_path else Path(pinned_evidence)
+            if selected_evidence_path.resolve() != Path(pinned_evidence).resolve():
+                raise ValueError(
+                    "CFW evidence path differs from the shared WorkflowAuthority")
+            self.evidence_path = (Path(evidence_path) if evidence_path else
+                                  Path(pinned_evidence))
+        else:
+            self.state_store = self.control.SubjectStateStore(
+                Path(state_path) if state_path else self.root / "state" / "subjects.json")
+            self.evidence_store = self.control.EvidenceStore()
+            self.evidence_path = Path(evidence_path) if evidence_path else self.root / "state" / "evidence.json"
         object.__setattr__(self, "namespace_id", str(namespace_id))
         object.__setattr__(self, "application_id", str(application_id))
         object.__setattr__(self, "application_instance_id", str(application_instance_id))
@@ -38,10 +70,19 @@ class CFWAuthorityAdapter:
             for key, value in (statework_memberships or {}).items()}
         object.__setattr__(self, "_frozen_scope", True)
         self._controllers: Dict[str, Any] = {}
-        self._load_evidence()
-        self.workflow_authority = self.control.WorkflowAuthority(
-            root=self.root, state_store=self.state_store,
-            evidence_store=self.evidence_store)
+        if workflow_authority is None:
+            self._load_evidence()
+            self.workflow_authority = self.control.WorkflowAuthority(
+                root=self.root, state_store=self.state_store,
+                evidence_store=self.evidence_store,
+                storage_identity={
+                    "state_store": str(Path(self.state_store.path).resolve()),
+                    "selection_store": str((self.root / "state" /
+                                             "workflow-selections.json").resolve()),
+                    "evidence_store": str(self.evidence_path.resolve()),
+                })
+        else:
+            self.workflow_authority = workflow_authority
 
     def __setattr__(self, name: str, value: Any) -> None:
         if getattr(self, "_frozen_scope", False) and name in {
@@ -60,7 +101,8 @@ class CFWAuthorityAdapter:
             evidence_path=self.evidence_path, namespace_id=namespace_id,
             application_id=application_id, application_instance_id=application_instance_id,
             workflow_id=workflow_id,
-            statework_memberships=statework_memberships)
+            statework_memberships=statework_memberships,
+            workflow_authority=self.workflow_authority)
 
     def _load_evidence(self) -> None:
         if not self.evidence_path.exists():
@@ -94,10 +136,31 @@ class CFWAuthorityAdapter:
             statework_id=statework_id,
             contract_version=str(contract_identity["contract_version"]))
 
+    @staticmethod
+    def _authority_identity(identity: Any) -> Dict[str, str]:
+        """Normalize identity at the shared-authority module boundary.
+
+        Hosts may load CSW through a different import name than this provider.
+        In that case equivalent ``WorkflowIdentity`` dataclasses are distinct
+        Python classes, so the authority must receive the neutral mapping
+        form accepted by its public API.
+        """
+        fields = ("namespace_id", "application_id", "application_instance_id",
+                  "workflow_id", "subject_ref", "statework_id", "contract_version")
+        return {name: str(getattr(identity, name)) for name in fields}
+
     def workflow_contract_identity(self, statework_id: str,
                                    contract_hash: str) -> Dict[str, Any]:
         return self.workflow_authority.workflow_contract_identity(
             statework_id, contract_hash)
+
+    def workflow_authority_identity(self, *, statework_id: str,
+                                    subject_ref: str, contract_hash: str) -> Any:
+        identity = self._workflow_identity(
+            statework_id=statework_id, subject_ref=subject_ref,
+            contract_hash=contract_hash)
+        return self.workflow_authority.workflow_authority_identity(
+            self._authority_identity(identity), contract_hash=contract_hash)
 
     def inspect_workflow(self, *, statework_id: str, subject_ref: str,
                          contract_hash: str) -> Any:
@@ -105,7 +168,7 @@ class CFWAuthorityAdapter:
             statework_id=statework_id, subject_ref=subject_ref,
             contract_hash=contract_hash)
         return self.workflow_authority.inspect_workflow(
-            identity, contract_hash=contract_hash)
+            self._authority_identity(identity), contract_hash=contract_hash)
 
     def resolve_legacy_step(self, *, statework_id: str, subject_ref: str,
                             contract_hash: str, to_state: str,
@@ -114,7 +177,7 @@ class CFWAuthorityAdapter:
             statework_id=statework_id, subject_ref=subject_ref,
             contract_hash=contract_hash)
         return self.workflow_authority.resolve_legacy_step(
-            identity, contract_hash=contract_hash, to_state=to_state,
+            self._authority_identity(identity), contract_hash=contract_hash, to_state=to_state,
             trigger=trigger)
 
     def apply_workflow_step(self, *, statework_id: str, subject_ref: str,
@@ -145,7 +208,7 @@ class CFWAuthorityAdapter:
         if scoped_refs:
             self.evidence_store.save(self.evidence_path)
         return self.workflow_authority.apply_step(
-            identity, contract_hash=contract_hash, step_id=step_id,
+            self._authority_identity(identity), contract_hash=contract_hash, step_id=step_id,
             evidence_refs=scoped_refs, expected_revision=expected_revision)
 
     def _identity(self, *, statework_id: str, subject_ref: str, contract: Mapping[str, Any]) -> Dict[str, Any]:

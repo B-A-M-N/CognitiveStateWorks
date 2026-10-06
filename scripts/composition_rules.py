@@ -1,7 +1,7 @@
 """Canonical StateWork composition rules shared by planning and authority."""
 from __future__ import annotations
 
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping, Optional
 
 
 def composition_for(manifest: Mapping[str, Any]) -> dict[str, Any]:
@@ -47,14 +47,19 @@ def depends_on(manifests: Mapping[str, Mapping[str, Any]],
 
 
 def validate_selection(manifests: Mapping[str, Mapping[str, Any]],
-                       selected_ids: set[str]) -> None:
+                       selected_ids: set[str], *,
+                       satisfied_requirements: Optional[
+                           Mapping[str, Iterable[str]]] = None) -> None:
     """Raise when a complete active/planned set violates canonical rules."""
     if not selected_ids.issubset(manifests):
         raise ValueError("StateWork selection contains an unavailable dependency")
     compositions = {statework_id: composition_for(manifests[statework_id])
                     for statework_id in selected_ids}
+    satisfied = {str(statework_id): set(str(value) for value in values)
+                 for statework_id, values in (satisfied_requirements or {}).items()}
     for statework_id, composition in compositions.items():
-        missing = composition["requires"] - selected_ids
+        missing = (composition["requires"] - selected_ids
+                   - satisfied.get(statework_id, set()))
         if missing:
             raise ValueError(
                 f"StateWork {statework_id!r} is missing requirements {sorted(missing)}")

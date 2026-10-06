@@ -89,6 +89,16 @@ class CognitiveStateWorkProvider:
         return self._workflow_planner().resolve_workflows(
             runtime_identity, task_context, routing_adjustments)
 
+    def rank_legal_routes(self, *, runtime_identity: Mapping[str, Any],
+                          task_context: Mapping[str, Any], statework_id: str,
+                          candidate_routes: Iterable[str],
+                          expected_workflow_revision: int,
+                          state_authority: Any) -> Dict[str, Any]:
+        """Rank resolved child routes under the bound CSW workflow authority."""
+        return self._workflow_planner().rank_legal_routes(
+            runtime_identity, task_context, statework_id,
+            candidate_routes, expected_workflow_revision, state_authority)
+
     def load_stateworks(self) -> list[dict[str, Any]]:
         compiled = self._compiled_registry()
         out = []

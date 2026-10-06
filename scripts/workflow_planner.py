@@ -146,6 +146,7 @@ class WorkflowPlanner:
         resolved: set[str] = set()
         visiting: set[str] = set()
         ordered: list[dict[str, Any]] = []
+        satisfied_requirements: dict[str, set[str]] = {}
 
         def current_packet(statework_id: str, packet_type: str) -> Optional[dict[str, Any]]:
             subject = subject_refs.get(statework_id, default_subject)
@@ -173,6 +174,7 @@ class WorkflowPlanner:
                                 if (producers.get(packet) or {}).get("producer") == dependency]
                 if packet_types and all(current_packet(statework_id, packet)
                                         is not None for packet in packet_types):
+                    satisfied_requirements.setdefault(statework_id, set()).add(dependency)
                     continue
                 visit(dependency)
             for packet_type in required:
@@ -201,7 +203,8 @@ class WorkflowPlanner:
 
         active_ids = {str(item.get("id") or "") for item in ordered}
         try:
-            validate_selection(self.manifests, active_ids)
+            validate_selection(self.manifests, active_ids,
+                               satisfied_requirements=satisfied_requirements)
         except ValueError as exc:
             raise WorkflowPlanError(str(exc)) from exc
         return ordered
@@ -315,6 +318,8 @@ class WorkflowPlanner:
         subject_refs = dict(task_context.get("statework_subject_refs") or {})
         default_subject = runtime_identity.get("subject_ref")
         active: list[dict[str, Any]] = []
+        component_requirements: list[str] = []
+        component_enhancements: list[str] = []
         capsules: dict[str, tuple[str, str]] = {}
         for manifest in ordered:
             statework_id = str(manifest.get("id") or "")
@@ -330,6 +335,19 @@ class WorkflowPlanner:
             if item.get("flow_selection_status") == "inactive":
                 continue
             item["subject_ref"] = subject_refs.get(statework_id, default_subject)
+            self._collect_component_integrations(
+                item.get("integrations"), component_requirements,
+                component_enhancements)
+            self._collect_component_integrations(
+                item.get("flow_integrations"), component_requirements,
+                component_enhancements)
+            item.pop("integrations", None)
+            item.pop("flow_integrations", None)
+            metadata = item.get("flow_metadata")
+            if isinstance(metadata, Mapping):
+                metadata = dict(metadata)
+                metadata.pop("integrations", None)
+                item["flow_metadata"] = metadata
             active.append(item)
             capsules.update(item.pop("_capsules"))
         active_ids = {str(item.get("id") or "") for item in active}
@@ -347,11 +365,168 @@ class WorkflowPlanner:
                 raise WorkflowPlanError(
                     f"active StateWork {consumer_id!r} depends on inactive "
                     f"StateWork(s) {sorted(unavailable)}")
+        completion_claim_classes: dict[str, dict[str, dict[str, Any]]] = {}
+        for item in active:
+            statework_id = str(item.get("id") or "")
+            flow_metadata = item.get("flow_metadata") or {}
+            completion = (flow_metadata.get("completion") or {}
+                          if isinstance(flow_metadata, Mapping) else {})
+            claim_classes = completion.get("claim_classes") or {}
+            if not isinstance(claim_classes, Mapping):
+                raise WorkflowPlanError(
+                    f"StateWork {statework_id!r} has a malformed completion contract")
+            normalized: dict[str, dict[str, Any]] = {}
+            for claim_class, requirement in claim_classes.items():
+                evidence_kinds = (requirement.get("evidence_kinds")
+                                  if isinstance(requirement, Mapping) else None)
+                minimum_state = (requirement.get("minimum_state")
+                                 if isinstance(requirement, Mapping) else None)
+                if (not isinstance(claim_class, str) or not claim_class
+                        or not isinstance(minimum_state, str) or not minimum_state
+                        or not isinstance(evidence_kinds, (list, tuple))
+                        or not evidence_kinds
+                        or any(not isinstance(kind, str) or not kind
+                               for kind in evidence_kinds)
+                        or len(evidence_kinds) != len(set(evidence_kinds))):
+                    raise WorkflowPlanError(
+                        f"StateWork {statework_id!r} has a malformed completion claim class")
+                normalized[claim_class] = {
+                    "minimum_state": minimum_state,
+                    "evidence_kinds": list(evidence_kinds),
+                }
+            if normalized:
+                completion_claim_classes[statework_id] = normalized
         registry_version = str(self.compiled.get("registry_version") or
                                self.compiled.get("version") or "")
+        registry_hash = str(self.compiled.get("registry_hash") or "")
+        route_contract_digests: dict[str, str] = {}
+        for item in active:
+            selected = item.get("selected_flow")
+            workflow_id = str(item.get("id") or "")
+            if (not isinstance(selected, (list, tuple)) or len(selected) != 2
+                    or not workflow_id):
+                continue
+            relative_path, digest = str(selected[0]), str(selected[1])
+            route_name = Path(relative_path).parent.name
+            route_id = f"flow:{workflow_id}:{route_name}"
+            if (not route_name or len(route_id) > 192
+                    or len(digest) != 64
+                    or any(char not in "0123456789abcdef" for char in digest)):
+                raise WorkflowPlanError(
+                    "resolved workflow contains a malformed route contract pin")
+            route_contract_digests[route_id] = digest
         return {"execution_order": ordered, "active_workflows": active,
-                "capsules": capsules, "registry_version": registry_version,
+                "capsules": capsules,
+                "component_requirements": list(dict.fromkeys(component_requirements)),
+                "component_enhancements": list(dict.fromkeys(component_enhancements)),
+                "route_contract_digests": route_contract_digests,
+                "completion_claim_classes": completion_claim_classes,
+                "registry_version": registry_version,
+                "registry_hash": registry_hash,
                 "dependency_checks_passed": True}
+
+    def rank_legal_routes(self, runtime_identity: Mapping[str, Any],
+                          task_context: Mapping[str, Any], statework_id: str,
+                          candidate_routes: Iterable[str],
+                          expected_workflow_revision: int,
+                          state_authority: Any) -> dict[str, Any]:
+        """Rank child flow routes using CSW contracts and live workflow state."""
+        statework_id = str(statework_id or "")
+        if not statework_id or len(statework_id) > 64:
+            raise WorkflowPlanError("route ranking requires a bounded StateWork ID")
+        if type(expected_workflow_revision) is not int or expected_workflow_revision < 0:
+            raise WorkflowPlanError("route ranking requires a valid workflow revision")
+        routes = tuple(candidate_routes)
+        if (not routes or len(routes) > 16 or len(routes) != len(set(routes))
+                or any(not isinstance(route, str) or len(route) > 192
+                       for route in routes)):
+            raise WorkflowPlanError("route ranking candidates are malformed")
+        flow_names: dict[str, str] = {}
+        for route in routes:
+            parts = route.split(":", 2)
+            if (len(parts) != 3 or parts[0] != "flow" or parts[1] != statework_id
+                    or not parts[2] or len(parts[2]) > 64
+                    or any(char in parts[2] for char in "/\\\0")):
+                raise WorkflowPlanError("route ranking candidate is outside the target StateWork")
+            flow_names[route] = parts[2]
+
+        inspect = getattr(state_authority, "inspect_workflow", None)
+        if not callable(inspect):
+            raise WorkflowPlanError("route ranking requires a bound workflow state authority")
+        subject_refs = task_context.get("statework_subject_refs") or {}
+        subject_ref = (subject_refs.get(statework_id)
+                       if isinstance(subject_refs, Mapping) else None)
+        subject_ref = str(subject_ref or runtime_identity.get("subject_ref") or "")
+        if not subject_ref:
+            raise WorkflowPlanError("route ranking requires a scoped workflow subject")
+        entry = self.entries.get(statework_id)
+        if entry is None:
+            raise WorkflowPlanError(f"StateWork {statework_id!r} is unavailable")
+        engine = entry.get("engine") or {}
+        contract_hash = str(engine.get("contract_hash") or "")
+        if not contract_hash:
+            raise WorkflowPlanError(f"StateWork {statework_id!r} has no compiled workflow contract")
+        snapshot = inspect(statework_id=statework_id, subject_ref=subject_ref,
+                           contract_hash=contract_hash)
+        actual_revision = getattr(snapshot, "revision", None)
+        if actual_revision != expected_workflow_revision:
+            raise WorkflowPlanError("workflow revision changed before route ranking")
+
+        flow_contract = self._compiled_flow_metadata(statework_id)
+        manifest = self.manifests[statework_id]
+        selection_context = self._flow_context(task_context)
+        selection_context["current_state"] = getattr(snapshot, "current_state", None)
+        selection = FlowSelector.select(
+            flow_contract, selection_context,
+            dict(manifest.get("flow_selection") or {}))
+        eligible = set(selection.candidates)
+        score_by_name = dict(selection.scores)
+        legal_routes = tuple(sorted(
+            route for route, flow_name in flow_names.items()
+            if flow_name in eligible and flow_name in score_by_name))
+        scores = {route: int(score_by_name[flow_names[route]])
+                  for route in legal_routes}
+        file_hashes = entry.get("file_hashes") or {}
+        route_digests = {}
+        for route in legal_routes:
+            flow_name = flow_names[route]
+            digest = file_hashes.get(f"flows/{flow_name}/flow.md")
+            if (not isinstance(digest, str) or len(digest) != 64
+                    or any(char not in "0123456789abcdef" for char in digest)):
+                raise WorkflowPlanError(
+                    f"StateWork {statework_id!r} has no compiled pin for flow {flow_name!r}")
+            route_digests[route] = digest
+        registry_hash = str(self.compiled.get("registry_hash") or "")
+        if not registry_hash:
+            raise WorkflowPlanError("compiled workflow registry has no integrity hash")
+        return {"legal_routes": legal_routes, "scores": scores,
+                "workflow_revision": actual_revision,
+                "route_contract_digests": route_digests,
+                "registry_hash": registry_hash,
+                "workflow_id": statework_id}
+
+    @staticmethod
+    def _collect_component_integrations(integrations: Any,
+                                        required: list[str],
+                                        enhanced: list[str]) -> None:
+        """Normalize CFW component requirements while CSW owns manifest meaning."""
+        if integrations is None:
+            return
+        if not isinstance(integrations, Mapping):
+            raise WorkflowPlanError("StateWork integrations must be a mapping")
+        cfw = integrations.get("cognitiveframeworks") or {}
+        if not isinstance(cfw, Mapping):
+            raise WorkflowPlanError("CognitiveFrameworks integration must be a mapping")
+        for field, destination in (("required", required), ("enhancements", enhanced)):
+            values = cfw.get(field) or ()
+            if not isinstance(values, (list, tuple)) or len(values) > 64:
+                raise WorkflowPlanError(f"CognitiveFrameworks {field} list is invalid")
+            for value in values:
+                if not isinstance(value, str) or not value or len(value) > 128:
+                    raise WorkflowPlanError(
+                        f"CognitiveFrameworks {field} contains an invalid component ID")
+                if value not in destination:
+                    destination.append(value)
 
     def _pin_workflow(self, statework_id: str, manifest: Mapping[str, Any],
                       entry: Mapping[str, Any], owner_root: Path,

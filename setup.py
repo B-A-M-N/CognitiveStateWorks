@@ -50,7 +50,10 @@ class BuildPy(build_py):
                              else source_root / source_root_ref)
             bundle_source = (bundle_source / str(entry.get("bundle_ref") or ".")).resolve()
             statework_id = str(entry["id"])
-            shutil.copytree(bundle_source, package_root / statework_id)
+            bundle_target = package_root / statework_id
+            if bundle_target.exists():
+                shutil.rmtree(bundle_target)
+            shutil.copytree(bundle_source, bundle_target)
             statework_ids.append(statework_id)
 
         (package_root / "registry.yaml").write_text(

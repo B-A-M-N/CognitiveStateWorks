@@ -129,9 +129,11 @@ def main(root: Path = ROOT) -> int:
 
     flow_schema_path = root / "schemas" / "statework-flow.schema.json"
     transition_schema_path = root / "schemas" / "transition-contract.schema.json"
+    milestone_schema_path = root / "schemas" / "milestone-contract.schema.json"
     packet_registry_schema_path = root / "schemas" / "packet-registry.schema.json"
     flow_schema = json.loads(flow_schema_path.read_text(encoding="utf-8"))
     transition_schema = json.loads(transition_schema_path.read_text(encoding="utf-8"))
+    milestone_schema = json.loads(milestone_schema_path.read_text(encoding="utf-8"))
     packet_registry_schema = json.loads(packet_registry_schema_path.read_text(encoding="utf-8"))
     try:
         jsonschema.validate(instance=load_yaml(root / "schemas" / "packet-registry.yaml"),
@@ -223,6 +225,7 @@ def main(root: Path = ROOT) -> int:
         engine_kind = str(engine.get("kind") or "state_machine")
         if engine_kind == "milestone":
             try:
+                jsonschema.validate(instance=contract, schema=milestone_schema)
                 MilestoneWorkflowEngine().validate_contract(contract)
             except Exception as exc:
                 problems.append(f"{name}: invalid milestone contract: {exc}")

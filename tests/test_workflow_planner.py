@@ -59,6 +59,12 @@ def test_csw_planner_owns_eligibility_composition_and_flow_pins():
     assert active["exclusive_group"] == "tui_state"
     assert active["composition"]["mode"] == "exclusive"
     assert active["selected_flow"][0] == "tuid/flows/implement/flow.md"
+    assert resolution["route_contract_digests"] == {
+        "flow:tuid:implement": active["selected_flow"][1]}
+    assert resolution["completion_claim_classes"]["tuid"]["static_visual"] == {
+        "minimum_state": "IMPLEMENTED",
+        "evidence_kinds": ["rendered_observation"],
+    }
     assert "statework:tuid" in resolution["capsules"]
     assert resolution["registry_version"] == "2.0.0"
 
@@ -88,6 +94,25 @@ def test_csw_planner_accepts_explicit_roots_for_legacy_host_adapters():
     assert [item["statework_id"] for item in eligibility["eligible_routes"]
             if item["route_type"] == "statework"] == ["tuid"]
     assert [item["id"] for item in resolution["execution_order"]] == ["tuid"]
+
+
+def test_valid_current_packet_satisfies_its_workflow_dependency():
+    planner = _planner()
+    fixture = __import__("json").loads(
+        (ROOT / "fixtures" / "fixtures-valid.ndjson").read_text().splitlines()[0])
+    identity = {"task_id": fixture["task_id"],
+                "subject_ref": fixture["subject_ref"]}
+    context = {
+        **_context(), "domains": (), "requested_statework_ids": ("getter",),
+        "packet_records": (fixture,),
+        "observation_context": {"repository_freshness":
+                                fixture["payload"]["freshness"]},
+    }
+
+    resolution = planner.resolve_workflows(identity, context, ())
+
+    assert [item["id"] for item in resolution["active_workflows"]] == ["getter"]
+    assert [item["id"] for item in resolution["execution_order"]] == ["getter"]
 
 
 def test_csw_planner_owns_dependency_cycle_and_unknown_packet_failures(tmp_path):

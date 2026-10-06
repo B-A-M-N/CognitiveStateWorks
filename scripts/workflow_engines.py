@@ -32,6 +32,9 @@ class WorkflowStep:
     domain_effect: str
     required_evidence: tuple[str, ...] = ()
     dependencies: tuple[str, ...] = ()
+    requires_facts: tuple[str, ...] = ()
+    establishes_facts: tuple[str, ...] = ()
+    invalidates_facts: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -64,6 +67,9 @@ class WorkflowDecision:
     completed: bool
     evidence_refs: tuple[str, ...] = ()
     state_data: Mapping[str, Any] = field(default_factory=dict)
+    requires_facts: tuple[str, ...] = ()
+    establishes_facts: tuple[str, ...] = ()
+    invalidates_facts: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "state_data", MappingProxyType(dict(self.state_data)))
@@ -78,7 +84,10 @@ class WorkflowDecision:
                 "previous_state": self.previous_state,
                 "completed": self.completed,
                 "evidence_refs": list(self.evidence_refs),
-                "state_data": dict(self.state_data)}
+                "state_data": dict(self.state_data),
+                "requires_facts": list(self.requires_facts),
+                "establishes_facts": list(self.establishes_facts),
+                "invalidates_facts": list(self.invalidates_facts)}
 
 
 @dataclass(frozen=True)
@@ -114,6 +123,70 @@ class WorkflowEngine(Protocol):
     def apply(self, identity: WorkflowIdentity, contract: Mapping[str, Any],
               snapshot: WorkflowSnapshot, *, step_id: str,
               evidence: Sequence[Mapping[str, Any]]) -> WorkflowDecision: ...
+
+
+_FACT_FIELDS = ("requires_facts", "establishes_facts", "invalidates_facts")
+
+
+def validate_fact_contract(contract: Mapping[str, Any], *, step_field: str) -> None:
+    """Validate engine-neutral fact declarations and their workflow effects."""
+    facts = contract.get("facts", {})
+    if facts is None:
+        facts = {}
+    if not isinstance(facts, Mapping) or len(facts) > 64:
+        raise ValueError("workflow facts must be a bounded mapping")
+    known: set[str] = set()
+    for fact_id, declaration in facts.items():
+        if (not isinstance(fact_id, str) or not fact_id or len(fact_id) > 128
+                or not isinstance(declaration, Mapping)
+                or set(declaration) - {"terminal_required"}
+                or ("terminal_required" in declaration
+                    and type(declaration["terminal_required"]) is not bool)):
+            raise ValueError("workflow fact declaration is malformed")
+        known.add(fact_id)
+
+    steps = contract.get(step_field) or ()
+    if not isinstance(steps, (list, tuple)) or len(steps) > 4096:
+        raise ValueError("workflow steps or transitions exceed their bound")
+    for step in steps:
+        if not isinstance(step, Mapping):
+            raise ValueError("workflow step or transition is malformed")
+        effects: dict[str, set[str]] = {}
+        for name in _FACT_FIELDS:
+            values = step.get(name, ())
+            if values is None:
+                values = ()
+            if (not isinstance(values, (list, tuple)) or len(values) > 64
+                    or any(not isinstance(value, str) or not value or len(value) > 128
+                           for value in values)
+                    or len(values) != len(set(values))
+                    or set(values) - known):
+                raise ValueError(f"workflow {name} references invalid fact IDs")
+            effects[name] = set(values)
+        if effects["establishes_facts"] & effects["invalidates_facts"]:
+            raise ValueError("a workflow step cannot establish and invalidate the same fact")
+
+
+def terminal_required_facts(contract: Mapping[str, Any]) -> frozenset[str]:
+    facts = contract.get("facts", {})
+    if facts is None:
+        facts = {}
+    if not isinstance(facts, Mapping):
+        return frozenset()
+    return frozenset(str(fact_id) for fact_id, declaration in facts.items()
+                     if isinstance(declaration, Mapping)
+                     and declaration.get("terminal_required") is True)
+
+
+def active_fact_ids(data: Mapping[str, Any]) -> frozenset[str]:
+    """Read the normalized fact projection carried by an inspection snapshot."""
+    ledger = data.get("fact_ledger") or ()
+    if isinstance(ledger, Mapping):
+        ledger = tuple(ledger.values())
+    if not isinstance(ledger, (list, tuple)):
+        return frozenset()
+    return frozenset(str(item.get("fact_id")) for item in ledger
+                     if isinstance(item, Mapping) and item.get("status") == "ESTABLISHED")
 
 
 class EngineRegistry:
@@ -264,6 +337,7 @@ class StateMachineWorkflowEngine:
             raise ValueError("state_machine contract requires initial_state")
         if set(contract.get("completion_states") or ()) - set(contract.get("states") or ()):
             raise ValueError("state_machine completion_states must be declared")
+        validate_fact_contract(contract, step_field="transitions")
 
     def initialize(self, identity: WorkflowIdentity,
                    contract: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -274,15 +348,28 @@ class StateMachineWorkflowEngine:
                        contract: Mapping[str, Any],
                        snapshot: WorkflowSnapshot) -> tuple[WorkflowStep, ...]:
         state = snapshot.current_state
+        established = active_fact_ids(snapshot.data)
         rows = []
         for edge in contract.get("transitions") or ():
             if edge.get("from") not in {"*", state}:
+                continue
+            requires_facts = tuple(edge.get("requires_facts") or ())
+            if not set(requires_facts).issubset(established):
+                continue
+            terminal_required = terminal_required_facts(contract)
+            next_facts = ((established - set(edge.get("invalidates_facts") or ()))
+                          | set(edge.get("establishes_facts") or ()))
+            if (edge.get("to") in set(contract.get("completion_states") or ())
+                    and not terminal_required.issubset(next_facts)):
                 continue
             rows.append(WorkflowStep(
                 step_id=str(edge["id"]), label=str(edge.get("trigger") or edge["id"]),
                 work_class=str(edge.get("work_class") or "workflow"),
                 domain_effect=str(edge.get("domain_effect") or "workflow_state"),
-                required_evidence=tuple(edge.get("required_evidence") or ())))
+                required_evidence=tuple(edge.get("required_evidence") or ()),
+                requires_facts=requires_facts,
+                establishes_facts=tuple(edge.get("establishes_facts") or ()),
+                invalidates_facts=tuple(edge.get("invalidates_facts") or ())))
         return tuple(rows)
 
     def resolve_legacy_step(self, contract: Mapping[str, Any], *, current_state: str,
@@ -300,9 +387,12 @@ class StateMachineWorkflowEngine:
     def inspect(self, identity: WorkflowIdentity, contract: Mapping[str, Any],
                 state: Mapping[str, Any], revision: int) -> WorkflowSnapshot:
         current = state.get("state") or contract.get("initial_state")
+        terminal_facts = terminal_required_facts(contract)
+        established_facts = active_fact_ids(state)
         provisional = WorkflowSnapshot(
             identity, self.kind, revision, state, str(current),
-            str(current) in set(contract.get("completion_states") or ()))
+            (str(current) in set(contract.get("completion_states") or ())
+             and terminal_facts.issubset(established_facts)))
         return WorkflowSnapshot(
             identity, self.kind, revision, state, str(current), provisional.completed,
             self.eligible_steps(identity, contract, provisional))
@@ -316,6 +406,28 @@ class StateMachineWorkflowEngine:
             raise ValueError(f"unknown workflow step {step_id!r}")
         target = str(edge.get("to") or "")
         trigger = edge.get("trigger")
+        requires_facts = tuple(edge.get("requires_facts") or ())
+        established = active_fact_ids(snapshot.data)
+        establishes_facts = tuple(edge.get("establishes_facts") or ())
+        invalidates_facts = tuple(edge.get("invalidates_facts") or ())
+        next_facts = (established - set(invalidates_facts)) | set(establishes_facts)
+        missing_facts = set(requires_facts) - established
+        terminal_required = terminal_required_facts(contract)
+        terminal_facts_missing = (
+            target in set(contract.get("completion_states") or ())
+            and not terminal_required.issubset(next_facts))
+        if missing_facts or terminal_facts_missing:
+            return WorkflowDecision(
+                False, ("required workflow facts are not established" if missing_facts
+                        else "terminal-required workflow facts are not established"), self.kind,
+                step_id, snapshot.revision, snapshot.revision,
+                str(edge.get("work_class") or "workflow"),
+                str(edge.get("domain_effect") or "workflow_state"),
+                "LATERAL", snapshot.current_state, snapshot.current_state,
+                snapshot.completed, tuple(str(item.get("ref") or "") for item in evidence),
+                {"state": snapshot.current_state}, requires_facts=requires_facts,
+                establishes_facts=establishes_facts,
+                invalidates_facts=invalidates_facts)
         decision = self._transition_engine.transition(
             identity.subject_ref, str(snapshot.current_state), target,
             trigger=trigger, evidence_refs=evidence)
@@ -330,9 +442,13 @@ class StateMachineWorkflowEngine:
             domain_effect=str(decision.domain_effect or edge.get("domain_effect") or "workflow_state"),
             progress_class=str(decision.progress_class), current_state=next_state,
             previous_state=snapshot.current_state,
-            completed=next_state in set(contract.get("completion_states") or ()),
+            completed=(next_state in set(contract.get("completion_states") or ())
+                       and terminal_required_facts(contract).issubset(next_facts)),
             evidence_refs=tuple(str(item.get("ref") or "") for item in evidence),
-            state_data={"state": next_state})
+            state_data={"state": next_state},
+            requires_facts=requires_facts,
+            establishes_facts=establishes_facts,
+            invalidates_facts=invalidates_facts)
 
 
 class MilestoneWorkflowEngine:
@@ -352,6 +468,7 @@ class MilestoneWorkflowEngine:
             dependencies = set(step.get("depends_on") or ())
             if dependencies - known or str(step.get("id")) in dependencies:
                 raise ValueError("milestone dependencies must reference other steps")
+        validate_fact_contract(contract, step_field="steps")
         self._topological_order(steps)
 
     @staticmethod
@@ -370,27 +487,33 @@ class MilestoneWorkflowEngine:
     def initialize(self, identity: WorkflowIdentity,
                    contract: Mapping[str, Any]) -> Mapping[str, Any]:
         self.validate_contract(contract)
-        return {"completed_steps": []}
+        return {"milestone_receipts": []}
 
     def eligible_steps(self, identity: WorkflowIdentity,
                        contract: Mapping[str, Any],
                        snapshot: WorkflowSnapshot) -> tuple[WorkflowStep, ...]:
         completed = set(snapshot.data.get("completed_steps") or ())
+        established = active_fact_ids(snapshot.data)
         return tuple(WorkflowStep(
             step_id=str(item["id"]), label=str(item.get("label") or item["id"]),
             work_class=str(item.get("work_class") or "milestone"),
             domain_effect=str(item.get("domain_effect") or "workflow_milestone"),
             required_evidence=tuple(item.get("required_evidence") or ()),
-            dependencies=tuple(item.get("depends_on") or ()))
+            dependencies=tuple(item.get("depends_on") or ()),
+            requires_facts=tuple(item.get("requires_facts") or ()),
+            establishes_facts=tuple(item.get("establishes_facts") or ()),
+            invalidates_facts=tuple(item.get("invalidates_facts") or ()))
             for item in contract.get("steps") or ()
             if str(item["id"]) not in completed
-            and set(item.get("depends_on") or ()).issubset(completed))
+            and set(item.get("depends_on") or ()).issubset(completed)
+            and set(item.get("requires_facts") or ()).issubset(established))
 
     def inspect(self, identity: WorkflowIdentity, contract: Mapping[str, Any],
                 state: Mapping[str, Any], revision: int) -> WorkflowSnapshot:
         self.validate_contract(contract)
         completed = set(state.get("completed_steps") or ())
-        done = completed.issuperset(str(item["id"]) for item in contract["steps"])
+        done = (completed.issuperset(str(item["id"]) for item in contract["steps"])
+                and terminal_required_facts(contract).issubset(active_fact_ids(state)))
         provisional = WorkflowSnapshot(identity, self.kind, revision, state,
                                         completed=done)
         return WorkflowSnapshot(identity, self.kind, revision, state, completed=done,
@@ -405,7 +528,10 @@ class MilestoneWorkflowEngine:
             raise ValueError(f"unknown milestone step {step_id!r}")
         eligible = {item.step_id for item in snapshot.eligible_steps}
         if step_id not in eligible:
-            return WorkflowDecision(False, "milestone dependencies are incomplete", self.kind,
+            reason = ("milestone dependencies or required facts are incomplete"
+                      if step_id in {str(item["id"]) for item in contract["steps"]}
+                      else "unknown milestone step")
+            return WorkflowDecision(False, reason, self.kind,
                                     step_id, snapshot.revision, snapshot.revision,
                                     str(step.get("work_class") or "milestone"),
                                     str(step.get("domain_effect") or "workflow_milestone"),
@@ -423,15 +549,38 @@ class MilestoneWorkflowEngine:
                                     tuple(str(item.get("ref") or "") for item in evidence),
                                     dict(snapshot.data))
         completed = sorted(set(snapshot.data.get("completed_steps") or ()) | {step_id})
-        done = len(completed) == len(contract["steps"])
-        progress = "TERMINAL" if done else str(step.get("progress_class") or "FORWARD_PROGRESS")
+        requires_facts = tuple(step.get("requires_facts") or ())
+        establishes_facts = tuple(step.get("establishes_facts") or ())
+        invalidates_facts = tuple(step.get("invalidates_facts") or ())
+        established = active_fact_ids(snapshot.data)
+        next_facts = (established - set(invalidates_facts)) | set(establishes_facts)
+        all_steps_done = len(completed) == len(contract["steps"])
+        done = (all_steps_done
+                and terminal_required_facts(contract).issubset(next_facts))
+        progress = ("TERMINAL" if all_steps_done
+                    else str(step.get("progress_class") or "FORWARD_PROGRESS"))
+        receipt = {
+            "step_id": step_id,
+            "evidence_refs": [str(item.get("ref") or "") for item in evidence],
+            "workflow_revision": snapshot.revision + 1,
+            "requires_facts": list(requires_facts),
+            "establishes_facts": list(establishes_facts),
+            "invalidates_facts": list(invalidates_facts),
+        }
+        receipts = list(snapshot.data.get("milestone_receipts") or ())
+        if len(receipts) >= 4096:
+            raise ValueError("milestone receipt ledger exceeds its bound")
+        receipts.append(receipt)
         return WorkflowDecision(True, "milestone recorded", self.kind, step_id,
                                 snapshot.revision, snapshot.revision + 1,
                                 str(step.get("work_class") or "milestone"),
                                 str(step.get("domain_effect") or "workflow_milestone"),
                                 progress, None, None, done,
                                 tuple(str(item.get("ref") or "") for item in evidence),
-                                {"completed_steps": completed})
+                                {"milestone_receipts": receipts},
+                                requires_facts=requires_facts,
+                                establishes_facts=establishes_facts,
+                                invalidates_facts=invalidates_facts)
 
 
 __all__ = ["WorkflowIdentity", "WorkflowStep", "WorkflowSnapshot",
