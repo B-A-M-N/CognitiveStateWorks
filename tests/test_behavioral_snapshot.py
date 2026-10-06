@@ -69,6 +69,59 @@ def test_snapshot_cannot_be_forged_by_host_supplied_active_ids(tmp_path):
         "gitter", "infrae", "tuid"}
 
 
+def test_milestone_completion_reopens_when_receipt_evidence_is_invalidated(tmp_path):
+    from workflow_engines import MilestoneWorkflowEngine
+
+    evidence = EvidenceStore()
+    state_store = SubjectStateStore(tmp_path / "milestone-subjects.json")
+    authority = WorkflowAuthority(
+        root=ROOT, state_store=state_store, evidence_store=evidence,
+        selection_store=WorkflowSelectionStore(tmp_path / "milestone-selections.json"))
+    engine = MilestoneWorkflowEngine()
+    contract = {"steps": [
+        {"id": "design", "required_evidence": ["design_review"]},
+        {"id": "build", "depends_on": ["design"],
+         "required_evidence": ["build_receipt"]},
+    ]}
+    engine.validate_contract(contract)
+    contract_hash = "a" * 64
+    authority._bundle = lambda _statework_id, _contract_hash=None: (
+        {}, contract, contract_hash, engine, {})
+    identity = {
+        **_scope("milestone-ledger"), "statework_id": "milestone-test",
+        "contract_version": engine.contract_version,
+    }
+
+    def record(ref: str, kind: str) -> None:
+        evidence.create({"ref": ref, "kind": kind,
+                         "subject_ref": identity["subject_ref"]})
+
+    record("design-evidence-v1", "design_review")
+    record("build-evidence-v1", "build_receipt")
+    first = authority.apply_step(
+        identity, contract_hash=contract_hash, step_id="design",
+        evidence_refs=["design-evidence-v1"], expected_revision=0)
+    second = authority.apply_step(
+        identity, contract_hash=contract_hash, step_id="build",
+        evidence_refs=["build-evidence-v1"], expected_revision=first.revision)
+    assert second.completed is True
+
+    ledger = state_store.get(identity)["workflow_data"]
+    assert "completed_steps" not in ledger
+    assert len(ledger["milestone_receipts"]) == 2
+
+    evidence.invalidate("design-evidence-v1")
+    reopened = authority.inspect_workflow(identity, contract_hash=contract_hash)
+    assert reopened.completed is False
+    assert [step.step_id for step in reopened.eligible_steps] == ["design"]
+
+    record("design-evidence-v2", "design_review")
+    repaired = authority.apply_step(
+        identity, contract_hash=contract_hash, step_id="design",
+        evidence_refs=["design-evidence-v2"], expected_revision=reopened.revision)
+    assert repaired.completed is True
+
+
 def test_authority_pins_compiled_registry_until_explicit_reload(tmp_path, monkeypatch):
     import workflow_authority
 
@@ -362,6 +415,47 @@ def test_expired_dp_dependency_lease_is_retained_and_later_released(tmp_path):
     assert released["disposition"] == "released"
     assert set(released["released_stateworks"]) == {"gitter", "getter"}
     assert released["active_workflows"] == {}
+
+
+def test_releasing_last_consumer_cascades_real_three_level_dependency_chain(tmp_path):
+    authority = _authority(tmp_path)
+    scope = _scope("three-level-cascade")
+    authority._compiled_registry = {
+        "registry_hash": authority.registry_hash,
+        "stateworks": [
+            {"id": "A", "manifest": {"id": "A", "composition": {"requires": []}}},
+            {"id": "B", "manifest": {"id": "B", "composition": {"requires": ["A"]}}},
+            {"id": "C", "manifest": {"id": "C", "composition": {"requires": ["B"]}}},
+        ],
+    }
+    rows = {
+        "A": {"identity": {"statework_id": "A"}, "contract_hash": "a" * 64,
+              "activation_owner": "dependency", "control_session_id": None,
+              "intervention_id": None, "activation_revision": 1,
+              "expires_at_action": None},
+        "B": {"identity": {"statework_id": "B"}, "contract_hash": "b" * 64,
+              "activation_owner": "dependency", "control_session_id": None,
+              "intervention_id": None, "activation_revision": 1,
+              "expires_at_action": None},
+        "C": {"identity": {"statework_id": "C"}, "contract_hash": "c" * 64,
+              "activation_owner": "digitalpsychology",
+              "control_session_id": "dp-session", "intervention_id": "release-C",
+              "activation_revision": 1, "expires_at_action": 9},
+    }
+    selected = authority.selection_store.replace(
+        scope, expected_revision=0, active_workflows=rows)
+
+    released = authority.deactivate_workflow(
+        workflow_scope=scope, statework_id="C",
+        expected_selection_revision=selected["revision"],
+        expected_activation_owner="digitalpsychology",
+        expected_control_session_id="dp-session",
+        expected_intervention_id="release-C")
+
+    assert released["disposition"] == "released"
+    assert released["released_stateworks"] == ["A", "B", "C"]
+    assert released["active_workflows"] == {}
+    assert released["revision"] == selected["revision"] + 1
 
 def test_expiring_dp_workflow_preserves_an_independent_host_workflow(tmp_path):
     authority = _authority(tmp_path)

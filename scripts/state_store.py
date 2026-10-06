@@ -7,6 +7,7 @@ import json
 import jsonschema
 import os
 import sqlite3
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Optional
@@ -31,10 +32,9 @@ class SubjectStateStore:
     overwrite a newer state.
     """
     def __init__(self, path: Path) -> None:
-        self.legacy_path = Path(path)
-        self.path = (self.legacy_path.with_suffix(".sqlite3")
-                     if self.legacy_path.suffix.lower() == ".json"
-                     else self.legacy_path)
+        source = Path(path)
+        self.legacy_path = source if source.suffix.lower() == ".json" else None
+        self.path = source.with_suffix(".sqlite3") if self.legacy_path else source
         self.path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
         self._initialize()
 
@@ -44,9 +44,59 @@ class SubjectStateStore:
         database.execute("PRAGMA busy_timeout=5000")
         return database
 
+    def history_for(self, identity: Mapping[str, Any], *,
+                    maximum: int = 4096) -> tuple[dict[str, Any], ...]:
+        """Return the bounded append-only history for one workflow identity.
+
+        Workflow authorities use this public projection when they need to
+        revalidate durable transitions against current evidence. Keeping the
+        query here lets alternate state stores implement the same contract
+        without exposing SQLite connections or table names.
+        """
+        if type(maximum) is not int or not 1 <= maximum <= 4096:
+            raise TransitionError("subject history bound must be between 1 and 4096")
+        subject_key = self.key(identity)
+        with self._connect() as database:
+            rows = database.execute(
+                "SELECT event_json FROM subject_history "
+                "WHERE subject_key=? ORDER BY event_id LIMIT ?",
+                (subject_key, maximum + 1),
+            ).fetchall()
+        if len(rows) > maximum:
+            raise TransitionError("subject history exceeds its inspection bound")
+        events: list[dict[str, Any]] = []
+        for row in rows:
+            try:
+                event = json.loads(row[0])
+            except (TypeError, json.JSONDecodeError) as exc:
+                raise TransitionError("subject history contains invalid JSON") from exc
+            if not isinstance(event, Mapping):
+                raise TransitionError("subject history event is malformed")
+            events.append(dict(event))
+        return tuple(events)
+
     def _initialize(self) -> None:
         with self._connect() as database:
-            database.execute("PRAGMA journal_mode=WAL")
+            # New authorities can be opened concurrently by independent host
+            # workers. SQLite may report SQLITE_BUSY while the first process
+            # changes a fresh file from DELETE to WAL mode, even with its busy
+            # handler configured. Retry this one-time setup with a short
+            # handler so concurrent startup stays bounded.
+            database.execute("PRAGMA busy_timeout=100")
+            deadline = time.monotonic() + 5.0
+            retry_delay = 0.01
+            while True:
+                try:
+                    database.execute("PRAGMA journal_mode=WAL")
+                    break
+                except sqlite3.OperationalError as exc:
+                    message = str(exc).lower()
+                    if ("locked" not in message and "busy" not in message) or (
+                            time.monotonic() >= deadline):
+                        raise
+                    time.sleep(retry_delay)
+                    retry_delay = min(retry_delay * 2, 0.2)
+            database.execute("PRAGMA busy_timeout=5000")
             database.executescript("""
                 CREATE TABLE IF NOT EXISTS store_metadata (
                     key TEXT PRIMARY KEY, value TEXT NOT NULL
@@ -94,7 +144,7 @@ class SubjectStateStore:
         os.chmod(self.path, 0o600)
 
     def _read_legacy(self) -> dict[str, Any]:
-        if not self.legacy_path.exists():
+        if self.legacy_path is None or not self.legacy_path.exists():
             return {"version": 1, "subjects": {}, "history": []}
         try:
             data = json.loads(self.legacy_path.read_text(encoding="utf-8"))
@@ -191,7 +241,10 @@ class SubjectStateStore:
             database.commit()
             return dict(record)
 
-    def commit(self, identity: Mapping[str, Any], *, expected_revision: int, new_state: str, transition: Mapping[str, Any]) -> Dict[str, Any]:
+    def commit(self, identity: Mapping[str, Any], *, expected_revision: int,
+               new_state: str, transition: Mapping[str, Any],
+               fact_ledger: Optional[Iterable[Mapping[str, Any]]] = None
+               ) -> Dict[str, Any]:
         key = self.key(identity)
         with self._connect() as database:
             database.execute("BEGIN IMMEDIATE")
@@ -204,8 +257,10 @@ class SubjectStateStore:
                 database.rollback()
                 raise TransitionError(f"subject state revision conflict: expected {expected_revision}, found {current.get('revision', 0)}; re-inspect required")
             revision = int(expected_revision) + 1
-            record = dict(identity); record.update({"state": new_state, "revision": revision, "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")})
             recorded_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            record = dict(identity); record.update({"state": new_state, "revision": revision, "updated_at": recorded_at})
+            if fact_ledger is not None:
+                record["fact_ledger"] = copy.deepcopy(list(fact_ledger))
             event = {"identity": dict(identity), "from_state": current.get("state"),
                      "to_state": new_state, "revision": revision,
                      "recorded_at": recorded_at, "transition": dict(transition)}
@@ -250,12 +305,12 @@ class PacketStore:
         self._packets: Dict[str, Dict[str, Any]] = {}
         self._digests: Dict[str, str] = {}
         self.revision = 0
-        self.legacy_storage_path = Path(storage_path) if storage_path else None
+        source = Path(storage_path) if storage_path else None
+        self.legacy_storage_path = (
+            source if source is not None and source.suffix.lower() == ".json" else None)
         self.storage_path = (
-            self.legacy_storage_path.with_suffix(".sqlite3")
-            if self.legacy_storage_path is not None
-            and self.legacy_storage_path.suffix.lower() == ".json"
-            else self.legacy_storage_path)
+            source.with_suffix(".sqlite3")
+            if source is not None and source.suffix.lower() == ".json" else source)
         self.secure_storage_dir = bool(secure_storage_dir)
         if self.storage_path is not None:
             self._initialize_persistence()

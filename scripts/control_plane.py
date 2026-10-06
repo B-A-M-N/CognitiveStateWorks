@@ -63,14 +63,14 @@ if __package__:
     from .selection_store import WorkflowSelectionStore
     from .transition_engine import PROGRESS_CLASSES, TransitionDecision, TransitionEngine
     from .workflow_controller import StandaloneStateWorkController
-    from .workflow_authority import WorkflowAuthority
+    from .workflow_authority import WorkflowAuthority, WorkflowAuthorityIdentity
     from .standalone_host import StandaloneHostInterface
 else:
     from state_store import PacketStore, SubjectStateStore
     from selection_store import WorkflowSelectionStore
     from transition_engine import PROGRESS_CLASSES, TransitionDecision, TransitionEngine
     from workflow_controller import StandaloneStateWorkController
-    from workflow_authority import WorkflowAuthority
+    from workflow_authority import WorkflowAuthority, WorkflowAuthorityIdentity
     from standalone_host import StandaloneHostInterface
 
 

@@ -1,9 +1,10 @@
 {
   "builtin_engine_hashes": {
-    "flow_selector": "33f50a692126cfc2ca8237fb40d5cb4c9998afa0e30ee53d2b03c91881ba33d1",
-    "milestone": "70b8da14e606c650788c474e7a3732fc7599d61819be13a01adc92ee204ee223",
-    "state_machine": "e22698f057d57de16da6741da9bcef5be888063ccc8f76fad4cfbf9f7beff497"
+    "flow_selector": "13e984fe68f703a8593a385c87455f5d2548b0de413c6d45b3a91c12c0b62ae4",
+    "milestone": "92725eb479a2a9f9a01ec642c443a97533510eaeeeeb3b1d830a5e54229b0c7e",
+    "state_machine": "5f2952192592d2fccdaebcfa7823209d64c1a88f3d514488978a7bfb1a83b36d"
   },
+  "compatibility_api_hash": "abfd01fa52288e287e89881cc569b7c7e2d5a1fa1e3a1cfc310971058b0edece",
   "evidence_registry": {
     "kinds": {
       "authority": {
@@ -431,7 +432,7 @@
   },
   "evidence_validator_hashes": {},
   "freshness_validator_hashes": {
-    "repository_truth_v1": "83a3e03172a328bfab6c4f4d082556fae580bf3dbd6c1699e7a7307bc1de3027"
+    "repository_truth_v1": "ddb8aca078cfb85fe06abec96832b7627152765384c1d4463e7a931602b3e3fc"
   },
   "packet_registry": {
     "packets": {
@@ -1064,8 +1065,9 @@
       "title": "Tui validation packet"
     }
   },
+  "registry_compiler_hash": "8ae3e760da7f505c076c58f7fb580dd80a2f9c5330818f3f85a6fbdf851c95a2",
   "registry_config_hash": "d4efe61d7c37394e7e4d7fd0406b5d83c94e2b0941cf56f7c2e57a881693ef85",
-  "registry_hash": "bd462e3cc389e2f3c80542fff17279c2e13b4bf06f8f5555a3a75dda269b24b4",
+  "registry_hash": "da196cc01ef7c39a14d1edfff6ed54928ae36f0420a8bcd5fb2b62c329c625f3",
   "registry_version": "2.0.0",
   "stateworks": [
     {

@@ -15,10 +15,12 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional
 if __package__:
     from .errors import TransitionError
     from .resources import ROOT, _aware_datetime
+    from .repository_truth import validate_repository_truth_packet
     from .workflow_engines import EngineRegistry
 else:
     from errors import TransitionError
     from resources import ROOT, _aware_datetime
+    from repository_truth import validate_repository_truth_packet
     from workflow_engines import EngineRegistry
 
 
@@ -26,15 +28,7 @@ def _repository_truth_v1(packet: Dict[str, Any], context: Mapping[str, Any]) -> 
     """Trusted repository-currentness validator selected by the registry."""
     repo_path = context.get("repository_path")
     if repo_path:
-        import importlib.util
-        module_path = ROOT / "validate-repository-truth.py"
-        if not module_path.exists():
-            module_path = ROOT / "scripts" / "validate-repository-truth.py"
-        spec = importlib.util.spec_from_file_location(
-            "cognitive_statework_repository_truth", module_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return bool(module.validate_repository_truth_packet(
+        return bool(validate_repository_truth_packet(
             packet, Path(repo_path)).get("valid"))
     expected_vector = context.get("repository_freshness")
     actual_vector = packet.get("payload", {}).get("freshness", {})
@@ -303,6 +297,29 @@ class EvidenceStore:
                 raise TransitionError(f"evidence reference {ref!r} has an invalid attestation digest")
             out.append(dict(current))
         return out
+
+    def refresh_attested(self, path: Path) -> None:
+        """Reload the current durable evidence revision under the store lock.
+
+        Independent WorkflowAuthority instances may share this evidence file.
+        Reconciliation must evaluate the same current evidence regardless of
+        which instance originally accepted the transition.
+        """
+        path = Path(path)
+        if not path.exists():
+            self._records = {}
+            return
+        lock_path = path.with_name(path.name + ".lock")
+        try:
+            with lock_path.open("a+", encoding="utf-8") as lock:
+                fcntl.flock(lock.fileno(), fcntl.LOCK_SH)
+                records = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(records, list):
+                    raise TransitionError("trusted evidence store is malformed")
+                loaded = type(self).load_attested(records)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise TransitionError("trusted evidence store is unreadable") from exc
+        self._records = loaded._records
 
     def invalidate(self, ref: str) -> None:
         if ref not in self._records:

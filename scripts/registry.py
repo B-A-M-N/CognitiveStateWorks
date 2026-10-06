@@ -32,6 +32,11 @@ except ImportError:
 class RegistryCompiler:
     """Compile trusted bundle roots into one immutable, content-addressed registry."""
     VERSION = "2.0.0"
+    BUILTIN_ENGINE_SOURCE_MANIFEST = {
+        "state_machine": ("workflow_engines.py", "transition_engine.py", "evidence.py"),
+        "milestone": ("workflow_engines.py",),
+        "flow_selector": ("flow_selectors.py",),
+    }
 
     def __init__(self, root: Optional[Path] = None, *,
                  engine_registry: Optional[EngineRegistry] = None):
@@ -44,24 +49,36 @@ class RegistryCompiler:
             value, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
 
     @staticmethod
-    def _builtin_engine_hashes() -> dict[str, str]:
-        engine_bytes = Path(__file__).with_name("workflow_engines.py").read_bytes()
-        selector_bytes = Path(__file__).with_name("flow_selectors.py").read_bytes()
-        control_bytes = Path(__file__).with_name("control_plane.py").read_bytes()
-        registry_bytes = Path(__file__).read_bytes()
-        bundle_bytes = Path(__file__).with_name("bundles.py").read_bytes()
-        contract_bytes = Path(__file__).with_name("contracts.py").read_bytes()
-        evidence_bytes = Path(__file__).with_name("evidence.py").read_bytes()
-        resources_bytes = Path(__file__).with_name("resources.py").read_bytes()
-        errors_bytes = Path(__file__).with_name("errors.py").read_bytes()
-        return {
-            "state_machine": hashlib.sha256(
-                engine_bytes + control_bytes + registry_bytes
-                + bundle_bytes + contract_bytes + evidence_bytes
-                + resources_bytes + errors_bytes).hexdigest(),
-            "milestone": hashlib.sha256(engine_bytes).hexdigest(),
-            "flow_selector": hashlib.sha256(selector_bytes).hexdigest(),
-        }
+    def _source_manifest_hash(source_files: tuple[str, ...]) -> str:
+        digest = hashlib.sha256()
+        root = Path(__file__).parent
+        for source_name in source_files:
+            if (not isinstance(source_name, str) or not source_name
+                    or Path(source_name).is_absolute()
+                    or ".." in Path(source_name).parts):
+                raise ValueError("CSW source hash manifest contains an unsafe path")
+            source = root / source_name
+            if source.is_symlink() or not source.is_file():
+                raise TransitionError(
+                    f"CSW implementation source is missing or linked: {source_name}")
+            digest.update(source_name.replace("\\", "/").encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(source.read_bytes())
+            digest.update(b"\0")
+        return digest.hexdigest()
+
+    @classmethod
+    def _builtin_engine_hashes(cls) -> dict[str, str]:
+        return {engine: cls._source_manifest_hash(files)
+                for engine, files in cls.BUILTIN_ENGINE_SOURCE_MANIFEST.items()}
+
+    @classmethod
+    def _registry_compiler_hash(cls) -> str:
+        return cls._source_manifest_hash(("registry.py", "compile-registry.py"))
+
+    @classmethod
+    def _compatibility_api_hash(cls) -> str:
+        return cls._source_manifest_hash(("control_plane.py",))
 
     @staticmethod
     def _relative_file(bundle_root: Path, name: str) -> Path:
@@ -152,6 +169,19 @@ class RegistryCompiler:
                 contract_relative = str(engine_decl.get("contract") or "")
                 contract_path = self._relative_file(bundle_root, contract_relative)
                 workflow_contract = _load_yaml(contract_path) or {}
+                contract_schema_name = {
+                    "state_machine": "transition-contract.schema.json",
+                    "milestone": "milestone-contract.schema.json",
+                }.get(kind)
+                if contract_schema_name is not None:
+                    contract_schema_path = self.root / "schemas" / contract_schema_name
+                    if (contract_schema_path.is_symlink()
+                            or not contract_schema_path.is_file()):
+                        raise TransitionError(
+                            f"workflow contract schema is unavailable: {contract_schema_name}")
+                    jsonschema.validate(
+                        instance=workflow_contract,
+                        schema=json.loads(contract_schema_path.read_text(encoding="utf-8")))
                 contracts = manifest.get("contracts") or {}
                 local_packets = self._load_fragment(
                     bundle_root, contracts.get("packets"), fragment="packets")
@@ -252,6 +282,8 @@ class RegistryCompiler:
                 "evidence_validator_hashes": dict(EVIDENCE_VALIDATORS.identities),
                 "freshness_validator_hashes": dict(FRESHNESS_VALIDATORS.identities),
                 "builtin_engine_hashes": self._builtin_engine_hashes(),
+                "registry_compiler_hash": self._registry_compiler_hash(),
+                "compatibility_api_hash": self._compatibility_api_hash(),
                 "workflow_engine_hashes": dict(self.engine_registry.identities)}
         result = {**body, "registry_hash": self._digest(body)}
         if write:
@@ -344,6 +376,10 @@ def load_compiled_registry(root: Optional[Path] = None, *,
         raise TransitionError("compiled evidence-validator registry changed")
     if result.get("builtin_engine_hashes") != RegistryCompiler._builtin_engine_hashes():
         raise TransitionError("compiled workflow engine implementation changed")
+    if result.get("registry_compiler_hash") != RegistryCompiler._registry_compiler_hash():
+        raise TransitionError("compiled CSW registry compiler implementation changed")
+    if result.get("compatibility_api_hash") != RegistryCompiler._compatibility_api_hash():
+        raise TransitionError("compiled CSW compatibility API changed")
     for item in result.get("stateworks") or ():
         capsule = str(item.get("runtime_capsule") or "")
         capsule_hash = hashlib.sha256(capsule.encode("utf-8")).hexdigest()
