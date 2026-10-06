@@ -99,7 +99,10 @@ class WorkflowPlanner:
 
     def _roots(self, domains: Iterable[str], phase: Optional[str],
                requested_ids: Optional[Iterable[str]] = None) -> list[dict[str, Any]]:
-        if requested_ids is not None:
+        # Hosts send an empty tuple when they have no explicit root override.
+        # Treat that the same as an omitted override so normal domain matching
+        # still runs; only a non-empty list pins explicit roots.
+        if requested_ids:
             ids = tuple(sorted(set(str(item) for item in requested_ids)))
             missing = set(ids) - set(self.manifests)
             if missing:

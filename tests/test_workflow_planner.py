@@ -96,6 +96,19 @@ def test_csw_planner_accepts_explicit_roots_for_legacy_host_adapters():
     assert [item["id"] for item in resolution["execution_order"]] == ["tuid"]
 
 
+def test_empty_explicit_roots_fall_back_to_domain_matching():
+    planner = _planner()
+    identity = {"task_id": "planner-test", "subject_ref": "repo:fixture"}
+    context = {**_context(), "requested_statework_ids": ()}
+
+    eligibility = planner.eligible_routes(identity, context)
+    resolution = planner.resolve_workflows(identity, context, ())
+
+    assert [item["statework_id"] for item in eligibility["eligible_routes"]
+            if item["route_type"] == "statework"] == ["tuid"]
+    assert [item["id"] for item in resolution["execution_order"]] == ["tuid"]
+
+
 def test_valid_current_packet_satisfies_its_workflow_dependency():
     planner = _planner()
     fixture = __import__("json").loads(
