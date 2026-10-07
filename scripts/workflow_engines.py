@@ -46,6 +46,8 @@ class WorkflowSnapshot:
     current_state: str | None = None
     completed: bool = False
     eligible_steps: tuple[WorkflowStep, ...] = ()
+    previous_state: str | None = None
+    progress_class: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "data", MappingProxyType(dict(self.data)))

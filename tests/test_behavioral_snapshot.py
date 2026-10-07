@@ -11,6 +11,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from control_plane import (EvidenceStore, SubjectStateStore, TransitionError,
                            WorkflowAuthority, WorkflowSelectionStore)
+from transition_engine import TransitionEngine
+from workflow_engines import StateMachineWorkflowEngine, WorkflowIdentity
 
 
 def _scope(suffix: str = "main") -> dict[str, str]:
@@ -67,6 +69,88 @@ def test_snapshot_cannot_be_forged_by_host_supplied_active_ids(tmp_path):
     assert snapshot["active_workflows"] == []
     assert {item["statework_id"] for item in snapshot["eligible_stateworks"]} == {
         "gitter", "infrae", "tuid"}
+
+
+def test_active_snapshot_reports_evidence_supported_previous_and_legal_states(tmp_path):
+    authority = _authority(tmp_path)
+    scope = _scope("snapshot-semantics")
+    contract = {
+        "initial_state": "OPEN",
+        "states": ["OPEN", "DONE"],
+        "completion_states": ["DONE"],
+        "transitions": [{
+            "id": "snapshot.complete",
+            "from": "OPEN",
+            "to": "DONE",
+            "trigger": "complete",
+            "required_evidence": ["approval"],
+            "work_class": "governance",
+            "domain_effect": "complete_task",
+            "progress_class": "TERMINAL",
+            "consequential": True,
+        }],
+    }
+    evidence_registry = {"kinds": {"approval": {
+        "allowed_issuers": ["host:test"],
+        "validator": "test-approval-v1",
+        "schema": "test-approval-v1",
+    }}}
+    engine = StateMachineWorkflowEngine(TransitionEngine(
+        contract, evidence_registry=evidence_registry, require_registered=True,
+        evidence_store=authority.evidence_store))
+    contract_hash = "a" * 64
+    statework_id = "snapshot-semantics"
+    identity = WorkflowIdentity(
+        namespace_id=scope["namespace_id"],
+        application_id=scope["application_id"],
+        application_instance_id=scope["application_instance_id"],
+        workflow_id=scope["workflow_id"],
+        subject_ref=scope["subject_ref"],
+        statework_id=statework_id,
+        contract_version=engine.contract_version,
+    )
+    authority._bundle = lambda _statework_id, _contract_hash=None: (
+        {"id": statework_id, "composition": {"requires": []}},
+        contract, contract_hash, engine, evidence_registry)
+    compiled = dict(authority._compiled_registry)
+    compiled["stateworks"] = [
+        *compiled["stateworks"],
+        {"id": statework_id,
+         "manifest": {"id": statework_id, "composition": {"requires": []}}},
+    ]
+    authority._compiled_registry = compiled
+    authority.activate_workflow(
+        identity, contract_hash=contract_hash, expected_selection_revision=0)
+
+    initial = authority.behavioral_snapshot(workflow_scope=scope)["active_workflows"][0]
+    assert initial["previous_state"] is None
+    assert initial["legal_next_states"] == ["DONE"]
+
+    authority.evidence_store.create({
+        "ref": "snapshot-approval-v1",
+        "kind": "approval",
+        "subject_ref": identity.subject_ref,
+        "observed_at": "2025-01-01T00:00:00Z",
+        "issuer": "host:test",
+        "validator": "test-approval-v1",
+        "schema": "test-approval-v1",
+        "content_digest": "snapshot-approval-content-v1",
+    })
+    opened = authority.inspect_workflow(identity, contract_hash=contract_hash)
+    authority.apply_step(
+        identity, contract_hash=contract_hash, step_id="snapshot.complete",
+        evidence_refs=["snapshot-approval-v1"], expected_revision=opened.revision)
+
+    completed = authority.behavioral_snapshot(workflow_scope=scope)["active_workflows"][0]
+    assert completed["current_state"] == "DONE"
+    assert completed["previous_state"] == "OPEN"
+    assert completed["legal_next_states"] == []
+
+    authority.evidence_store.invalidate("snapshot-approval-v1")
+    reopened = authority.behavioral_snapshot(workflow_scope=scope)["active_workflows"][0]
+    assert reopened["current_state"] == "OPEN"
+    assert reopened["previous_state"] is None
+    assert reopened["legal_next_states"] == ["DONE"]
 
 
 def test_milestone_completion_reopens_when_receipt_evidence_is_invalidated(tmp_path):

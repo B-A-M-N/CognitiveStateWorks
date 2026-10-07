@@ -91,6 +91,18 @@ python3 scripts/install-stateworks.py \
 
 That product contains the controller, schemas, compiled StateWork bundles, flows, and validators declared by the runtime package. The ordinary installation remains an advisory skill product.
 
+CSW's workflow authority consumes normalized workflow requests, state
+snapshots, and evidence references. It does not depend on a model or harness
+event protocol; a host adapter translates those events before calling CSW.
+Eligibility, state, evidence, and transition decisions therefore stay the same
+across harnesses.
+
+The trusted host/runtime owns task lifecycle orchestration and event
+normalization. DP may request activation only from CSW's eligible choices;
+CSW validates and commits the selection. CFW consumes normalized workflow
+requirements through its host port and keeps its component and action gates
+local. It is not the universal StateWork selector.
+
 ## Optional integrations
 
 - **CSW alone:** use `StandaloneHostInterface` and the enforcing installation; CFW and DP are not required.
@@ -135,8 +147,11 @@ remain implemented here.
 The host calls `WorkflowAuthority.behavioral_snapshot(...)` with the workflow
 scope and an optional bounded candidate list. It does not supply active
 workflow identities: CSW reads those from its own revisioned selection store.
-The snapshot returns current authoritative workflow states and legal steps,
-plus only registered, composition-compatible StateWorks with bounded
+The snapshot returns current authoritative workflow states, the last
+evidence-supported `previous_state` and `progress_class` when recorded, and
+`legal_next_states` derived from currently eligible transitions. A legal next state still requires
+the transition's declared evidence when the host applies it. The snapshot also
+returns only registered, composition-compatible StateWorks with bounded
 `behavior_tags`. DP may rank those candidates; tags are descriptive hints and
 do not grant activation or transition authority. Activation uses
 `WorkflowAuthority.activate_workflow(...)` with a contract hash and expected
@@ -387,9 +402,12 @@ the selection revision. DP cannot create eligibility, rewrite StateWork
 invariants, or declare `CHANGING → STABLE` legal because verification is
 inconvenient.
 
-## Direct Codex integration evidence
+## Codex adapter integration evidence
 
-The regular packaged Codex App Server matrix recorded 10/10 CFW+CSW trials at
+This is evidence for one optional harness adapter. CSW's workflow contracts and
+authority remain host-neutral and do not require Codex.
+
+The Codex App Server adapter matrix recorded 10/10 CFW+CSW trials at
 4/4 criteria, with 10/10 completion permits. The run used one coding fixture,
 `deepseek-v4-flash`, and the FreeInference external-provider Responses route;
 ChatGPT-mode attempts had stopped at workspace-routing discovery before the

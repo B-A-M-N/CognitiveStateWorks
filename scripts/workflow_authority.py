@@ -16,7 +16,7 @@ if __package__:
     from .resources import ROOT, _aware_datetime, _load_yaml
     from .selection_store import WorkflowSelectionStore
     from .state_store import SubjectStateStore
-    from .transition_engine import TransitionEngine
+    from .transition_engine import PROGRESS_CLASSES, TransitionEngine
     from .workflow_controller import StandaloneStateWorkController
     from .workflow_engines import (EngineRegistry, MilestoneWorkflowEngine,
                                    StateMachineWorkflowEngine, WorkflowDecision,
@@ -30,7 +30,7 @@ else:
     from resources import ROOT, _aware_datetime, _load_yaml
     from selection_store import WorkflowSelectionStore
     from state_store import SubjectStateStore
-    from transition_engine import TransitionEngine
+    from transition_engine import PROGRESS_CLASSES, TransitionEngine
     from workflow_controller import StandaloneStateWorkController
     from workflow_engines import (EngineRegistry, MilestoneWorkflowEngine,
                                   StateMachineWorkflowEngine, WorkflowDecision,
@@ -40,7 +40,7 @@ else:
     from composition_rules import depends_on, validate_selection
 
 
-WORKFLOW_PORT_VERSION = "1.4.0"
+WORKFLOW_PORT_VERSION = "1.6.0"
 
 
 @dataclass(frozen=True)
@@ -548,6 +548,15 @@ class WorkflowAuthority:
             if statework_id not in entries:
                 raise TransitionError(f"active StateWork {statework_id!r} is unavailable")
             snapshot = self.inspect_workflow(identity, contract_hash=str(contract_hash))
+            _manifest, workflow_contract, _digest, workflow_engine, _evidence_registry = (
+                self._bundle(statework_id, str(contract_hash)))
+            eligible_step_ids = {step.step_id for step in snapshot.eligible_steps}
+            legal_next_states = sorted({
+                str(edge["to"])
+                for edge in workflow_contract.get("transitions") or ()
+                if workflow_engine.kind == "state_machine"
+                and str(edge.get("id") or "") in eligible_step_ids
+            })
             active_ids.add(statework_id)
             active.append({
                 "identity": dict(identity.__dict__),
@@ -558,6 +567,9 @@ class WorkflowAuthority:
                 "engine_kind": snapshot.engine_kind,
                 "revision": snapshot.revision,
                 "current_state": snapshot.current_state,
+                "previous_state": snapshot.previous_state,
+                "progress_class": snapshot.progress_class,
+                "legal_next_states": legal_next_states,
                 "completed": snapshot.completed,
                 "eligible_steps": [
                     {"step_id": step.step_id, "label": step.label,
@@ -918,7 +930,8 @@ class WorkflowAuthority:
                      and terminal_required_facts(contract).issubset(active))
         return WorkflowSnapshot(snapshot.identity, snapshot.engine_kind,
                                 snapshot.revision, data, snapshot.current_state,
-                                completed, eligible)
+                                completed, eligible, snapshot.previous_state,
+                                snapshot.progress_class)
 
     def _recompute_milestone_fact_ledger(
             self, identity: WorkflowIdentity, contract: Mapping[str, Any],
@@ -1029,12 +1042,19 @@ class WorkflowAuthority:
                     evidence_registry=evidence_registry)
                 self._controllers[key] = controller
             record = controller.inspect()
-            current_state, record, fact_ledger = self._recompute_state_machine_state(
-                identity, contract, engine, record)
+            current_state, record, fact_ledger, previous_state = (
+                self._recompute_state_machine_state(
+                    identity, contract, engine, record))
             snapshot = engine.inspect(identity, contract,
                                       {"state": current_state,
                                        "fact_ledger": fact_ledger},
                                       int(record.get("revision", 0) or 0))
+            snapshot = WorkflowSnapshot(
+                snapshot.identity, snapshot.engine_kind, snapshot.revision,
+                snapshot.data, snapshot.current_state, snapshot.completed,
+                snapshot.eligible_steps, previous_state,
+                self._latest_progress_class(
+                    identity, int(record.get("revision", 0) or 0)))
         else:
             initial = engine.initialize(identity, contract)
             record = self.state_store.initialize_workflow(
@@ -1061,8 +1081,41 @@ class WorkflowAuthority:
                     identity, contract, data, int(record.get("revision", 0) or 0))
             snapshot = engine.inspect(identity, contract, data,
                                       int(record.get("revision", 0) or 0))
+            snapshot = WorkflowSnapshot(
+                snapshot.identity, snapshot.engine_kind, snapshot.revision,
+                snapshot.data, snapshot.current_state, snapshot.completed,
+                snapshot.eligible_steps, snapshot.previous_state,
+                self._latest_progress_class(
+                    identity, int(record.get("revision", 0) or 0)))
         snapshot = self._snapshot_with_fact_ledger(snapshot, contract, fact_ledger)
         return engine, contract, snapshot
+
+    def _latest_progress_class(self, identity: WorkflowIdentity,
+                               revision: int) -> Optional[str]:
+        """Return the authoritative progress class recorded at this revision."""
+        read_history = getattr(self.state_store, "history_for", None)
+        if not callable(read_history):
+            return None
+        try:
+            events = read_history(identity.__dict__, maximum=4096)
+        except Exception:
+            return None
+        if not isinstance(events, (list, tuple)) or len(events) > 4096:
+            return None
+        for event in reversed(events):
+            if not isinstance(event, Mapping) or event.get("revision") != revision:
+                continue
+            transition = event.get("transition")
+            if not isinstance(transition, Mapping):
+                return None
+            progress = transition.get("progress")
+            progress_class = (progress.get("progress_class")
+                              if isinstance(progress, Mapping)
+                              else transition.get("progress_class"))
+            return (progress_class if isinstance(progress_class, str)
+                    and progress_class in PROGRESS_CLASSES
+                    else None)
+        return None
 
     def _state_machine_history(self, identity: WorkflowIdentity
                                ) -> list[dict[str, Any]]:
@@ -1086,7 +1139,7 @@ class WorkflowAuthority:
     def _recompute_state_machine_state(
             self, identity: WorkflowIdentity, contract: Mapping[str, Any],
             engine: StateMachineWorkflowEngine, record: Mapping[str, Any]
-            ) -> tuple[str, dict[str, Any], list[dict[str, Any]]]:
+            ) -> tuple[str, dict[str, Any], list[dict[str, Any]], Optional[str]]:
         """Replay state and fact effects against current authoritative evidence."""
         revision = record.get("revision", 0)
         if type(revision) is not int or revision < 0:
@@ -1096,6 +1149,7 @@ class WorkflowAuthority:
             raise TransitionError("state-machine history does not match its current revision")
 
         current = str(contract["initial_state"])
+        previous_state: Optional[str] = None
         supported_transition_changed = False
         unsupported_refs: set[str] = set()
         fact_ledger = self._initial_fact_ledger(contract)
@@ -1193,6 +1247,7 @@ class WorkflowAuthority:
                 fact_ledger = self._apply_fact_effects(
                     identity, contract, fact_ledger, effects, revision=index,
                     evidence_refs=refs, step_id=step_id)
+                previous_state = current
                 current = target
                 continue
 
@@ -1230,8 +1285,8 @@ class WorkflowAuthority:
                     "reconciled_state": current,
                     "unsupported_transition_evidence_refs": sorted(unsupported_refs),
                 })
-            return current, corrected, fact_ledger
-        return current, dict(record), fact_ledger
+            return current, corrected, fact_ledger, previous_state
+        return current, dict(record), fact_ledger, previous_state
 
     def _valid_milestone_completions(
             self, identity: WorkflowIdentity, contract: Mapping[str, Any],
