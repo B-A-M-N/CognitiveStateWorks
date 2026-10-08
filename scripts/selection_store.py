@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import os
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -18,6 +20,7 @@ class WorkflowSelectionStore:
 
     SCOPE_FIELDS = ("namespace_id", "application_id", "application_instance_id",
                     "workflow_id", "subject_ref")
+    MAX_TRANSITION_AUDIT_ROWS = 512
 
     def __init__(self, path: Path) -> None:
         source = Path(path)
@@ -49,6 +52,21 @@ class WorkflowSelectionStore:
                     scope_key TEXT NOT NULL,
                     record_json TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS workflow_transition_attempts (
+                    attempt_id TEXT PRIMARY KEY,
+                    scope_key TEXT NOT NULL,
+                    statework_id TEXT NOT NULL,
+                    step_id TEXT NOT NULL,
+                    expected_revision INTEGER NOT NULL,
+                    before_revision INTEGER NOT NULL,
+                    after_revision INTEGER,
+                    outcome TEXT NOT NULL,
+                    failure_class TEXT,
+                    started_at TEXT NOT NULL,
+                    completed_at TEXT
+                );
+                CREATE INDEX IF NOT EXISTS workflow_transition_attempt_scope
+                    ON workflow_transition_attempts(scope_key, started_at, attempt_id);
             """)
             database.execute("BEGIN IMMEDIATE")
             migrated = database.execute(
@@ -70,6 +88,102 @@ class WorkflowSelectionStore:
                     raise
             database.commit()
         os.chmod(self.path, 0o600)
+
+    def begin_transition_attempt(self, scope: Mapping[str, Any], *,
+                                 attempt_id: str, statework_id: str,
+                                 step_id: str, expected_revision: int,
+                                 before_revision: int) -> None:
+        """Durably start an authority attempt before CSW evaluates a step."""
+        key = self._scope_key(scope)
+        if (not isinstance(attempt_id, str) or len(attempt_id) != 32
+                or any(char not in "0123456789abcdef" for char in attempt_id)
+                or not isinstance(statework_id, str) or not statework_id.strip()
+                or len(statework_id) > 256
+                or not isinstance(step_id, str) or not step_id.strip()
+                or len(step_id) > 256
+                or type(expected_revision) is not int or expected_revision < 0
+                or type(before_revision) is not int or before_revision < 0):
+            raise TransitionError("workflow transition attempt is malformed")
+        started_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        try:
+            with self._connect() as database:
+                database.execute(
+                    "INSERT INTO workflow_transition_attempts "
+                    "(attempt_id, scope_key, statework_id, step_id, expected_revision, "
+                    "before_revision, after_revision, outcome, failure_class, started_at, "
+                    "completed_at) VALUES (?, ?, ?, ?, ?, ?, NULL, 'pending', NULL, ?, NULL)",
+                    (attempt_id, key, statework_id, step_id, expected_revision,
+                     before_revision, started_at))
+        except sqlite3.Error as exc:
+            raise TransitionError("workflow transition attempt could not be recorded") from exc
+
+    def finish_transition_attempt(self, attempt_id: str, *, outcome: str,
+                                  after_revision: int | None,
+                                  failure_class: str | None = None) -> None:
+        """Close a started attempt with the authority's observed result."""
+        if (not isinstance(attempt_id, str) or len(attempt_id) != 32
+                or any(char not in "0123456789abcdef" for char in attempt_id)
+                or outcome not in {"accepted", "rejected"}
+                or (after_revision is not None
+                    and (type(after_revision) is not int or after_revision < 0))
+                or (failure_class is not None
+                    and (not isinstance(failure_class, str)
+                         or not failure_class.isidentifier()
+                         or len(failure_class) > 96))):
+            raise TransitionError("workflow transition result is malformed")
+        completed_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        with self._connect() as database:
+            cursor = database.execute(
+                "UPDATE workflow_transition_attempts SET after_revision=?, outcome=?, "
+                "failure_class=?, completed_at=? WHERE attempt_id=? AND outcome='pending'",
+                (after_revision, outcome, failure_class, completed_at, attempt_id))
+            if cursor.rowcount != 1:
+                raise TransitionError("workflow transition attempt is missing or already closed")
+
+    def transition_attempt_summary(self, scope: Mapping[str, Any]) -> dict[str, Any]:
+        """Return bounded, read-only transition evidence for one workflow scope."""
+        key = self._scope_key(scope)
+        with self._connect() as database:
+            total = int(database.execute(
+                "SELECT COUNT(*) FROM workflow_transition_attempts WHERE scope_key=?",
+                (key,)).fetchone()[0])
+            rows = database.execute(
+                "SELECT attempt_id, statework_id, step_id, expected_revision, "
+                "before_revision, after_revision, outcome, failure_class, started_at, "
+                "completed_at FROM workflow_transition_attempts WHERE scope_key=? "
+                "ORDER BY started_at, attempt_id LIMIT ?",
+                (key, self.MAX_TRANSITION_AUDIT_ROWS)).fetchall()
+        attempts = [{
+            "attempt_id": str(row["attempt_id"]),
+            "statework_id": str(row["statework_id"]),
+            "step_id": str(row["step_id"]),
+            "expected_revision": int(row["expected_revision"]),
+            "before_revision": int(row["before_revision"]),
+            "after_revision": (int(row["after_revision"])
+                               if row["after_revision"] is not None else None),
+            "outcome": str(row["outcome"]),
+            "failure_class": row["failure_class"],
+            "started_at": str(row["started_at"]),
+            "completed_at": row["completed_at"],
+        } for row in rows]
+        counts = {outcome: sum(item["outcome"] == outcome for item in attempts)
+                  for outcome in ("accepted", "rejected", "pending")}
+        receipt_digest = hashlib.sha256(json.dumps(
+            attempts, sort_keys=True, separators=(",", ":"),
+            ensure_ascii=False).encode("utf-8")).hexdigest()
+        truncated = total > len(attempts)
+        return {
+            "schema_version": "csw-transition-attempts/v1",
+            "status": "truncated" if truncated else "observed",
+            "scope_sha256": hashlib.sha256(key.encode("utf-8")).hexdigest(),
+            "attempt_count": total,
+            "accepted_count": counts["accepted"],
+            "rejected_count": counts["rejected"],
+            "pending_count": counts["pending"],
+            "truncated": truncated,
+            "receipt_sha256": receipt_digest,
+            "attempts": attempts,
+        }
 
     def _read_legacy(self) -> dict[str, Any]:
         if self.legacy_path is None or not self.legacy_path.exists():

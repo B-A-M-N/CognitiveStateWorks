@@ -71,6 +71,68 @@ def test_snapshot_cannot_be_forged_by_host_supplied_active_ids(tmp_path):
         "gitter", "infrae", "tuid"}
 
 
+def test_rejected_transition_attempt_is_durable_and_does_not_advance_revision(tmp_path):
+    authority = _authority(tmp_path)
+    scope = _scope("transition-audit")
+    identity, contract = _identity(authority, scope, "gitter")
+
+    try:
+        decision = authority.apply_step(
+            identity, contract_hash=contract["contract_hash"],
+            step_id="not-a-registered-step", evidence_refs=[],
+            expected_revision=0)
+    except TransitionError:
+        decision = None
+    assert decision is None or decision.allowed is False
+
+    summary = authority.selection_store.transition_attempt_summary(scope)
+    assert summary["schema_version"] == "csw-transition-attempts/v1"
+    assert summary["status"] == "observed"
+    assert summary["attempt_count"] == 1
+    assert summary["accepted_count"] == 0
+    assert summary["rejected_count"] == 1
+    assert summary["pending_count"] == 0
+    attempt = summary["attempts"][0]
+    assert attempt["statework_id"] == "gitter"
+    assert attempt["step_id"] == "not-a-registered-step"
+    assert attempt["outcome"] == "rejected"
+    assert attempt["before_revision"] == attempt["after_revision"]
+
+    reopened = WorkflowSelectionStore(authority.selection_store.path)
+    assert reopened.transition_attempt_summary(scope) == summary
+
+
+def test_rejected_transition_attempt_is_durable_and_does_not_advance_revision(tmp_path):
+    authority = _authority(tmp_path)
+    scope = _scope("transition-audit")
+    identity, contract = _identity(authority, scope, "gitter")
+
+    try:
+        decision = authority.apply_step(
+            identity, contract_hash=contract["contract_hash"],
+            step_id="not-a-registered-step", evidence_refs=[],
+            expected_revision=0)
+    except TransitionError:
+        decision = None
+    assert decision is None or decision.allowed is False
+
+    summary = authority.selection_store.transition_attempt_summary(scope)
+    assert summary["schema_version"] == "csw-transition-attempts/v1"
+    assert summary["status"] == "observed"
+    assert summary["attempt_count"] == 1
+    assert summary["accepted_count"] == 0
+    assert summary["rejected_count"] == 1
+    assert summary["pending_count"] == 0
+    attempt = summary["attempts"][0]
+    assert attempt["statework_id"] == "gitter"
+    assert attempt["step_id"] == "not-a-registered-step"
+    assert attempt["outcome"] == "rejected"
+    assert attempt["before_revision"] == attempt["after_revision"]
+
+    reopened = WorkflowSelectionStore(authority.selection_store.path)
+    assert reopened.transition_attempt_summary(scope) == summary
+
+
 def test_active_snapshot_reports_evidence_supported_previous_and_legal_states(tmp_path):
     authority = _authority(tmp_path)
     scope = _scope("snapshot-semantics")

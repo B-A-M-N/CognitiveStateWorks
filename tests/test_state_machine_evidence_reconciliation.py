@@ -83,6 +83,15 @@ def test_state_machine_completion_reopens_after_supporting_evidence_invalidation
         evidence_refs=["approval-evidence-v1"], expected_revision=opened.revision)
     assert completed.completed is True
     assert completed.current_state == "DONE"
+    transition_scope = {name: getattr(identity, name)
+                        for name in WorkflowSelectionStore.SCOPE_FIELDS}
+    transition_audit = authority.selection_store.transition_attempt_summary(
+        transition_scope)
+    assert transition_audit["accepted_count"] == 1
+    assert transition_audit["rejected_count"] == 0
+    assert transition_audit["attempts"][0]["outcome"] == "accepted"
+    assert transition_audit["attempts"][0]["after_revision"] == \
+        transition_audit["attempts"][0]["before_revision"] + 1
 
     evidence.invalidate("approval-evidence-v1")
     reopened = authority.inspect_workflow(identity, contract_hash=contract_hash)

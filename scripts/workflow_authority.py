@@ -1320,6 +1320,52 @@ class WorkflowAuthority:
     def apply_step(self, identity: WorkflowIdentity | Mapping[str, Any], *,
                    contract_hash: str, step_id: str, evidence_refs: Iterable[str],
                    expected_revision: int) -> WorkflowDecision:
+        """Apply one step and durably record the CSW authority disposition."""
+        identity = self._identity(identity)
+        _engine, _contract, snapshot_before = self._engine_snapshot(
+            identity, contract_hash)
+        before_revision = int(snapshot_before.revision)
+        attempt_id = secrets.token_hex(16)
+        self.selection_store.begin_transition_attempt(
+            self._selection_scope(identity), attempt_id=attempt_id,
+            statework_id=identity.statework_id, step_id=step_id,
+            expected_revision=expected_revision,
+            before_revision=before_revision)
+        try:
+            decision = self._apply_step(
+                identity, contract_hash=contract_hash, step_id=step_id,
+                evidence_refs=evidence_refs,
+                expected_revision=expected_revision)
+        except Exception as exc:
+            try:
+                state_after = self.state_store.get(identity.__dict__)
+                after_revision = int(state_after.get("revision", 0) or 0)
+            except Exception:
+                after_revision = None
+            try:
+                self.selection_store.finish_transition_attempt(
+                    attempt_id, outcome="rejected", after_revision=after_revision,
+                    failure_class=type(exc).__name__)
+            except Exception:
+                # A durable pending row makes the telemetry gap explicit while
+                # preserving the authority's original exception.
+                pass
+            raise
+        try:
+            self.selection_store.finish_transition_attempt(
+                attempt_id,
+                outcome="accepted" if decision.allowed else "rejected",
+                after_revision=decision.revision)
+        except Exception:
+            # Do not change a valid CSW decision because reporting failed. The
+            # pending row causes downstream qualification to fail closed.
+            pass
+        return decision
+
+    def _apply_step(self, identity: WorkflowIdentity | Mapping[str, Any], *,
+                    contract_hash: str, step_id: str,
+                    evidence_refs: Iterable[str],
+                    expected_revision: int) -> WorkflowDecision:
         identity = self._identity(identity)
         engine, contract, snapshot = self._engine_snapshot(identity, contract_hash)
         if snapshot.revision != int(expected_revision):
