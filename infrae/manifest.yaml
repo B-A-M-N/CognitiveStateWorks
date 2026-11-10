@@ -3,7 +3,7 @@ domain: infrastructure_state
 purpose: Model and control infrastructure changes using bounded evidence and recovery
   paths.
 name: Infrae
-entrypoint: infrae/STATEWORK.md
+entrypoint: STATEWORK.md
 advisory_entrypoint: STATEWORK.md
 triggers:
 - infrastructure

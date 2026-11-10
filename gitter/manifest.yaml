@@ -2,7 +2,7 @@ id: gitter
 domain: repository_state
 purpose: Establish the current repository state from scoped, inspectable evidence.
 name: Gitter
-entrypoint: gitter/SKILL.md
+entrypoint: SKILL.md
 advisory_entrypoint: SKILL.md
 triggers:
 - repository state

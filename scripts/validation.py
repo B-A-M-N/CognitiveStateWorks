@@ -93,6 +93,8 @@ def main(root: Path = ROOT) -> int:
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
 
     import jsonschema
+    from scripts.bundles import BundleFiles
+    from scripts.control_plane import TransitionError
     manifests: Dict[str, Dict[str, Any]] = {}
     for name in names:
         owner = bundle_roots.get(name, root / name)
@@ -112,10 +114,18 @@ def main(root: Path = ROOT) -> int:
                 jsonschema.validate(instance=data, schema=schema)
             except jsonschema.ValidationError as exc:
                 problems.append(f"{name}/manifest.yaml schema violation: {exc.message}")
-        # entrypoint exists
+        # Entrypoints must resolve to a regular file inside the owning
+        # bundle. A previous repo-root fallback accepted root-relative values
+        # (e.g. "testworks/SKILL.md") only because the source checkout nests
+        # every bundle under the repo root; that fallback masked bundles that
+        # cannot stand alone, so root-relative escape is rejected even when
+        # the file exists under the root.
         entry = data.get("entrypoint")
-        if entry and not (owner / entry).exists() and not (root / entry).exists():
-            problems.append(f"{name}: entrypoint {entry!r} does not exist")
+        if entry:
+            try:
+                BundleFiles.relative_file(owner, str(entry))
+            except TransitionError as exc:
+                problems.append(f"{name}: invalid entrypoint {entry!r}: {exc}")
         # Advisory entrypoints are explicit bundle-local paths. CSW keeps
         # integration capability names opaque to the host integration.
         advisory_entrypoint = data.get("advisory_entrypoint")

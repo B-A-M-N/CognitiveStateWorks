@@ -1,14 +1,24 @@
 version: 1.0.0
 packets:
+  godkiller_boundary_packet:
+    schema: contracts/schemas/godkiller_boundary_packet.schema.json
+    schema_version: 1.0.0
+    producer: godkiller
+    consumers: [terraformer, testworks]
+    freshness:
+      strategy: exact_context
+      packet_path: payload.architecture_fingerprint
+      context_path: architecture_fingerprint
+    required_context:
+    - architecture_fingerprint
   terraformer_integration_packet:
     schema: contracts/schemas/terraformer_integration_packet.schema.json
     schema_version: 1.0.0
     producer: terraformer
-    consumers: []
+    consumers: [testworks]
     freshness:
       strategy: exact_context
       packet_path: payload.composition_fingerprint
       context_path: composition_fingerprint
     required_context:
     - composition_fingerprint
-

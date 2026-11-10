@@ -4,7 +4,7 @@ packets:
     schema: contracts/schemas/godkiller_boundary_packet.schema.json
     schema_version: 1.0.0
     producer: godkiller
-    consumers: []
+    consumers: [terraformer, testworks]
     freshness:
       strategy: exact_context
       packet_path: payload.architecture_fingerprint

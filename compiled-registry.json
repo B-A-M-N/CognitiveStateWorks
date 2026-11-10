@@ -841,7 +841,10 @@
   "packet_registry": {
     "packets": {
       "godkiller_boundary_packet": {
-        "consumers": [],
+        "consumers": [
+          "terraformer",
+          "testworks"
+        ],
         "freshness": {
           "context_path": "architecture_fingerprint",
           "packet_path": "payload.architecture_fingerprint",
@@ -903,7 +906,9 @@
         "schema_version": "1.1.0"
       },
       "terraformer_integration_packet": {
-        "consumers": [],
+        "consumers": [
+          "testworks"
+        ],
         "freshness": {
           "context_path": "composition_fingerprint",
           "packet_path": "payload.composition_fingerprint",
@@ -3269,11 +3274,11 @@
   },
   "registry_compiler_hash": "8ae3e760da7f505c076c58f7fb580dd80a2f9c5330818f3f85a6fbdf851c95a2",
   "registry_config_hash": "1a580545f41791c43201ed865e54ba447c350feff94713558215508108cc7072",
-  "registry_hash": "3a7712b1ac24a4a32e85b0d3a9384eb07758a4a86aa46953a1a09823d0222fa2",
+  "registry_hash": "330f2e39432e567797484223823917a3120557acf2408703e930414239fae1e5",
   "registry_version": "2.0.0",
   "stateworks": [
     {
-      "bundle_hash": "894c3ec1d8d666090f2294f82bc9a0fa132933ba11866a9fd4ec457318f65676",
+      "bundle_hash": "03d85b83b8d2e99947201abcb05d9f69e615fb85f46b8ce88c6845aee8bc2ecf",
       "bundle_ref": "infrae",
       "contracts": {
         "evidence": [
@@ -3619,7 +3624,7 @@
         "flows/recover/flow.md": "7f908b0f99a163ab4b66d7a5f03b5af1d29a7a8e101b777e0233bf2f4bfc6938",
         "flows/scale/flow.md": "81e4ecd1945403d0dda28dac6731f12de5a8eac790ee58ed19920a18cd0f14dd",
         "flows/validate/flow.md": "fe391362f9ecf2b2780debecd2ec4e4a57c81988286d47c7efa59c8bbe68122f",
-        "manifest.yaml": "d845a3a6fbe6914c0c051214d41b930659ef02775c4caf436a77a0b8002b07a6",
+        "manifest.yaml": "eb893be96b267fcfcded85d1826654dfabebdef5fdd8203fa9d37aeb132aee7f",
         "policies/concurrency/README.md": "a7ee95c4092b4aaa51d4cdd6106c58992c6d12d8b80e779c16624de30b8e582b",
         "policies/destructive-change/README.md": "2de83432f0892c684acdeb5e737120ccdf909d752d4a375a70433aca9c1af5f2",
         "policies/evidence-thresholds/README.md": "23f22a02422cda728343bafedd3ddff20dc08563a7ac77820a33801e6d6b4332",
@@ -3672,7 +3677,7 @@
           "contract_version": "state-machine/v1",
           "kind": "state_machine"
         },
-        "entrypoint": "infrae/STATEWORK.md",
+        "entrypoint": "STATEWORK.md",
         "flow_selection": {
           "ambiguity": "error",
           "fallback": "required",
@@ -3720,7 +3725,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "6bec2d3943117704cc82ebb6ea0a4713e8fc5ba2c29c2d273f2a8c631002deed",
+      "bundle_hash": "2ba0c56162a44dd8e776f3071388a181e5c0605058478f32046caa0c7a2b8f5d",
       "bundle_ref": "gitter",
       "contracts": {
         "evidence": [
@@ -3802,7 +3807,7 @@
         "contracts/evidence-kinds.yaml": "cf2eda40054573c778ea341ffbad6e382bb5d397cec4fd3e691b6852e3da5503",
         "contracts/packets.yaml": "d3cb5ea9e0892d3a632c7ab7c77988630aa20bb11d88ae24361599f76a0717de",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
-        "manifest.yaml": "dead61e49f56c3c4b6e79707ea299158b5fd451f5129e5e4e2a3ca315dd1b4bc",
+        "manifest.yaml": "458f95c1a866633643b58e1d3c482d16a0acf502a5312b43f6213f830d15b740",
         "runtime.md": "43b5a0f6068ed5f9a4b26ffb4e1a58370819ad5d8a179a2caccf370ebc9dbc61",
         "transitions.yaml": "4d89a2ae88062b30d2ecda41b016d05616efaae8cddbcc1ca520452c257b8088"
       },
@@ -3839,7 +3844,7 @@
           "contract_version": "state-machine/v1",
           "kind": "state_machine"
         },
-        "entrypoint": "gitter/SKILL.md",
+        "entrypoint": "SKILL.md",
         "flow_selection": {
           "ambiguity": "error",
           "fallback": "forbidden",
@@ -3885,7 +3890,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "9edf40be5d4bc748b651ee5d27ce720611fa0bcef3a67157564befd2a9bc3674",
+      "bundle_hash": "b58a23b45d3674339e79fcc5b426ac7303daebdeef20ed7cb03fcc53c4491cb5",
       "bundle_ref": "getter",
       "contracts": {
         "evidence": [
@@ -4042,7 +4047,7 @@
         "contracts/packets.yaml": "31729095c544a21de837cff5cd65f10612fc6f5bd58eeedee1df4632bd888e9d",
         "contracts/schemas/repository-evidence-packet.schema.json": "5508e285ebbcbb525819b8c344e56af6c94a06e081af0e9a7f173aa4b62e27ba",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
-        "manifest.yaml": "559bc2649a7492e0dd7d5d9e27a8272ae60a1d03cf32002ac5164f1b03b547dc",
+        "manifest.yaml": "cbae785f4c88d0aef6cef72f4f50f32604737d711ba3928ad6d0939eb19c557b",
         "runtime.md": "e75f62fa7dfe1ade1adbb6c2408adab234c3022b7f968c646fb589f157603e0e",
         "transitions.yaml": "0673a2735ada5e9e9bd5499ae33aac6138341f090a951a8998ac0f50d9bdd026"
       },
@@ -4081,7 +4086,7 @@
           "contract_version": "state-machine/v1",
           "kind": "state_machine"
         },
-        "entrypoint": "getter/SKILL.md",
+        "entrypoint": "SKILL.md",
         "flow_selection": {
           "ambiguity": "error",
           "fallback": "forbidden",
@@ -4132,7 +4137,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "d58178e6b85e36a6624e52d33a04c5bf3bb9c3cec837f74fd31c7ef92ee0c716",
+      "bundle_hash": "33bc3909ada335ae08e313f14f39348e89da6f873cae74d16a28e7e253377a30",
       "bundle_ref": "tuid",
       "contracts": {
         "evidence": [
@@ -4477,7 +4482,7 @@
         "frameworks/ink-typescript/framework.md": "1dc4662124c72ada4810f16b209a93f5d841a9cff8cd6a333d720f78dcf494b4",
         "frameworks/ratatui-rust/framework.md": "a6470e80eb124ac1e439be5e12fff2d1c19f1d1866e22ccae49e3ff428b493f0",
         "frameworks/textual-python/framework.md": "4bfdcc3fcdd332c7d975e45356c71e918e4b37928cdf48312013b011907b84cc",
-        "manifest.yaml": "e42d9a15fd3dd31ff8d19c9046d81ea5dbd65e0216cd07ed166c19fb73251029",
+        "manifest.yaml": "163627e8c9945ba5dbd2f9b52e92ab3e5d8ec3b1e0af1933b9cf8544e1a3527e",
         "patterns/command-center/pattern.md": "d96757a3047ee87d26be92f1d55701000d6cee8fb8256758a4e2332b691fe2ce",
         "patterns/dashboard/pattern.md": "9914c4ea67ff944d53e230c9a17878b3870f53e4a160e292869e5e8524bfb89a",
         "patterns/data-browser/pattern.md": "0471747940677b8e66c7a045a9d8acdfa2b759a72c6567f84baaf64d3b0928dd",
@@ -4553,7 +4558,7 @@
           "contract_version": "state-machine/v1",
           "kind": "state_machine"
         },
-        "entrypoint": "tuid/SKILL.md",
+        "entrypoint": "SKILL.md",
         "flow_selection": {
           "ambiguity": "error",
           "fallback": "required",
@@ -4619,7 +4624,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "8ae7da2daa91cbce4f081b46eb0348f5159f1dbfd9a159ee8b4efe06500f8a0e",
+      "bundle_hash": "9a00f7ec7ad0fd6d872eb17f110bbcef7314f24c464d0fd6a5dfb9d526407b05",
       "bundle_ref": "godkiller",
       "contracts": {
         "evidence": [
@@ -4931,7 +4936,7 @@
         "SKILL.md": "1c2735113c792380ccc67915eaa1cf198b75c0e76a7fb3ef5d3e982d6e44fd53",
         "contracts/architecture-boundary.md": "851bd3d05b9e80eeb366f3ada4e4c0faedf67c16d82cf7b45bb8a73a5658feb2",
         "contracts/evidence-kinds.yaml": "c1f4392ea043421fad93c48f7d4529911fde11994b430ad1fecfdbbb89578979",
-        "contracts/packets.yaml": "f896a467e5cf8eaae37586cd973b1eb48b0995198bc385867d1fb890df952ec1",
+        "contracts/packets.yaml": "45169b4dd944dcd5ec697cab44527eee298fa57c635638423b3b9876c7041b7d",
         "contracts/schemas/architecture-boundary-v1.schema.json": "82723b20fe151e2af1bc40010621948533596e70ab015ef7d7eff725e5785066",
         "contracts/schemas/godkiller_boundary_packet.schema.json": "6d1a7c539dd2a72bf4f3169820528f697bafcd1f238157230fa240dee23095e1",
         "contracts/schemas/handoff-packet.schema.json": "f7fe14b934e95966b4d0a4f6dc7715bc6781fcde12731d4b6584de84646a356c",
@@ -5067,7 +5072,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "6e6f7bda0eb3ad40cdc852dcfea42449eb2077bf598fcbb467ed99acb136b9f2",
+      "bundle_hash": "efde36352db69566b43215afd79d578344c6d3266aa15b46d8f9163d3e16b307",
       "bundle_ref": "terraformer",
       "contracts": {
         "evidence": [
@@ -5090,6 +5095,7 @@
           "terraformer.recovery"
         ],
         "packets": [
+          "godkiller_boundary_packet",
           "terraformer_integration_packet"
         ]
       },
@@ -5432,8 +5438,9 @@
         "SKILL.md": "fec119a561e11972c8847e9ea8aa198e74dddef2ac834bdae6a0e23ea480597a",
         "contracts/architecture-boundary.md": "851bd3d05b9e80eeb366f3ada4e4c0faedf67c16d82cf7b45bb8a73a5658feb2",
         "contracts/evidence-kinds.yaml": "200b3f9fd392929b2f90fe462b037c5348993ab070c746262e1b096b7418be10",
-        "contracts/packets.yaml": "a50db814b0a5b71e4c3cd0489bd0ea23edc838dae81f1da96fab94eadfb30494",
+        "contracts/packets.yaml": "14817a91b8de0f3ff4283e95587ba23ced59e5f512f0579cf355461cfbf27769",
         "contracts/schemas/architecture-boundary-v1.schema.json": "82723b20fe151e2af1bc40010621948533596e70ab015ef7d7eff725e5785066",
+        "contracts/schemas/godkiller_boundary_packet.schema.json": "6d1a7c539dd2a72bf4f3169820528f697bafcd1f238157230fa240dee23095e1",
         "contracts/schemas/handoff-packet.schema.json": "f7fe14b934e95966b4d0a4f6dc7715bc6781fcde12731d4b6584de84646a356c",
         "contracts/schemas/terraformer_integration_packet.schema.json": "e3a4add6a95994b73a08397a3a006da43f6dbe67511273c55df46a1f67a9e74a",
         "flows/complete/flow.md": "2a8bf287be9c90f38244a40ed59e3430062ac735f26d577814dcadd838fc2f71",
@@ -5445,7 +5452,7 @@
         "flows/recover/flow.md": "839f005727089a2429720e4ccac13c9a2a8264e814bd4f32643b813ff162b969",
         "flows/triage/flow.md": "e52b3ecb5adc48c67c19dfb1ae8d6b82d5eee41c10eee8612427f49bc2a912cf",
         "guidance.md": "ab583ab6785b2dd2f2b52275cfd70db765a9274932ec8dd5bb227ff5b9342934",
-        "manifest.yaml": "34b7d5f8223783495c3a568bbccfe011b9be49ea05f39f7dc1045390808ff82a",
+        "manifest.yaml": "cfb385c95d28eeb95fc7c91c1c76a413df883c9d638354cd375332dfd0d49d9e",
         "qualification/README.md": "2322e43ca2c657d557b4eee8280a0cac540ce207833f8c98bbea48d927a5ca6f",
         "qualification/cases.yaml": "f9373516f83ba110d9e25b50dfdadaeab8c92792f182dbdcd9c1ef3cd2c1c11a",
         "qualification/negative/invalid_outcome.json": "c1070a17ebe07f8223e54d32a2be27fd84354b19aefe2a51a9146f60e3281704",
@@ -5488,7 +5495,8 @@
           "packets": "contracts/packets.yaml",
           "schemas": [
             "contracts/schemas/terraformer_integration_packet.schema.json",
-            "contracts/schemas/architecture-boundary-v1.schema.json"
+            "contracts/schemas/architecture-boundary-v1.schema.json",
+            "contracts/schemas/godkiller_boundary_packet.schema.json"
           ]
         },
         "domain": "architectural_recomposition",
@@ -5509,7 +5517,9 @@
         "handoff": "terraformer_integration_packet",
         "id": "terraformer",
         "inputs": {
-          "optional": [],
+          "optional": [
+            "godkiller_boundary_packet"
+          ],
           "required": [
             "task_context"
           ]
@@ -5568,7 +5578,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "8ae92a8501d94b2c6805d38766b69fda0cb4ab20ace5da7c88689ec334e7a36c",
+      "bundle_hash": "6667fea75cb43f29094f6fe06ceb94a67333170a1330fb42ba03f3e5a27a25ac",
       "bundle_ref": "testworks",
       "contracts": {
         "evidence": [
@@ -5589,6 +5599,8 @@
           "testworks.authority"
         ],
         "packets": [
+          "godkiller_boundary_packet",
+          "terraformer_integration_packet",
           "testing_evidence_packet"
         ]
       },
@@ -5959,7 +5971,9 @@
         "README.md": "c5c44ff2fa6cdfd640be592502dc46fa3d24a5007e7db1dfe07b38c82981ba0d",
         "SKILL.md": "05b864dd40ef388a054b66f40b87ba0f5603ffbb44c8785fbd5248144b4d1329",
         "contracts/evidence-kinds.yaml": "ac86081bd58a2fd12ce8fcfe60d5e376505b8a9f720115f5e8293e24abc71801",
-        "contracts/packets.yaml": "79d28d9935b267bca92ccee55c3fdea46d30997efede9c0b80774bd15d904160",
+        "contracts/packets.yaml": "a70961610bed25ea265b6402ea49c67aa839c8bf2ff1141c08103b0518d947d7",
+        "contracts/schemas/godkiller_boundary_packet.schema.json": "6d1a7c539dd2a72bf4f3169820528f697bafcd1f238157230fa240dee23095e1",
+        "contracts/schemas/terraformer_integration_packet.schema.json": "e3a4add6a95994b73a08397a3a006da43f6dbe67511273c55df46a1f67a9e74a",
         "contracts/schemas/testing-evidence-packet.schema.json": "9a60211e26aa705682089cea49185819f3d6c3e4939db7cec382f06f07fc93bc",
         "flows/README.md": "01db407a3d0ca044d959259743438f9c357432acf5456603b3b5f9f40d5e50dd",
         "flows/audit/FLOW.md": "33c4aac090ef861bed0dc6b20e2c65e555d14ffff11f3aef46d104b11434c218",
@@ -5993,7 +6007,7 @@
         "flows/triage/flow.md": "d2e0cca9db5e22b4a688418f036e3e7d0da54a6dae23ca1e4c367065d857a5a1",
         "flows/triage/flow.yaml": "3f34e4b58aaf585426bc15e3a4df6a5bd62b9f07a524c119cac9300febaa30e0",
         "guidance.md": "eeeb10368c514532258a366a10c028a77158c74148b115ead0ca56c4bdacecfa",
-        "manifest.yaml": "9f45f3ca9ca084124053c51f4548ef2e0245e35ed4d2b2731985a7d281afa13a",
+        "manifest.yaml": "b9fbce9df8058dfd7d34838f9b284693252c20319c4985e0d41e1568d1367cb3",
         "qualification/README.md": "fed208a386a1cb736b50ab6e2081268bd4a9822efe0259ed75837cbe5f33fd2f",
         "qualification/__pycache__/policy.cpython-311.pyc": "69dd5b5df52ba5b0ef46cfa32637bfdd3014a4958b6eaed66a1e42e911053d5d",
         "qualification/__pycache__/policy.cpython-313.pyc": "e49ead9bf03c66ef6507e2025d7283821170c101238774c78af339973964d7c4",
@@ -6035,7 +6049,9 @@
           "evidence": "contracts/evidence-kinds.yaml",
           "packets": "contracts/packets.yaml",
           "schemas": [
-            "contracts/schemas/testing-evidence-packet.schema.json"
+            "contracts/schemas/testing-evidence-packet.schema.json",
+            "contracts/schemas/godkiller_boundary_packet.schema.json",
+            "contracts/schemas/terraformer_integration_packet.schema.json"
           ]
         },
         "domain": "test_assurance",
@@ -6047,7 +6063,7 @@
           "contract_version": "state-machine/v1",
           "kind": "state_machine"
         },
-        "entrypoint": "testworks/SKILL.md",
+        "entrypoint": "SKILL.md",
         "flow_selection": {
           "ambiguity": "error",
           "fallback": "required",
@@ -6058,7 +6074,9 @@
         "inputs": {
           "optional": [
             "repository_truth_packet",
-            "infrastructure_truth_packet"
+            "infrastructure_truth_packet",
+            "godkiller_boundary_packet",
+            "terraformer_integration_packet"
           ],
           "required": [
             "task_context"

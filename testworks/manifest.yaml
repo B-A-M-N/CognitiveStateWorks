@@ -3,7 +3,7 @@ domain: test_assurance
 purpose: Select, produce, evaluate, conserve, and qualify proportionate software test evidence without
   rewarding test volume.
 name: TestWorks
-entrypoint: testworks/SKILL.md
+entrypoint: SKILL.md
 advisory_entrypoint: SKILL.md
 triggers:
 - testing strategy
@@ -32,6 +32,8 @@ inputs:
   optional:
   - repository_truth_packet
   - infrastructure_truth_packet
+  - godkiller_boundary_packet
+  - terraformer_integration_packet
 emits:
 - testing_evidence_packet
 context_budget: medium
@@ -52,6 +54,8 @@ contracts:
   evidence: contracts/evidence-kinds.yaml
   schemas:
   - contracts/schemas/testing-evidence-packet.schema.json
+  - contracts/schemas/godkiller_boundary_packet.schema.json
+  - contracts/schemas/terraformer_integration_packet.schema.json
 integrations:
   cognitiveframeworks:
     required: []

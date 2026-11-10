@@ -38,7 +38,8 @@ behavior_tags:
 inputs:
   required:
   - task_context
-  optional: []
+  optional:
+  - godkiller_boundary_packet
 emits:
 - terraformer_integration_packet
 context_budget: medium
@@ -59,6 +60,7 @@ contracts:
   schemas:
   - contracts/schemas/terraformer_integration_packet.schema.json
   - contracts/schemas/architecture-boundary-v1.schema.json
+  - contracts/schemas/godkiller_boundary_packet.schema.json
 integrations:
   cognitiveframeworks:
     required: []

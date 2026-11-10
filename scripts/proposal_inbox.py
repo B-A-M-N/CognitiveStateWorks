@@ -18,12 +18,20 @@ This module is deliberately NOT workflow state and NOT evidence:
 
 Separation: CSW core stays model-free. All model influence enters
 through host attestation, exactly like any other untrusted input.
+
+Persistence: SQLite in WAL mode. Each mutation runs in a single-writer
+transaction (BEGIN IMMEDIATE) on its own connection with a busy timeout,
+so concurrent threads/processes serialize instead of losing updates.
+Payload columns are write-once (INSERT only); only status/outcome/
+host_note/resolved_at are ever UPDATEd, and resolution is a
+compare-and-swap (UPDATE ... WHERE status='open').
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
@@ -51,6 +59,26 @@ MAX_OPEN_PROPOSALS = 128
 MAX_TEXT_FIELD = 512
 MAX_PAYLOAD_BYTES = 8192
 MAX_NOTE_BYTES = 1024
+
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS proposals (
+  proposal_id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,
+  author_model TEXT NOT NULL,
+  model_revision TEXT NOT NULL,
+  subject_ref TEXT NOT NULL,
+  statework_id TEXT,
+  suggested_owner TEXT,
+  body TEXT NOT NULL,
+  basis_revision INTEGER,
+  submitted_at TEXT NOT NULL,
+  status TEXT NOT NULL,
+  outcome TEXT,
+  host_note TEXT NOT NULL DEFAULT '',
+  resolved_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);
+"""
 
 
 def _utcnow() -> str:
@@ -113,55 +141,209 @@ def proposal_id(record: Mapping[str, Any]) -> str:
     return "prop-" + hashlib.sha256(_canonical(basis)).hexdigest()[:24]
 
 
+def _row_to_record(row: sqlite3.Row) -> dict[str, Any]:
+    resolution = None
+    if row["status"] != "open":
+        resolution = {
+            "outcome": row["outcome"],
+            "host_note": row["host_note"] or "",
+            "resolved_at": row["resolved_at"],
+        }
+    return {
+        "kind": row["kind"],
+        "author_model": row["author_model"],
+        "model_revision": row["model_revision"],
+        "subject_ref": row["subject_ref"],
+        "statework_id": row["statework_id"],
+        "suggested_owner": row["suggested_owner"],
+        "body": json.loads(row["body"]),
+        "basis_revision": row["basis_revision"],
+        "submitted_at": row["submitted_at"],
+        "status": row["status"],
+        "resolution": resolution,
+        "proposal_id": row["proposal_id"],
+    }
+
+
 class ProposalInbox:
-    """Bounded file-backed store for model proposals. Host bookkeeping only."""
+    """SQLite-WAL-backed store for model proposals. Host bookkeeping only."""
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
-        self._records: dict[str, dict[str, Any]] = {}
-        if self.path.exists():
-            try:
-                raw = json.loads(self.path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError) as exc:
-                raise TransitionError("proposal inbox is unreadable") from exc
-            if not isinstance(raw, Mapping):
-                raise TransitionError("proposal inbox is malformed")
-            for key, value in dict(raw).items():
-                if isinstance(value, Mapping):
-                    self._records[str(key)] = dict(value)
+        self._init_db()
 
-    def _persist(self) -> None:
+    # -- internals -----------------------------------------------------
+    def _connect(self) -> sqlite3.Connection:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self._records, indent=2, sort_keys=True),
-                             encoding="utf-8")
+        con = sqlite3.connect(str(self.path), timeout=30.0,
+                              isolation_level=None, check_same_thread=False)
+        con.row_factory = sqlite3.Row
+        try:
+            con.execute("PRAGMA journal_mode=WAL;")
+            con.execute("PRAGMA synchronous=NORMAL;")
+            con.execute("PRAGMA busy_timeout=30000;")
+        except sqlite3.DatabaseError as exc:
+            con.close()
+            raise TransitionError("proposal inbox is unreadable") from exc
+        return con
 
+    def _init_db(self) -> None:
+        try:
+            con = self._connect()
+        except TransitionError:
+            raise
+        try:
+            try:
+                con.executescript(_SCHEMA)
+            except sqlite3.DatabaseError:
+                # Existing file is not a SQLite db. If it is a legacy JSON
+                # inbox, migrate its records; otherwise fail closed.
+                con.close()
+                self._migrate_legacy_json_or_raise()
+                con = self._connect()
+                con.executescript(_SCHEMA)
+                con.close()
+                return
+            con.close()
+        except sqlite3.DatabaseError as exc:
+            try:
+                con.close()
+            except Exception:
+                pass
+            raise TransitionError("proposal inbox is unreadable") from exc
+
+    def _migrate_legacy_json_or_raise(self) -> None:
+        try:
+            raw = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise TransitionError("proposal inbox is unreadable") from exc
+        if not isinstance(raw, Mapping):
+            raise TransitionError("proposal inbox is malformed")
+        # Move the legacy file aside so the path names a SQLite file.
+        backup = self.path.with_suffix(self.path.suffix + ".legacy-json-bak")
+        try:
+            self.path.rename(backup)
+        except OSError as exc:
+            raise TransitionError("proposal inbox is unreadable") from exc
+        con = self._connect()
+        try:
+            con.executescript(_SCHEMA)
+            for key, value in dict(raw).items():
+                if not isinstance(value, Mapping):
+                    continue
+                try:
+                    rec = dict(value)
+                    pid = str(key)
+                    body = rec.get("body", {})
+                    resolution = rec.get("resolution") or {}
+                    con.execute(
+                        "INSERT OR IGNORE INTO proposals"
+                        " (proposal_id, kind, author_model, model_revision,"
+                        " subject_ref, statework_id, suggested_owner, body,"
+                        " basis_revision, submitted_at, status, outcome,"
+                        " host_note, resolved_at)"
+                        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        (pid, rec.get("kind"), rec.get("author_model"),
+                         rec.get("model_revision"), rec.get("subject_ref"),
+                         rec.get("statework_id"), rec.get("suggested_owner"),
+                         _canonical(body).decode("utf-8"),
+                         rec.get("basis_revision"), rec.get("submitted_at", _utcnow()),
+                         rec.get("status", "open"), resolution.get("outcome"),
+                         resolution.get("host_note", ""), resolution.get("resolved_at")),
+                    )
+                except sqlite3.DatabaseError:
+                    continue
+            con.execute("PRAGMA wal_checkpoint(TRUNCATE);")
+        finally:
+            con.close()
+
+    # -- reads ---------------------------------------------------------
     def open_count(self) -> int:
-        return sum(1 for item in self._records.values() if item.get("status") == "open")
+        con = self._connect()
+        try:
+            try:
+                cur = con.execute("SELECT COUNT(*) FROM proposals WHERE status='open'")
+            except sqlite3.DatabaseError as exc:
+                raise TransitionError("proposal inbox is unreadable") from exc
+            return int(cur.fetchone()[0])
+        finally:
+            con.close()
 
+    def get(self, pid: str) -> dict[str, Any]:
+        con = self._connect()
+        try:
+            try:
+                cur = con.execute("SELECT * FROM proposals WHERE proposal_id=?", (str(pid),))
+            except sqlite3.DatabaseError as exc:
+                raise TransitionError("proposal inbox is unreadable") from exc
+            row = cur.fetchone()
+            if row is None:
+                raise TransitionError(f"unknown proposal {pid!r}")
+            return _row_to_record(row)
+        finally:
+            con.close()
+
+    def list_open(self, statework_id: str | None = None) -> list[dict[str, Any]]:
+        con = self._connect()
+        try:
+            try:
+                if statework_id is None:
+                    cur = con.execute(
+                        "SELECT * FROM proposals WHERE status='open' ORDER BY submitted_at")
+                else:
+                    cur = con.execute(
+                        "SELECT * FROM proposals WHERE status='open'"
+                        " AND statework_id=? ORDER BY submitted_at", (statework_id,))
+            except sqlite3.DatabaseError as exc:
+                raise TransitionError("proposal inbox is unreadable") from exc
+            return [_row_to_record(row) for row in cur.fetchall()]
+        finally:
+            con.close()
+
+    # -- writes (single-writer transactions) ---------------------------
     def submit(self, payload: Mapping[str, Any]) -> str:
         """Accept one proposal. Idempotent on identical content. Fail closed when full."""
         record = validate_proposal(payload)
         pid = proposal_id(record)
-        if pid in self._records:
-            return pid
-        if self.open_count() >= MAX_OPEN_PROPOSALS:
-            raise TransitionError("proposal inbox is full; resolve open proposals first")
-        record["proposal_id"] = pid
-        self._records[pid] = record
-        self._persist()
-        return pid
-
-    def get(self, pid: str) -> dict[str, Any]:
-        record = self._records.get(str(pid))
-        if record is None:
-            raise TransitionError(f"unknown proposal {pid!r}")
-        return dict(record)
-
-    def list_open(self, statework_id: str | None = None) -> list[dict[str, Any]]:
-        out = [dict(item) for item in self._records.values()
-               if item.get("status") == "open"
-               and (statework_id is None or item.get("statework_id") == statework_id)]
-        return sorted(out, key=lambda item: item["submitted_at"])
+        con = self._connect()
+        try:
+            con.execute("BEGIN IMMEDIATE;")
+            try:
+                cur = con.execute("SELECT status FROM proposals WHERE proposal_id=?", (pid,))
+                if cur.fetchone() is not None:
+                    # Idempotent resubmit: payload columns are immutable, so a
+                    # matching id means identical content; return it unchanged.
+                    con.execute("COMMIT;")
+                    return pid
+                cur = con.execute("SELECT COUNT(*) FROM proposals WHERE status='open'")
+                if int(cur.fetchone()[0]) >= MAX_OPEN_PROPOSALS:
+                    con.execute("ROLLBACK;")
+                    raise TransitionError("proposal inbox is full; resolve open proposals first")
+                con.execute(
+                    "INSERT OR IGNORE INTO proposals"
+                    " (proposal_id, kind, author_model, model_revision,"
+                    " subject_ref, statework_id, suggested_owner, body,"
+                    " basis_revision, submitted_at, status, outcome,"
+                    " host_note, resolved_at)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', NULL, '', NULL)",
+                    (pid, record["kind"], record["author_model"],
+                     record["model_revision"], record["subject_ref"],
+                     record["statework_id"], record["suggested_owner"],
+                     _canonical(record["body"]).decode("utf-8"),
+                     record["basis_revision"], record["submitted_at"]),
+                )
+                con.execute("COMMIT;")
+                return pid
+            except TransitionError:
+                raise
+            except sqlite3.DatabaseError as exc:
+                try:
+                    con.execute("ROLLBACK;")
+                except Exception:
+                    pass
+                raise TransitionError("proposal inbox write failed") from exc
+        finally:
+            con.close()
 
     def resolve(self, pid: str, outcome: str, host_note: str = "") -> dict[str, Any]:
         """Record the host's decision on a proposal. Bookkeeping only."""
@@ -169,19 +351,38 @@ class ProposalInbox:
             raise TransitionError(f"proposal resolution must be one of {sorted(RESOLUTIONS)}")
         if host_note and len(host_note) > MAX_NOTE_BYTES:
             raise TransitionError("proposal host note exceeds size bound")
-        record = self._records.get(str(pid))
-        if record is None:
-            raise TransitionError(f"unknown proposal {pid!r}")
-        if record.get("status") != "open":
-            raise TransitionError(f"proposal {pid!r} is already resolved")
-        record["status"] = "resolved"
-        record["resolution"] = {
-            "outcome": outcome,
-            "host_note": host_note,
-            "resolved_at": _utcnow(),
-        }
-        self._persist()
-        return dict(record)
+        pid = str(pid)
+        resolved_at = _utcnow()
+        con = self._connect()
+        try:
+            con.execute("BEGIN IMMEDIATE;")
+            try:
+                # CAS: only an open row may transition; rowcount 0 means
+                # unknown or already resolved.
+                cur = con.execute(
+                    "UPDATE proposals SET status='resolved', outcome=?,"
+                    " host_note=?, resolved_at=? WHERE proposal_id=? AND status='open'",
+                    (outcome, host_note, resolved_at, pid),
+                )
+                if cur.rowcount == 0:
+                    probe = con.execute(
+                        "SELECT status FROM proposals WHERE proposal_id=?", (pid,)).fetchone()
+                    con.execute("ROLLBACK;")
+                    if probe is None:
+                        raise TransitionError(f"unknown proposal {pid!r}")
+                    raise TransitionError(f"proposal {pid!r} is already resolved")
+                con.execute("COMMIT;")
+            except TransitionError:
+                raise
+            except sqlite3.DatabaseError as exc:
+                try:
+                    con.execute("ROLLBACK;")
+                except Exception:
+                    pass
+                raise TransitionError("proposal inbox write failed") from exc
+            return self.get(pid)
+        finally:
+            con.close()
 
 
 def build_host_attestation(proposal: Mapping[str, Any], *, ref: str, kind: str,
