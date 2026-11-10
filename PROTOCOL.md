@@ -109,9 +109,12 @@ never by this prose.
 | StateWork | Domain | Location |
 |---|---|---|
 | **Infrae** | Infrastructure state | `infrae/` |
-| **tui'd** | Terminal user interface state | `tuid/` |
+| **tuid** | Terminal user interface state | `tuid/` |
 | **Gitter** | Repository observation state | `gitter/` |
 | **Getter** | Repository mutation state | `getter/` |
+| **GodKiller** | Architectural decomposition state | `godkiller/` |
+| **TerraFormer** | Architectural recomposition state | `terraformer/` |
+| **TestWorks** | Test assurance state | `testworks/` |
 | *future* | Deployment, security incident, data migration, release, PR lifecycle | — |
 
 Gitter's Truth Packet and Getter's Evidence Packet are handoff contracts

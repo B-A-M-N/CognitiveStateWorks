@@ -74,7 +74,7 @@ transition contract was satisfied.
 ## Compiling and registering the bundles
 
 The Python wheel includes the core, schemas, and the built-in Gitter, Getter,
-TUID, and Infrae bundles:
+TUID, Infrae, GodKiller, TerraFormer, and TestWorks bundles:
 
 ```bash
 python3 -m pip install .
