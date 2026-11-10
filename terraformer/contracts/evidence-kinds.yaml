@@ -1,0 +1,122 @@
+version: 1.0.0
+kinds:
+  terraformer.inventory:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.contract_validation:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.no_action:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.incompatibility:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.composition_plan:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.authority:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.connection_result:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.partial_integration:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.e2e:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.ownership_integrity:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.lifecycle_recovery:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.compatibility:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.qualification:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.completion:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.blocker:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.invalidation:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  terraformer.recovery:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+

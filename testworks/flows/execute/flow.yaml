@@ -1,0 +1,21 @@
+id: testworks.execute
+statework: testworks
+kind: internal_flow
+version: 1.0.0
+purpose: Obtain trustworthy, reproducible execution receipts for selected work.
+inputs:
+- run plan
+- host execution authority
+- environment attestations
+- subject identity
+outputs:
+- execution receipts
+- test outcomes
+- duration/compute cost
+- changed-state detection
+prohibitions:
+- Runner authority unknown
+- Unpinned or unrecorded subject
+- Logging/artifact provenance insufficient for qualification
+handoff_rule: Actual infrastructure provisioning belongs to Infrae; do not impersonate its environment
+  receipts.

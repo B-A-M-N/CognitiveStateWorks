@@ -1,0 +1,20 @@
+id: testworks.audit
+statework: testworks
+kind: internal_flow
+version: 1.0.0
+purpose: Evaluate the portfolio for actual risk detection, distinctiveness and maintenance cost.
+inputs:
+- test inventory
+- historical failures
+- runtime cost
+- risk matrix
+- known policy requirements
+outputs:
+- portfolio classification with supporting receipts
+- execution topology suggestions
+- candidate remediation list
+prohibitions:
+- Deletion based solely on never failing
+- Equating low runtime with high detection value
+- Removal without exact purpose and owner
+handoff_rule: Proposed repository edits are passed to Getter after ownership is established.

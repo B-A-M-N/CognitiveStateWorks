@@ -189,8 +189,14 @@ def _main_impl() -> int:
                     raise InstallSafetyError(f"{name}: advisory entrypoint is unavailable")
                 skill = dst_dir / "SKILL.md"
                 if source != skill:
-                    copy_owned_file(source, skill, reg, relative(reg, skill),
-                                    journal=journal, **_copy_args)
+                    # The advisory entrypoint is usually already installed as
+                    # part of the bundle files (e.g. advisory SKILL.md); the
+                    # safety check rejects rewriting an unmanaged path, so skip
+                    # the copy when this run already wrote identical bytes.
+                    if not (relative(reg, skill) in owned
+                            and sha256(source) == sha256(skill)):
+                        copy_owned_file(source, skill, reg, relative(reg, skill),
+                                        journal=journal, **_copy_args)
                 owned.add(relative(reg, skill))
             capsule = str(bundle.get("runtime_capsule") or "")
             capsule_path = dst_dir / "RUNTIME.md"

@@ -12,6 +12,7 @@ packets:
     producer: infrae
     consumers:
     - infrae
+    - testworks
     freshness:
       strategy: exact_context
       packet_path: payload.freshness_fingerprint

@@ -1,0 +1,43 @@
+schema_version: qualification-cases/v1
+skill: testworks
+cases:
+- id: sufficient-evidence
+  shape: fully qualified subject
+  observed: Current receipts cover the declared scope on the exact subject fingerprint and all required gates pass
+  expected: NO_ADDITIONAL_TESTING_NEEDED once host attestation and residual risks are recorded
+  negative: Reject re-running an already qualified suite as assurance work
+- id: stale-receipts-run-selected
+  shape: outdated execution receipts
+  observed: Strategy is current but prior receipts predate the observed revision or environment change
+  expected: RUN_SELECTED against the exact current subject and fingerprint before qualification
+  negative: Reject prior green runs as proof for the changed subject
+- id: coverage-gap
+  shape: unprotected behavior
+  observed: A critical invariant or changed behavior has no independent oracle or detecting case
+  expected: ADD_COVERAGE with a falsifiable case and independent oracle before execution
+  negative: Reject case-count growth without a new fault-detection claim
+- id: flaky-required-gate
+  shape: nondeterministic required gate
+  observed: A required gate passes intermittently without an isolated root cause
+  expected: INCONCLUSIVE until the gate is repaired, quarantined with explicit exposure, or replaced
+  negative: Reject rerun-until-green as a qualification basis
+- id: green-from-another-subject
+  shape: mismatched subject evidence
+  observed: Passing receipts reference a different revision, environment, or workload than the declared subject
+  expected: BLOCKED until receipts are re-established on the exact declared subject
+  negative: Reject green from another subject as current assurance
+- id: critical-gate-omitted
+  shape: omitted required gate
+  observed: Selection drops a required gate without an approved scope exception or compensating evidence
+  expected: BLOCKED until the gate is executed or an explicit exception is recorded
+  negative: Reject silent omission of a critical gate as qualification
+- id: revision-drift-invalidates
+  shape: changed subject revision
+  observed: Observed revision or fingerprint changed after receipts were recorded
+  expected: Invalidate dependent assurance; re-observe and requalify before any consequential claim
+  negative: Reject previously passing receipts as fresh proof
+- id: redundant-not-proven-kept
+  shape: proposed consolidation
+  observed: A candidate removal lacks demonstrated semantic equivalence and preserved regression detection
+  expected: KEEP until equivalence, detection preservation, rollback, and requalification are all proven
+  negative: Reject same-name or same-coverage inference as equivalence proof

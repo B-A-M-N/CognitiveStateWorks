@@ -8,7 +8,7 @@ packets:
     schema: repository-truth-packet.schema.json
     schema_version: "1.1.0"
     producer: gitter
-    consumers: [getter]
+    consumers: [getter, testworks]
     freshness:
       strategy: trusted_validator
       validator_id: repository_truth_v1
@@ -23,7 +23,7 @@ packets:
     schema: infrastructure-truth-packet.schema.json
     schema_version: "1.1.0"
     producer: infrae
-    consumers: [infrae]
+    consumers: [infrae, testworks]
     freshness:
       strategy: exact_context
       packet_path: payload.freshness_fingerprint
@@ -45,3 +45,35 @@ packets:
       packet_path: payload.freshness_fingerprint
       context_path: validation_fingerprint
     required_context: [validation_fingerprint]
+  godkiller_boundary_packet:
+    schema: godkiller_boundary_packet.schema.json
+    schema_version: 1.0.0
+    producer: godkiller
+    consumers: []
+    freshness:
+      strategy: exact_context
+      packet_path: payload.architecture_fingerprint
+      context_path: architecture_fingerprint
+    required_context:
+    - architecture_fingerprint
+  terraformer_integration_packet:
+    schema: terraformer_integration_packet.schema.json
+    schema_version: 1.0.0
+    producer: terraformer
+    consumers: []
+    freshness:
+      strategy: exact_context
+      packet_path: payload.composition_fingerprint
+      context_path: composition_fingerprint
+    required_context:
+    - composition_fingerprint
+  testing_evidence_packet:
+    schema: testing-evidence-packet.schema.json
+    schema_version: '1.0.0'
+    producer: testworks
+    consumers: []
+    freshness:
+      strategy: exact_context
+      packet_path: payload.subject.fingerprint
+      context_path: testing_fingerprint
+    required_context: [testing_fingerprint]

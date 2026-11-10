@@ -1,0 +1,77 @@
+id: godkiller
+domain: architectural_decomposition
+purpose: Diagnose responsibility concentration and perform evidence-backed, reversible
+  architectural decomposition without behavioral regression.
+name: GodKiller
+entrypoint: SKILL.md
+advisory_entrypoint: SKILL.md
+triggers:
+- god object
+- god class
+- god module
+- architectural decomposition
+- responsibility concentration
+- extract responsibility
+- split component
+- ownership boundaries
+- cosmetic decomposition
+match:
+  required_any:
+  - god object
+  - god class
+  - god module
+  - architectural decomposition
+  - responsibility concentration
+  secondary:
+  - extract responsibility
+  - split component
+  - ownership boundaries
+  - cosmetic decomposition
+phase_tags:
+- domain_state
+- architecture
+behavior_tags:
+- diagnose
+- implementation
+- verification
+- recovery
+inputs:
+  required:
+  - task_context
+  optional: []
+emits:
+- godkiller_boundary_packet
+context_budget: medium
+version: 1.0.0
+bundle_schema_version: 2
+engine:
+  kind: state_machine
+  contract: transitions.yaml
+  contract_version: state-machine/v1
+composition:
+  group: architectural_decomposition
+  mode: composable
+  requires: []
+  conflicts: []
+contracts:
+  packets: contracts/packets.yaml
+  evidence: contracts/evidence-kinds.yaml
+  schemas:
+  - contracts/schemas/godkiller_boundary_packet.schema.json
+  - contracts/schemas/architecture-boundary-v1.schema.json
+integrations:
+  cognitiveframeworks:
+    required: []
+    enhancements:
+    - owl
+    - anchor
+    - dox
+    - fuse
+    - ward
+    - flow
+    - sispis
+flow_selection:
+  fallback: required
+  ambiguity: error
+  no_match: blocked
+handoff: godkiller_boundary_packet

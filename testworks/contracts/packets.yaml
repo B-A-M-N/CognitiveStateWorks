@@ -1,0 +1,13 @@
+version: 1.0.0
+packets:
+  testing_evidence_packet:
+    schema: contracts/schemas/testing-evidence-packet.schema.json
+    schema_version: 1.0.0
+    producer: testworks
+    consumers: []
+    freshness:
+      strategy: exact_context
+      packet_path: payload.subject.fingerprint
+      context_path: testing_fingerprint
+    required_context:
+    - testing_fingerprint

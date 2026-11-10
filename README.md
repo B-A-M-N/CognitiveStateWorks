@@ -111,7 +111,10 @@ evidence, and proves that state survives a new interface instance.
 | **Gitter** | Repository inspection and state establishment       |
 | **Getter** | Controlled repository modification and recovery     |
 | **Infrae** | Infrastructure operations, validation, and recovery |
-| **tui'd** | Terminal interface design and development workflows |
+| **TUID** | Terminal interface design and development workflows |
+| **Godkiller** | Evidence-backed architectural decomposition      |
+| **Terraformer** | Evidence-backed component recomposition        |
+| **TestWorks** | Risk-based test selection, execution, and qualification |
 
 Each is a **registered workflow bundle with its own contracts** — not an
 autonomous agent, and not a dynamically spawned specialist. Registration means the
@@ -119,6 +122,15 @@ StateWork is available to CSW's resolver; it does not mean it is loaded into eve
 agent. CSW resolves eligibility and composition compatibility, and the trusted host
 or DP chooses among the returned legal candidates. See
 [`docs/architecture.md`](docs/architecture.md).
+
+The registry also includes **Godkiller** for evidence-backed architectural
+decomposition, **Terraformer** for evidence-backed component recomposition, and
+**TestWorks** for risk-based test selection, execution receipts, and qualification.
+They own separate workflow states and packets; neither is required by the other.
+CSW selects them only when their declared triggers and flow predicates match, and
+their guidance does not replace the trusted host's evidence or transition authority.
+See each bundle's `SKILL.md` and `manifest.yaml` for its scope and integration
+contract.
 
 ## How does it integrate with the other two?
 

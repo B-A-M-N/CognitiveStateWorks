@@ -1,0 +1,20 @@
+id: testworks.select
+statework: testworks
+kind: internal_flow
+version: 1.0.0
+purpose: Select the smallest defensible execution plan based on risk and current receipts.
+inputs:
+- risk model
+- affected surface
+- suite metadata
+- recent relevant receipts
+- release policy
+outputs:
+- selected and omitted suite list
+- test costs and confidence
+- run plan or sufficiency evidence
+prohibitions:
+- Critical invariant omitted solely because slow
+- Release-required suite skipped without explicit authority
+- Using tests for a different revision as current proof
+handoff_rule: Distributed environment needs become requests for Infrae through the composition layer.

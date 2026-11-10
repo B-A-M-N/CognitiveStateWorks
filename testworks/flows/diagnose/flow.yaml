@@ -1,0 +1,20 @@
+id: testworks.diagnose
+statework: testworks
+kind: internal_flow
+version: 1.0.0
+purpose: Differentiate product bugs, bad tests, flaky behavior and environmental failures.
+inputs:
+- execution receipts
+- error traces
+- prior baseline
+- environment facts
+outputs:
+- root cause hypothesis and confidence
+- proof or counterevidence
+- repair/retention proposal
+- residual risk
+prohibitions:
+- Automatically rerunning until green
+- Calling a failure flaky without evidence
+- Quarantining critical invariant with no compensating gate
+handoff_rule: Repository test repair through Getter; external runner faults via Infrae.

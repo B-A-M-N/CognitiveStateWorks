@@ -1,0 +1,20 @@
+id: testworks.recover
+statework: testworks
+kind: internal_flow
+version: 1.0.0
+purpose: Deterministically reopen claims when revision, environment, risk or evidence validity changes.
+inputs:
+- prior packet
+- new observation
+- changed fingerprint
+- invalidation trigger
+outputs:
+- invalidation record
+- bounded recovery/reassessment plan
+- fresh subject identity
+prohibitions:
+- Silently reusing old receipts
+- Replaying prior VERIFIED without matching fingerprints
+- Forgetting a contradictory operator report
+handoff_rule: Request repository truth from Gitter or environment attestation from Infrae through composition
+  as needed.

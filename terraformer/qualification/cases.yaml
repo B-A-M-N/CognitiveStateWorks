@@ -1,0 +1,54 @@
+schema_version: qualification-cases/v1
+skill: terraformer
+cases:
+- id: monolith
+  shape: single-process monolith
+  observed: Three modules expose mismatched data contracts and initialization preconditions
+  expected: Version/contract adaptation plus deterministic local initialization and E2E behavior
+  negative: Reject changing a class name or adding wrappers as completed work
+- id: event-service
+  shape: event-driven service
+  observed: Producer and consumer disagree on delivery ordering, idempotency and schema
+  expected: Reconcile event schema/idempotency/retry ownership and test duplicate/out-of-order failures
+  negative: Reject event bus as universal architectural answer
+- id: plugin-host
+  shape: plugin-based application
+  observed: Independent plugins disagree on versioning, unload and lifecycle
+  expected: Negotiate contracts, test load/unload/error isolation and preserve plugin autonomy
+  negative: Reject new global plugin manager with unrestricted mutable state
+- id: shared-state
+  shape: concurrent shared-state system
+  observed: Two components claim write authority and cannot coordinate concurrent updates
+  expected: INCOMPATIBLE until ownership/coordination protocol is demonstrated
+  negative: Reject duplicate writers and stale subject revision
+- id: partial-iteration
+  shape: incremental transformation
+  observed: A bounded responsibility or connection slice has been verified and other scope remains
+  expected: Qualify the slice, record partial scope, and start another composition scope
+  negative: Reject full-system completion from one successful local slice
+- id: stale-evidence
+  shape: changed subject revision
+  observed: Observed revision changed after packet creation
+  expected: Invalidate dependent state; re-observe and requalify before consequential action
+  negative: Reject previously passing tests as fresh proof
+- id: already-coherent
+  shape: compatible existing components
+  observed: Required end-to-end journeys already work through stable contracts, owned lifecycle, and current evidence
+  expected: NO_COMPOSITION_NEEDED after compatibility and journey evidence are checked
+  negative: Reject an adapter or orchestration layer added only to make a diagram look integrated
+- id: unnecessary-adapter
+  shape: directly compatible contracts
+  observed: Producer and consumer share a versioned contract and consistent error, ordering, and lifecycle semantics
+  expected: Keep the direct edge; do not add an adapter unless measured compatibility evidence requires one
+  negative: Reject duplicated schema translation or pass-through wrappers as integration progress
+- id: conflicting-ownership
+  shape: two independent state writers
+  observed: Components both mutate the same resource and no consistency or conflict protocol is agreed
+  expected: INCOMPATIBLE until the owner and coordination semantics are explicit
+  negative: Reject a central integration manager that silently assumes both components' authority
+- id: partial-lifecycle
+  shape: partially connected component path
+  observed: Main success path works, but cancellation, teardown, or recovery crosses an untested edge
+  expected: Keep PARTIALLY_INTEGRATED until lifecycle and recovery evidence closes the missing edge
+  negative: Reject a green happy-path smoke test as whole-system qualification
+

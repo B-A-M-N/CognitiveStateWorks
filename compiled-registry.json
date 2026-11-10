@@ -91,6 +91,123 @@
         "schema": "repository-truth-packet.schema.json",
         "validator": "repository-truth-v1"
       },
+      "godkiller.authority": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.baseline": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.blocker": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.boundary_independence": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.change_result": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.diagnosis": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.invalidation": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.inventory": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.no_action": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.packet_validation": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.partition": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.recovery": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "godkiller.regression": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
       "implementation": {
         "allowed_issuers": [
           "host:statework-observation"
@@ -364,6 +481,293 @@
         "schema": "statework-observation-v1",
         "validator": "host-statework-observation-v1"
       },
+      "terraformer.authority": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.blocker": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.compatibility": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.completion": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.composition_plan": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.connection_result": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.contract_validation": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.e2e": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.incompatibility": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.invalidation": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.inventory": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.lifecycle_recovery": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.no_action": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.ownership_integrity": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.partial_integration": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.qualification": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "terraformer.recovery": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.authority": {
+        "allowed_issuers": [
+          "host:authorization"
+        ],
+        "authoritative": true,
+        "schema": "authority-record-v1",
+        "validator": "host-authorization-v1"
+      },
+      "testworks.blocker": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.evaluation": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.inconclusive": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.invalidation": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.inventory": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.qualification": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.reassessment": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.recovery_plan": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.risk_assessment": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.run_plan": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.run_receipt": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.strategy": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.subject_identity": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
+      "testworks.sufficiency": {
+        "allowed_issuers": [
+          "host:statework-observation"
+        ],
+        "authoritative": true,
+        "mintable_by_host": true,
+        "schema": "statework-observation-v1",
+        "validator": "host-statework-observation-v1"
+      },
       "tuid.implementation": {
         "allowed_issuers": [
           "host:statework-observation"
@@ -436,6 +840,20 @@
   },
   "packet_registry": {
     "packets": {
+      "godkiller_boundary_packet": {
+        "consumers": [],
+        "freshness": {
+          "context_path": "architecture_fingerprint",
+          "packet_path": "payload.architecture_fingerprint",
+          "strategy": "exact_context"
+        },
+        "producer": "godkiller",
+        "required_context": [
+          "architecture_fingerprint"
+        ],
+        "schema": "contracts/schemas/godkiller_boundary_packet.schema.json",
+        "schema_version": "1.0.0"
+      },
       "infrastructure_evidence_packet": {
         "consumers": [],
         "freshness": "immutable",
@@ -445,7 +863,8 @@
       },
       "infrastructure_truth_packet": {
         "consumers": [
-          "infrae"
+          "infrae",
+          "testworks"
         ],
         "freshness": {
           "context_path": "infrastructure_fingerprint",
@@ -468,7 +887,8 @@
       },
       "repository_truth_packet": {
         "consumers": [
-          "getter"
+          "getter",
+          "testworks"
         ],
         "freshness": {
           "strategy": "trusted_validator",
@@ -481,6 +901,34 @@
         ],
         "schema": "contracts/schemas/repository-truth-packet.schema.json",
         "schema_version": "1.1.0"
+      },
+      "terraformer_integration_packet": {
+        "consumers": [],
+        "freshness": {
+          "context_path": "composition_fingerprint",
+          "packet_path": "payload.composition_fingerprint",
+          "strategy": "exact_context"
+        },
+        "producer": "terraformer",
+        "required_context": [
+          "composition_fingerprint"
+        ],
+        "schema": "contracts/schemas/terraformer_integration_packet.schema.json",
+        "schema_version": "1.0.0"
+      },
+      "testing_evidence_packet": {
+        "consumers": [],
+        "freshness": {
+          "context_path": "testing_fingerprint",
+          "packet_path": "payload.subject.fingerprint",
+          "strategy": "exact_context"
+        },
+        "producer": "testworks",
+        "required_context": [
+          "testing_fingerprint"
+        ],
+        "schema": "contracts/schemas/testing-evidence-packet.schema.json",
+        "schema_version": "1.0.0"
       },
       "tui_validation_packet": {
         "consumers": [],
@@ -500,6 +948,710 @@
     "version": "2.0.0"
   },
   "packet_schemas": {
+    "godkiller_boundary_packet": {
+      "$defs": {
+        "architecture_boundary": {
+          "additionalProperties": false,
+          "description": "Shared interchange payload. Independently produced by any competent source; does not require GodKiller or TerraFormer.",
+          "properties": {
+            "baseline": {
+              "additionalProperties": false,
+              "properties": {
+                "contract_refs": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "evidence_refs": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "observables": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "claim": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "oracle_ref": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "claim",
+                      "oracle_ref"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "contract_refs",
+                "evidence_refs",
+                "observables"
+              ],
+              "type": "object"
+            },
+            "components": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "contract_refs": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "lifecycle_refs": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "reads": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "responsibility_ids": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "writes": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind",
+                  "responsibility_ids",
+                  "reads",
+                  "writes"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "dependency_edges": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "contract_ref": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "source": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "target": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "target",
+                  "contract_ref",
+                  "reason"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "interfaces": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "compatibility_requirements": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "consumers": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "contract_ref": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "failure_semantics": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "provider": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "version": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "provider",
+                  "consumers",
+                  "contract_ref",
+                  "version",
+                  "failure_semantics"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "invariants": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence_refs": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "scope": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "statement": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "statement",
+                  "evidence_refs"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "lifecycle_contracts": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "cancellation_policy": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "component_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "failure_policy": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "phases": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "preconditions": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "recovery_policy": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "teardown_policy": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "component_id",
+                  "phases",
+                  "failure_policy",
+                  "recovery_policy"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "migration": {
+              "additionalProperties": false,
+              "properties": {
+                "compatibility_requirements": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "rollback_requirements": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "steps": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "description": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "preconditions": {
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "rollback": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "verification_refs": {
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "description",
+                      "preconditions",
+                      "rollback",
+                      "verification_refs"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "steps",
+                "compatibility_requirements",
+                "rollback_requirements"
+              ],
+              "type": "object"
+            },
+            "ownership_map": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "authority": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "conflict_resolution": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "mode": {
+                        "enum": [
+                          "exclusive",
+                          "coordinated_shared",
+                          "external"
+                        ]
+                      },
+                      "owners": {
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "protocol": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mode",
+                      "owners",
+                      "protocol",
+                      "conflict_resolution"
+                    ],
+                    "type": "object"
+                  },
+                  "mutable": {
+                    "type": "boolean"
+                  },
+                  "resource_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "resource_id",
+                  "mutable",
+                  "authority"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "responsibilities": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "current_owner": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "evidence_refs": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "statement": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "target_owner": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "statement",
+                  "current_owner",
+                  "target_owner",
+                  "evidence_refs"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "schema_version": {
+              "const": "architecture-boundary/v1"
+            },
+            "subject": {
+              "additionalProperties": false,
+              "properties": {
+                "fingerprint": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "kind": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "observed_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "revision": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "kind",
+                "fingerprint",
+                "observed_at"
+              ],
+              "type": "object"
+            },
+            "unresolved": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "blocks": {
+                    "type": "boolean"
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "next_observation": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "question": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "severity": {
+                    "enum": [
+                      "low",
+                      "moderate",
+                      "high",
+                      "critical"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "question",
+                  "severity",
+                  "blocks"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "verification": {
+              "additionalProperties": false,
+              "properties": {
+                "evidence_refs": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "required_checks": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "claim": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "evidence_refs": {
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "oracle": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "status": {
+                        "enum": [
+                          "pending",
+                          "pass",
+                          "fail",
+                          "blocked"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "claim",
+                      "oracle",
+                      "status"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "required_checks",
+                "evidence_refs"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "schema_version",
+            "subject",
+            "baseline",
+            "responsibilities",
+            "components",
+            "interfaces",
+            "ownership_map",
+            "dependency_edges",
+            "lifecycle_contracts",
+            "invariants",
+            "migration",
+            "verification",
+            "unresolved"
+          ],
+          "title": "Architecture Boundary Packet \u2014 technology-neutral facts",
+          "type": "object"
+        }
+      },
+      "$id": "https://cognitivestatework.dev/schemas/godkiller_boundary_packet.schema.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "allOf": [
+        {
+          "$ref": "handoff-packet.schema.json"
+        },
+        {
+          "additionalProperties": true,
+          "properties": {
+            "packet_type": {
+              "const": "godkiller_boundary_packet"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "properties": {
+                "architecture_boundary": {
+                  "$ref": "#/$defs/architecture_boundary"
+                },
+                "architecture_fingerprint": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "claim_evidence_refs": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "outcome": {
+                  "enum": [
+                    "decomposed",
+                    "not_needed",
+                    "partial",
+                    "blocked",
+                    "invalidated"
+                  ]
+                }
+              },
+              "required": [
+                "architecture_boundary",
+                "outcome",
+                "architecture_fingerprint",
+                "claim_evidence_refs"
+              ],
+              "type": "object"
+            },
+            "producer": {
+              "const": "godkiller"
+            },
+            "schema_version": {
+              "const": "1.0.0"
+            }
+          },
+          "required": [
+            "packet_type",
+            "producer",
+            "schema_version",
+            "payload"
+          ],
+          "type": "object"
+        }
+      ],
+      "title": "GodKiller StateWork handoff"
+    },
     "infrastructure_evidence_packet": {
       "$id": "https://cognitivestatework.dev/schemas/infrastructure-evidence-packet.schema.json",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -980,6 +2132,1056 @@
       "description": "Freshness-carrying truth packet for the Gitter \u2192 Getter handoff. Composes the common handoff envelope; domain data lives in the nested payload (repository / change / assessment / freshness).",
       "title": "Gitter repository truth packet"
     },
+    "terraformer_integration_packet": {
+      "$defs": {
+        "architecture_boundary": {
+          "additionalProperties": false,
+          "description": "Shared interchange payload. Independently produced by any competent source; does not require GodKiller or TerraFormer.",
+          "properties": {
+            "baseline": {
+              "additionalProperties": false,
+              "properties": {
+                "contract_refs": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "evidence_refs": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "observables": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "claim": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "oracle_ref": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "claim",
+                      "oracle_ref"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "contract_refs",
+                "evidence_refs",
+                "observables"
+              ],
+              "type": "object"
+            },
+            "components": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "contract_refs": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "lifecycle_refs": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "reads": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "responsibility_ids": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "writes": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind",
+                  "responsibility_ids",
+                  "reads",
+                  "writes"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "dependency_edges": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "contract_ref": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "source": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "target": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "target",
+                  "contract_ref",
+                  "reason"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "interfaces": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "compatibility_requirements": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "consumers": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "contract_ref": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "failure_semantics": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "provider": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "version": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "provider",
+                  "consumers",
+                  "contract_ref",
+                  "version",
+                  "failure_semantics"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "invariants": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence_refs": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "scope": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "statement": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "statement",
+                  "evidence_refs"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "lifecycle_contracts": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "cancellation_policy": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "component_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "failure_policy": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "phases": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "preconditions": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "recovery_policy": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "teardown_policy": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "component_id",
+                  "phases",
+                  "failure_policy",
+                  "recovery_policy"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "migration": {
+              "additionalProperties": false,
+              "properties": {
+                "compatibility_requirements": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "rollback_requirements": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "steps": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "description": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "preconditions": {
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "rollback": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "verification_refs": {
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "description",
+                      "preconditions",
+                      "rollback",
+                      "verification_refs"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "steps",
+                "compatibility_requirements",
+                "rollback_requirements"
+              ],
+              "type": "object"
+            },
+            "ownership_map": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "authority": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "conflict_resolution": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "mode": {
+                        "enum": [
+                          "exclusive",
+                          "coordinated_shared",
+                          "external"
+                        ]
+                      },
+                      "owners": {
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "protocol": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mode",
+                      "owners",
+                      "protocol",
+                      "conflict_resolution"
+                    ],
+                    "type": "object"
+                  },
+                  "mutable": {
+                    "type": "boolean"
+                  },
+                  "resource_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "resource_id",
+                  "mutable",
+                  "authority"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "responsibilities": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "current_owner": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "evidence_refs": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "statement": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "target_owner": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "statement",
+                  "current_owner",
+                  "target_owner",
+                  "evidence_refs"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "schema_version": {
+              "const": "architecture-boundary/v1"
+            },
+            "subject": {
+              "additionalProperties": false,
+              "properties": {
+                "fingerprint": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "kind": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "observed_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "revision": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "kind",
+                "fingerprint",
+                "observed_at"
+              ],
+              "type": "object"
+            },
+            "unresolved": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "blocks": {
+                    "type": "boolean"
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "next_observation": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "question": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "severity": {
+                    "enum": [
+                      "low",
+                      "moderate",
+                      "high",
+                      "critical"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "question",
+                  "severity",
+                  "blocks"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "verification": {
+              "additionalProperties": false,
+              "properties": {
+                "evidence_refs": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "required_checks": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "claim": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "evidence_refs": {
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "oracle": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "status": {
+                        "enum": [
+                          "pending",
+                          "pass",
+                          "fail",
+                          "blocked"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "claim",
+                      "oracle",
+                      "status"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "required_checks",
+                "evidence_refs"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "schema_version",
+            "subject",
+            "baseline",
+            "responsibilities",
+            "components",
+            "interfaces",
+            "ownership_map",
+            "dependency_edges",
+            "lifecycle_contracts",
+            "invariants",
+            "migration",
+            "verification",
+            "unresolved"
+          ],
+          "title": "Architecture Boundary Packet \u2014 technology-neutral facts",
+          "type": "object"
+        }
+      },
+      "$id": "https://cognitivestatework.dev/schemas/terraformer_integration_packet.schema.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "allOf": [
+        {
+          "$ref": "handoff-packet.schema.json"
+        },
+        {
+          "additionalProperties": true,
+          "properties": {
+            "packet_type": {
+              "const": "terraformer_integration_packet"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "properties": {
+                "architecture_boundary": {
+                  "$ref": "#/$defs/architecture_boundary"
+                },
+                "claim_evidence_refs": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "composition_fingerprint": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "outcome": {
+                  "enum": [
+                    "integrated",
+                    "not_needed",
+                    "incompatible",
+                    "partial",
+                    "blocked",
+                    "invalidated"
+                  ]
+                }
+              },
+              "required": [
+                "architecture_boundary",
+                "outcome",
+                "composition_fingerprint",
+                "claim_evidence_refs"
+              ],
+              "type": "object"
+            },
+            "producer": {
+              "const": "terraformer"
+            },
+            "schema_version": {
+              "const": "1.0.0"
+            }
+          },
+          "required": [
+            "packet_type",
+            "producer",
+            "schema_version",
+            "payload"
+          ],
+          "type": "object"
+        }
+      ],
+      "title": "TerraFormer StateWork handoff"
+    },
+    "testing_evidence_packet": {
+      "$defs": {
+        "omitted_selection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "reason": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "residual_risk": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "reason",
+            "residual_risk"
+          ],
+          "type": "object"
+        },
+        "portfolio_finding": {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "KEEP",
+                "SELECTIVE_RUN",
+                "REPAIR",
+                "QUARANTINE_WITH_RISK",
+                "PROPOSE_CONSOLIDATION",
+                "PROPOSE_REMOVAL"
+              ]
+            },
+            "classification": {
+              "enum": [
+                "CRITICAL_INVARIANT",
+                "UNIQUE_REGRESSION",
+                "USEFUL_EXPENSIVE",
+                "REDUNDANT",
+                "FLAKY",
+                "OBSOLETE",
+                "UNPROVEN_VALUE"
+              ]
+            },
+            "justification": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "test_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "test_id",
+            "classification",
+            "action",
+            "justification"
+          ],
+          "type": "object"
+        },
+        "test_result": {
+          "additionalProperties": false,
+          "properties": {
+            "duration_ms": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "failure_class": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "receipt_ref": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "SKIP",
+                "FLAKY",
+                "NOT_RUN"
+              ]
+            },
+            "test_id": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "test_id",
+            "status",
+            "receipt_ref"
+          ],
+          "type": "object"
+        },
+        "test_selection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "purpose": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "reason": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "purpose",
+            "reason"
+          ],
+          "type": "object"
+        }
+      },
+      "$id": "https://cognitivestatework.dev/schemas/testing-evidence-packet.schema.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "allOf": [
+        {
+          "$ref": "handoff-packet.schema.json"
+        },
+        {
+          "properties": {
+            "packet_type": {
+              "const": "testing_evidence_packet"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "properties": {
+                "decision": {
+                  "enum": [
+                    "ADD_COVERAGE",
+                    "RUN_SELECTED",
+                    "REPAIR_TESTS",
+                    "CONSOLIDATE_CANDIDATES",
+                    "QUALIFIED",
+                    "NO_ADDITIONAL_TESTING_NEEDED",
+                    "BLOCKED",
+                    "INCONCLUSIVE",
+                    "INVALIDATED"
+                  ]
+                },
+                "evidence_quality": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "explanation": {
+                      "type": "string"
+                    },
+                    "grade": {
+                      "enum": [
+                        "OBSERVATIONAL",
+                        "EXECUTED",
+                        "ATTESTED",
+                        "INSUFFICIENT"
+                      ]
+                    },
+                    "receipt_refs": {
+                      "items": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "grade",
+                    "explanation",
+                    "receipt_refs"
+                  ],
+                  "type": "object"
+                },
+                "next_action": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "portfolio_findings": {
+                  "items": {
+                    "$ref": "#/$defs/portfolio_finding"
+                  },
+                  "type": "array"
+                },
+                "purpose": {
+                  "minLength": 10,
+                  "type": "string"
+                },
+                "qualification_scope": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "residual_risks": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "results": {
+                  "items": {
+                    "$ref": "#/$defs/test_result"
+                  },
+                  "type": "array"
+                },
+                "risk": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "critical_invariants": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "rationale": {
+                      "minLength": 3,
+                      "type": "string"
+                    },
+                    "severity": {
+                      "enum": [
+                        "LOW",
+                        "MODERATE",
+                        "HIGH",
+                        "CRITICAL"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "severity",
+                    "rationale",
+                    "critical_invariants"
+                  ],
+                  "type": "object"
+                },
+                "selection": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "chosen": {
+                      "items": {
+                        "$ref": "#/$defs/test_selection"
+                      },
+                      "type": "array"
+                    },
+                    "omitted": {
+                      "items": {
+                        "$ref": "#/$defs/omitted_selection"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "chosen",
+                    "omitted"
+                  ],
+                  "type": "object"
+                },
+                "subject": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "dirty_tree_fingerprint": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "environment_fingerprint": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "fingerprint": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "identifier": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "kind": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "revision": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "suite_fingerprint": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "workload_fingerprint": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "identifier",
+                    "revision",
+                    "fingerprint",
+                    "environment_fingerprint"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "subject",
+                "purpose",
+                "decision",
+                "risk",
+                "selection",
+                "results",
+                "evidence_quality",
+                "residual_risks",
+                "next_action"
+              ],
+              "type": "object"
+            },
+            "producer": {
+              "const": "testworks"
+            },
+            "schema_version": {
+              "const": "1.0.0"
+            }
+          }
+        }
+      ],
+      "description": "Typed test-assurance handoff. Inherits canonical CSW envelope; host validates trust, subject fingerprint, and transitions.",
+      "title": "TestWorks testing evidence packet"
+    },
     "tui_validation_packet": {
       "$id": "https://cognitivestatework.dev/schemas/tui-validation-packet.schema.json",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1066,12 +3268,12 @@
     }
   },
   "registry_compiler_hash": "8ae3e760da7f505c076c58f7fb580dd80a2f9c5330818f3f85a6fbdf851c95a2",
-  "registry_config_hash": "d4efe61d7c37394e7e4d7fd0406b5d83c94e2b0941cf56f7c2e57a881693ef85",
-  "registry_hash": "dd31f01835396146add1b07d2debc8e9c1af88a55174c7bd1b1f98dad7714cae",
+  "registry_config_hash": "1a580545f41791c43201ed865e54ba447c350feff94713558215508108cc7072",
+  "registry_hash": "3a7712b1ac24a4a32e85b0d3a9384eb07758a4a86aa46953a1a09823d0222fa2",
   "registry_version": "2.0.0",
   "stateworks": [
     {
-      "bundle_hash": "d0f732135484969d7327a1a16b73631f5e39fc74733e1da99ad7deb5b7699d72",
+      "bundle_hash": "894c3ec1d8d666090f2294f82bc9a0fa132933ba11866a9fd4ec457318f65676",
       "bundle_ref": "infrae",
       "contracts": {
         "evidence": [
@@ -1390,9 +3592,9 @@
         "kind": "state_machine"
       },
       "file_hashes": {
-        "STATEWORK.md": "010953bb5fce1a16780ecc45521084dc0b0995cfce9f49cd2c4109c59720dae3",
+        "STATEWORK.md": "da55bea3876bb9551f13f90b568b505189c53c55443b4d49a8cc30a56046c630",
         "contracts/evidence-kinds.yaml": "cd1a4a85ad5198c0a6e43b20bc7631976ea845617ac718cd137adcd27e21176d",
-        "contracts/packets.yaml": "1974dfbb52491e27c13e415ecb91ffc9be2995fbe955f4dc59be45ca7e1c8340",
+        "contracts/packets.yaml": "bba944e2a719ae22004c5c652b3941ea24e81c08d30e9336af0258104e619237",
         "contracts/schemas/infrastructure-evidence-packet.schema.json": "7daa5769f2f121323f9ee92867bdfd6e3508ecc432a791a0c2bfc15572ca2679",
         "contracts/schemas/infrastructure-truth-packet.schema.json": "a25d245a02293f2e5e9c9fa98934c0e3fd72f802b5aa749a1f1fb9462cd1b1dd",
         "domains/capacity/domain.md": "692dc2f8e5e669c4b77114abf7fcde56089c76e129e7e825fb150d8c24fa0ce1",
@@ -1412,6 +3614,8 @@
         "flows/incident/flow.md": "3dbbf79728cecfb0e7d8a7db23583eae29240992f1ba4a6f064896a701f42f55",
         "flows/migrate/flow.md": "81105e7f8520500edcb174753a656ea8e81bf95bf8c51c9630ef888ceae03dff",
         "flows/model/flow.md": "9c3ba2ec71f4a30dcdf93d8d943ecdc6e1660707fbd3d3ab2774943b3c08e901",
+        "flows/qualify-container-runtime/flow.md": "d995d48a4d20d7dcb87602999de4e851c71626ead0e5c6bfac13a6fdf96107d3",
+        "flows/qualify-distributed-test/flow.md": "5bf4f40e5625f88719ef3491b993791b79d30d7d8ae4b5a40896d5db99e2b9b9",
         "flows/recover/flow.md": "7f908b0f99a163ab4b66d7a5f03b5af1d29a7a8e101b777e0233bf2f4bfc6938",
         "flows/scale/flow.md": "81e4ecd1945403d0dda28dac6731f12de5a8eac790ee58ed19920a18cd0f14dd",
         "flows/validate/flow.md": "fe391362f9ecf2b2780debecd2ec4e4a57c81988286d47c7efa59c8bbe68122f",
@@ -1511,12 +3715,12 @@
         "version": "1.1.0"
       },
       "root_ref": ".",
-      "runtime_capsule": "# Infrae \u2014 StateWork\nDomain: infrastructure_state\nPurpose: Model and control infrastructure changes using bounded evidence and recovery paths.\nWorkflow engine: state_machine (state-machine/v1)\nAvailable flows:\n- assess\n- change\n- decommission\n- design\n- discover\n- incident\n- migrate\n- model\n- recover\n- scale\n- validate\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n",
-      "runtime_capsule_hash": "a13db836553c2d026fb8f0723f36227e962a3a57fb16e4132779844fbee3ff62",
+      "runtime_capsule": "# Infrae \u2014 StateWork\nDomain: infrastructure_state\nPurpose: Model and control infrastructure changes using bounded evidence and recovery paths.\nWorkflow engine: state_machine (state-machine/v1)\nAvailable flows:\n- assess\n- change\n- decommission\n- design\n- discover\n- incident\n- migrate\n- model\n- qualify-container-runtime\n- qualify-distributed-test\n- recover\n- scale\n- validate\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n",
+      "runtime_capsule_hash": "541821dd7767dc73d394015d656b8bd0fe1cfe5807e59e9d842fef70ba53e4b2",
       "source_root": "."
     },
     {
-      "bundle_hash": "529ea6dc98ae3f121ecc058faf75b0a0100363644553399e4b37a64f94bebe85",
+      "bundle_hash": "6bec2d3943117704cc82ebb6ea0a4713e8fc5ba2c29c2d273f2a8c631002deed",
       "bundle_ref": "gitter",
       "contracts": {
         "evidence": [
@@ -1596,7 +3800,7 @@
       "file_hashes": {
         "SKILL.md": "a76b8ba869d9a627ef0554f83520f1a779a2759bf0254426c16cac245a70b977",
         "contracts/evidence-kinds.yaml": "cf2eda40054573c778ea341ffbad6e382bb5d397cec4fd3e691b6852e3da5503",
-        "contracts/packets.yaml": "fcc9787d417c11a98e9d1df88179bf12a241ae90b8bb308fa6a0b7ea55bef957",
+        "contracts/packets.yaml": "d3cb5ea9e0892d3a632c7ab7c77988630aa20bb11d88ae24361599f76a0717de",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
         "manifest.yaml": "dead61e49f56c3c4b6e79707ea299158b5fd451f5129e5e4e2a3ca315dd1b4bc",
         "runtime.md": "43b5a0f6068ed5f9a4b26ffb4e1a58370819ad5d8a179a2caccf370ebc9dbc61",
@@ -1681,7 +3885,7 @@
       "source_root": "."
     },
     {
-      "bundle_hash": "33e3f478208873d900103b90b7cc62f685e7639dfec8bdca541be729f5f0cd97",
+      "bundle_hash": "9edf40be5d4bc748b651ee5d27ce720611fa0bcef3a67157564befd2a9bc3674",
       "bundle_ref": "getter",
       "contracts": {
         "evidence": [
@@ -1835,7 +4039,7 @@
       "file_hashes": {
         "SKILL.md": "672b2ed98164f5836afa02a021a6610916dfbf2824bd924c701f9c455ea5b3b9",
         "contracts/evidence-kinds.yaml": "f3afd1081c68073cc7d8739d47c5d8b3bc2dfbaa5b3562103d832994668a79f3",
-        "contracts/packets.yaml": "19db12dfb5fef646a4e9db5cf9ece1a78e97a8c6c53d83af5218d2f24eab08f8",
+        "contracts/packets.yaml": "31729095c544a21de837cff5cd65f10612fc6f5bd58eeedee1df4632bd888e9d",
         "contracts/schemas/repository-evidence-packet.schema.json": "5508e285ebbcbb525819b8c344e56af6c94a06e081af0e9a7f173aa4b62e27ba",
         "contracts/schemas/repository-truth-packet.schema.json": "e9a54105766f3fa76b302347cd642ddb6e4fee40585ed574c226748ad450ed8a",
         "manifest.yaml": "559bc2649a7492e0dd7d5d9e27a8272ae60a1d03cf32002ac5164f1b03b547dc",
@@ -2412,6 +4616,1485 @@
       "root_ref": ".",
       "runtime_capsule": "# tui'd \u2014 StateWork\nDomain: terminal_interface_state\nPurpose: Model, implement, exercise, and validate terminal interface behavior.\nWorkflow engine: state_machine (state-machine/v1)\nAvailable flows:\n- debug\n- design\n- discover\n- implement\n- interact\n- model\n- recover\n- redesign\n- review\n- test\n- validate\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n",
       "runtime_capsule_hash": "83093bd02b94cae1a91070fd8632bcb6214b78ade94d5c72e985b9f976622a4a",
+      "source_root": "."
+    },
+    {
+      "bundle_hash": "8ae7da2daa91cbce4f081b46eb0348f5159f1dbfd9a159ee8b4efe06500f8a0e",
+      "bundle_ref": "godkiller",
+      "contracts": {
+        "evidence": [
+          "godkiller.inventory",
+          "godkiller.diagnosis",
+          "godkiller.no_action",
+          "godkiller.partition",
+          "godkiller.baseline",
+          "godkiller.authority",
+          "godkiller.change_result",
+          "godkiller.boundary_independence",
+          "godkiller.regression",
+          "godkiller.packet_validation",
+          "godkiller.blocker",
+          "godkiller.invalidation",
+          "godkiller.recovery"
+        ],
+        "packets": [
+          "godkiller_boundary_packet"
+        ]
+      },
+      "engine": {
+        "contract": {
+          "completion_states": [
+            "HANDOFF_READY",
+            "NO_DECOMPOSITION_NEEDED"
+          ],
+          "initial_state": "UNASSESSED",
+          "normal_path": [
+            "UNASSESSED",
+            "MAPPED",
+            "DIAGNOSED",
+            "PARTITIONED",
+            "EXTRACTING",
+            "VERIFIED",
+            "HANDOFF_READY"
+          ],
+          "states": [
+            "UNASSESSED",
+            "MAPPED",
+            "DIAGNOSED",
+            "PARTITIONED",
+            "EXTRACTING",
+            "VERIFIED",
+            "HANDOFF_READY",
+            "NO_DECOMPOSITION_NEEDED",
+            "BLOCKED",
+            "INVALIDATED",
+            "RECOVERY_REQUIRED"
+          ],
+          "transitions": [
+            {
+              "domain_effect": "godkiller.observe",
+              "from": "UNASSESSED",
+              "id": "godkiller.unassessed.observe.mapped",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "godkiller.inventory"
+              ],
+              "to": "MAPPED",
+              "trigger": "observe",
+              "work_class": "observe"
+            },
+            {
+              "domain_effect": "godkiller.diagnose",
+              "from": "MAPPED",
+              "id": "godkiller.mapped.diagnose.diagnosed",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "godkiller.diagnosis"
+              ],
+              "to": "DIAGNOSED",
+              "trigger": "diagnose",
+              "work_class": "diagnose"
+            },
+            {
+              "domain_effect": "godkiller.no_action",
+              "from": "MAPPED",
+              "id": "godkiller.mapped.no_action.no_decomposition_needed",
+              "path_class": "normal",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "godkiller.no_action",
+                "godkiller.baseline"
+              ],
+              "to": "NO_DECOMPOSITION_NEEDED",
+              "trigger": "no_action",
+              "work_class": "no_action"
+            },
+            {
+              "domain_effect": "godkiller.no_action",
+              "from": "DIAGNOSED",
+              "id": "godkiller.diagnosed.no_action.no_decomposition_needed",
+              "path_class": "normal",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "godkiller.no_action",
+                "godkiller.diagnosis"
+              ],
+              "to": "NO_DECOMPOSITION_NEEDED",
+              "trigger": "no_action",
+              "work_class": "no_action"
+            },
+            {
+              "domain_effect": "godkiller.partition",
+              "from": "DIAGNOSED",
+              "id": "godkiller.diagnosed.partition.partitioned",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "godkiller.partition",
+                "godkiller.baseline"
+              ],
+              "to": "PARTITIONED",
+              "trigger": "partition",
+              "work_class": "partition"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "godkiller.authorize",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "PARTITIONED",
+              "id": "godkiller.partitioned.authorize.extracting",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "godkiller.authority",
+                "godkiller.partition",
+                "godkiller.baseline"
+              ],
+              "to": "EXTRACTING",
+              "trigger": "authorize",
+              "work_class": "authorize"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "godkiller.verify",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "EXTRACTING",
+              "id": "godkiller.extracting.verify.verified",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "godkiller.change_result",
+                "godkiller.boundary_independence",
+                "godkiller.regression"
+              ],
+              "to": "VERIFIED",
+              "trigger": "verify",
+              "work_class": "verify"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "godkiller.publish",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "VERIFIED",
+              "id": "godkiller.verified.publish.handoff_ready",
+              "path_class": "normal",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "godkiller.packet_validation",
+                "godkiller.regression"
+              ],
+              "to": "HANDOFF_READY",
+              "trigger": "publish",
+              "work_class": "publish"
+            },
+            {
+              "domain_effect": "godkiller.next_slice",
+              "from": "VERIFIED",
+              "id": "godkiller.verified.next_slice.partitioned",
+              "path_class": "normal",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "godkiller.partition",
+                "godkiller.regression"
+              ],
+              "to": "PARTITIONED",
+              "trigger": "next_slice",
+              "work_class": "next_slice"
+            },
+            {
+              "domain_effect": "godkiller.replan",
+              "from": "EXTRACTING",
+              "id": "godkiller.extracting.replan.partitioned",
+              "path_class": "normal",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "godkiller.change_result",
+                "godkiller.partition"
+              ],
+              "to": "PARTITIONED",
+              "trigger": "replan",
+              "work_class": "replan"
+            },
+            {
+              "domain_effect": "godkiller.recover",
+              "from": "EXTRACTING",
+              "id": "godkiller.extracting.recover.recovery_required",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "godkiller.invalidation"
+              ],
+              "to": "RECOVERY_REQUIRED",
+              "trigger": "recover",
+              "work_class": "recover"
+            },
+            {
+              "domain_effect": "godkiller.recover",
+              "from": "PARTITIONED",
+              "id": "godkiller.partitioned.recover.recovery_required",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "godkiller.invalidation"
+              ],
+              "to": "RECOVERY_REQUIRED",
+              "trigger": "recover",
+              "work_class": "recover"
+            },
+            {
+              "domain_effect": "godkiller.reobserve",
+              "from": "RECOVERY_REQUIRED",
+              "id": "godkiller.recovery_required.reobserve.mapped",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "godkiller.recovery",
+                "godkiller.inventory"
+              ],
+              "to": "MAPPED",
+              "trigger": "reobserve",
+              "work_class": "reobserve"
+            },
+            {
+              "domain_effect": "godkiller.reobserve",
+              "from": "BLOCKED",
+              "id": "godkiller.blocked.reobserve.mapped",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "godkiller.recovery",
+                "godkiller.inventory"
+              ],
+              "to": "MAPPED",
+              "trigger": "reobserve",
+              "work_class": "reobserve"
+            },
+            {
+              "domain_effect": "godkiller.reobserve",
+              "from": "INVALIDATED",
+              "id": "godkiller.invalidated.reobserve.mapped",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "godkiller.invalidation",
+                "godkiller.inventory"
+              ],
+              "to": "MAPPED",
+              "trigger": "reobserve",
+              "work_class": "reobserve"
+            },
+            {
+              "domain_effect": "godkiller.block",
+              "from": "*",
+              "id": "godkiller.any.block.blocked",
+              "path_class": "failure",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "godkiller.blocker"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "block"
+            },
+            {
+              "domain_effect": "godkiller.invalidate",
+              "from": "*",
+              "id": "godkiller.any.invalidate.invalidated",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "godkiller.invalidation"
+              ],
+              "to": "INVALIDATED",
+              "trigger": "invalidate",
+              "work_class": "invalidate"
+            }
+          ],
+          "version": "1.0.0"
+        },
+        "contract_hash": "04b395ccc58eb51e995bb5e5eb7c5c03fa8f2525c98d7d8f6db8d916a83d83ab",
+        "contract_path": "transitions.yaml",
+        "contract_version": "state-machine/v1",
+        "kind": "state_machine"
+      },
+      "file_hashes": {
+        "CHECKSUMS.sha256": "200e184dee3ea367e61ce93fbd7c22dd0ac5c797b048f189399de3a486167d8f",
+        "README.md": "3cf31474e39c5f02a73804c256a771660bbbf3a41336f07dab8dfe120bcbf841",
+        "SKILL.md": "1c2735113c792380ccc67915eaa1cf198b75c0e76a7fb3ef5d3e982d6e44fd53",
+        "contracts/architecture-boundary.md": "851bd3d05b9e80eeb366f3ada4e4c0faedf67c16d82cf7b45bb8a73a5658feb2",
+        "contracts/evidence-kinds.yaml": "c1f4392ea043421fad93c48f7d4529911fde11994b430ad1fecfdbbb89578979",
+        "contracts/packets.yaml": "f896a467e5cf8eaae37586cd973b1eb48b0995198bc385867d1fb890df952ec1",
+        "contracts/schemas/architecture-boundary-v1.schema.json": "82723b20fe151e2af1bc40010621948533596e70ab015ef7d7eff725e5785066",
+        "contracts/schemas/godkiller_boundary_packet.schema.json": "6d1a7c539dd2a72bf4f3169820528f697bafcd1f238157230fa240dee23095e1",
+        "contracts/schemas/handoff-packet.schema.json": "f7fe14b934e95966b4d0a4f6dc7715bc6781fcde12731d4b6584de84646a356c",
+        "flows/diagnose/flow.md": "13ff215d18eff2a4422d99b60599623545970470995f0e06660a40eaf3fb029e",
+        "flows/extract/flow.md": "a75c3f273ea7523620f54857a71b34e5430c52e63e341cb667f503b50cd99666",
+        "flows/handoff/flow.md": "7fa771c121cf21459a0454ab939cf07ad95a4d741647f6573bab07c032585878",
+        "flows/map/flow.md": "2cb2f9772d09d8319d7869200b13a5b7e049b91cd65a1d10e865b3034521503c",
+        "flows/partition/flow.md": "9bb12f5f781ca88db002a51ff29b12156ec83fcbc62c368ac7ad2410f7999f6f",
+        "flows/recover/flow.md": "a6eb257c4b1835e1035f704780be4b2e7d31903919b2c1bc1afdb6f6b1a6a10e",
+        "flows/triage/flow.md": "48dc5a9457a0b85523e1eb1e8933906e53c9b8e3af600722539d11d4124bcba5",
+        "flows/verify/flow.md": "54da0d546763da8a8da89df40e2afcfa6589825f5c13b41ce76f862e0b9071bc",
+        "guidance.md": "f2c2e668c9076e349d00378bf6b9f67144ed62e4b00e24f148ec2f2507147035",
+        "manifest.yaml": "f4099df9ad2bd29f14836fedd6b18df5bc437e6f3c0c184c04d847552bb775a9",
+        "qualification/README.md": "fe9ed0d4b56ade9665d8679d3bdd1dabce96e47da1c6cc6246aa6783a37162eb",
+        "qualification/cases.yaml": "6a7082c194f0163bcb641f3b0c25fb2ccddd3775869a747033b2f691442a579b",
+        "qualification/negative/invalid_outcome.json": "e321647d02356de59ab145bffec6c616c8ad25b00ba0e2ffbedec40a56f5f469",
+        "qualification/negative/missing_owner.json": "3925c4b55b70d33ffad54b93fe0d91814f2e35567aaef1d55ca53442b4a19080",
+        "qualification/negative/missing_revision.json": "85736bb4ef83c54e9ed81bb665ef49c80cb3a59c72d754d109436358e48629f8",
+        "qualification/negative/wrong_producer.json": "82214a293e2648335f53de97f272a561da5a421bd57cf6c2caf241f553c23aab",
+        "qualification/packet-valid.example.json": "a13fd276d8c289a411c5e5e5fb694cc3beb8a98e8409d58b1cf4c13818c99505",
+        "references/authority.md": "a65fda00bbf46023ecb63f94fe05e018ef9d9ed02dbeabff7a788ba6a6e55580",
+        "references/boundaries.md": "f575a7efdc1ea1e231daf0dc5c5ea4ac49cfc6448fe8bd6fb204e3613e51fed7",
+        "references/diagnosis.md": "5811ca92ab5dc1396b55dda7ce5729e52c3521fecc4860d6e0c2a0b41c17c9c6",
+        "references/extraction.md": "3c4084b96a8639ceabbf686260817c900026fbbec8fc46bbe9989c81ff82326c",
+        "references/verification.md": "32852aa08ac94b35bf420321ca49b5110b67f1b30806f5569f8dca38c8e81a5f",
+        "runtime.md": "85ec86fd7374b3b2abeab2409345c6ab5dce3aaac1ba34d97e1a16527012de30",
+        "templates/architecture-boundary.example.yaml": "476399a31dd8862ad75e5023e71835504e74f687f425be6d2b3c0cc187b05068",
+        "templates/assessment.md": "d5bc6ff7ade2decc9f01d7a6182f71bd9e654f4a01c16f5575e301ce28a3b93b",
+        "templates/evidence-ledger.yaml": "40ba584ac3e7518f857c12c5589c02365bcf6d926bfc723cb571993ac12d1e3f",
+        "templates/slice-plan.md": "bd022b98109a88c7c37ca38548da6bf6911cdd55e6a29a524407be6d457a542d",
+        "tests/validate.py": "fcecf41f3623d4ee94543265e77486b61338f22c64c375bd14e30b7fc7aa2e4c",
+        "transitions.yaml": "b4250f06b9bf497bcc09b219a8dd1c6acea161b0fcc6b5b7fba31fe5eb6d72e2"
+      },
+      "id": "godkiller",
+      "manifest": {
+        "advisory_entrypoint": "SKILL.md",
+        "behavior_tags": [
+          "diagnose",
+          "implementation",
+          "verification",
+          "recovery"
+        ],
+        "bundle_schema_version": 2,
+        "composition": {
+          "conflicts": [],
+          "group": "architectural_decomposition",
+          "mode": "composable",
+          "requires": []
+        },
+        "context_budget": "medium",
+        "contracts": {
+          "evidence": "contracts/evidence-kinds.yaml",
+          "packets": "contracts/packets.yaml",
+          "schemas": [
+            "contracts/schemas/godkiller_boundary_packet.schema.json",
+            "contracts/schemas/architecture-boundary-v1.schema.json"
+          ]
+        },
+        "domain": "architectural_decomposition",
+        "emits": [
+          "godkiller_boundary_packet"
+        ],
+        "engine": {
+          "contract": "transitions.yaml",
+          "contract_version": "state-machine/v1",
+          "kind": "state_machine"
+        },
+        "entrypoint": "SKILL.md",
+        "flow_selection": {
+          "ambiguity": "error",
+          "fallback": "required",
+          "no_match": "blocked"
+        },
+        "handoff": "godkiller_boundary_packet",
+        "id": "godkiller",
+        "inputs": {
+          "optional": [],
+          "required": [
+            "task_context"
+          ]
+        },
+        "integrations": {
+          "cognitiveframeworks": {
+            "enhancements": [
+              "owl",
+              "anchor",
+              "dox",
+              "fuse",
+              "ward",
+              "flow",
+              "sispis"
+            ],
+            "required": []
+          }
+        },
+        "match": {
+          "required_any": [
+            "god object",
+            "god class",
+            "god module",
+            "architectural decomposition",
+            "responsibility concentration"
+          ],
+          "secondary": [
+            "extract responsibility",
+            "split component",
+            "ownership boundaries",
+            "cosmetic decomposition"
+          ]
+        },
+        "name": "GodKiller",
+        "phase_tags": [
+          "domain_state",
+          "architecture"
+        ],
+        "purpose": "Diagnose responsibility concentration and perform evidence-backed, reversible architectural decomposition without behavioral regression.",
+        "triggers": [
+          "god object",
+          "god class",
+          "god module",
+          "architectural decomposition",
+          "responsibility concentration",
+          "extract responsibility",
+          "split component",
+          "ownership boundaries",
+          "cosmetic decomposition"
+        ],
+        "version": "1.0.0"
+      },
+      "root_ref": ".",
+      "runtime_capsule": "# GodKiller \u2014 StateWork\nDomain: architectural_decomposition\nPurpose: Diagnose responsibility concentration and perform evidence-backed, reversible architectural decomposition without behavioral regression.\nWorkflow engine: state_machine (state-machine/v1)\nAvailable flows:\n- diagnose\n- extract\n- handoff\n- map\n- partition\n- recover\n- triage\n- verify\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n\n## Domain guidance\n\n# GodKiller \u2014 runtime guidance\n\nKeep the active subject revision, explicit ownership, baseline contracts, host/operator mutation authority and claim-specific trusted evidence in scope. Distinguish declared from effective architecture. Never equate files or passing isolated tests with demonstrated correctness. Never call another StateWork. Use the existing CSW host for durable evidence and transition authority. In advisory installations do not claim enforcement. When evidence contradicts the state, invalidate and re-observe. Use smallest reversible slices; conclude no action is warranted when supported.\n",
+      "runtime_capsule_hash": "c025335e086dd79c73119ffbe3f96100ea2bfdb989a59467d1e66cb11fa31fad",
+      "source_root": "."
+    },
+    {
+      "bundle_hash": "6e6f7bda0eb3ad40cdc852dcfea42449eb2077bf598fcbb467ed99acb136b9f2",
+      "bundle_ref": "terraformer",
+      "contracts": {
+        "evidence": [
+          "terraformer.inventory",
+          "terraformer.contract_validation",
+          "terraformer.no_action",
+          "terraformer.incompatibility",
+          "terraformer.composition_plan",
+          "terraformer.authority",
+          "terraformer.connection_result",
+          "terraformer.partial_integration",
+          "terraformer.e2e",
+          "terraformer.ownership_integrity",
+          "terraformer.lifecycle_recovery",
+          "terraformer.compatibility",
+          "terraformer.qualification",
+          "terraformer.completion",
+          "terraformer.blocker",
+          "terraformer.invalidation",
+          "terraformer.recovery"
+        ],
+        "packets": [
+          "terraformer_integration_packet"
+        ]
+      },
+      "engine": {
+        "contract": {
+          "completion_states": [
+            "COMPLETE",
+            "NO_COMPOSITION_NEEDED"
+          ],
+          "initial_state": "UNASSESSED",
+          "normal_path": [
+            "UNASSESSED",
+            "CONTRACTS_VALIDATED",
+            "COMPOSITION_PLANNED",
+            "CONNECTING",
+            "INTEGRATED",
+            "QUALIFIED",
+            "COMPLETE"
+          ],
+          "states": [
+            "UNASSESSED",
+            "CONTRACTS_VALIDATED",
+            "COMPOSITION_PLANNED",
+            "CONNECTING",
+            "INTEGRATED",
+            "QUALIFIED",
+            "COMPLETE",
+            "NO_COMPOSITION_NEEDED",
+            "INCOMPATIBLE",
+            "PARTIALLY_INTEGRATED",
+            "BLOCKED",
+            "INVALIDATED",
+            "RECOVERY_REQUIRED"
+          ],
+          "transitions": [
+            {
+              "domain_effect": "terraformer.validate_contracts",
+              "from": "UNASSESSED",
+              "id": "terraformer.unassessed.validate_contracts.contracts_validated",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "terraformer.inventory",
+                "terraformer.contract_validation"
+              ],
+              "to": "CONTRACTS_VALIDATED",
+              "trigger": "validate_contracts",
+              "work_class": "validate_contracts"
+            },
+            {
+              "domain_effect": "terraformer.no_action",
+              "from": "CONTRACTS_VALIDATED",
+              "id": "terraformer.contracts_validated.no_action.no_composition_needed",
+              "path_class": "normal",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "terraformer.no_action",
+                "terraformer.contract_validation"
+              ],
+              "to": "NO_COMPOSITION_NEEDED",
+              "trigger": "no_action",
+              "work_class": "no_action"
+            },
+            {
+              "domain_effect": "terraformer.plan",
+              "from": "CONTRACTS_VALIDATED",
+              "id": "terraformer.contracts_validated.plan.composition_planned",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "terraformer.composition_plan",
+                "terraformer.contract_validation"
+              ],
+              "to": "COMPOSITION_PLANNED",
+              "trigger": "plan",
+              "work_class": "plan"
+            },
+            {
+              "domain_effect": "terraformer.reject",
+              "from": "CONTRACTS_VALIDATED",
+              "id": "terraformer.contracts_validated.reject.incompatible",
+              "path_class": "failure",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "terraformer.incompatibility"
+              ],
+              "to": "INCOMPATIBLE",
+              "trigger": "reject",
+              "work_class": "reject"
+            },
+            {
+              "domain_effect": "terraformer.reconcile",
+              "from": "INCOMPATIBLE",
+              "id": "terraformer.incompatible.reconcile.contracts_validated",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "terraformer.contract_validation",
+                "terraformer.recovery"
+              ],
+              "to": "CONTRACTS_VALIDATED",
+              "trigger": "reconcile",
+              "work_class": "reconcile"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "terraformer.authorize",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "COMPOSITION_PLANNED",
+              "id": "terraformer.composition_planned.authorize.connecting",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "terraformer.authority",
+                "terraformer.composition_plan"
+              ],
+              "to": "CONNECTING",
+              "trigger": "authorize",
+              "work_class": "authorize"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "terraformer.integrate",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "CONNECTING",
+              "id": "terraformer.connecting.integrate.integrated",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "terraformer.connection_result",
+                "terraformer.ownership_integrity"
+              ],
+              "to": "INTEGRATED",
+              "trigger": "integrate",
+              "work_class": "integrate"
+            },
+            {
+              "domain_effect": "terraformer.partial",
+              "from": "CONNECTING",
+              "id": "terraformer.connecting.partial.partially_integrated",
+              "path_class": "normal",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "terraformer.partial_integration"
+              ],
+              "to": "PARTIALLY_INTEGRATED",
+              "trigger": "partial",
+              "work_class": "partial"
+            },
+            {
+              "domain_effect": "terraformer.resume",
+              "from": "PARTIALLY_INTEGRATED",
+              "id": "terraformer.partially_integrated.resume.connecting",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "terraformer.composition_plan",
+                "terraformer.recovery"
+              ],
+              "to": "CONNECTING",
+              "trigger": "resume",
+              "work_class": "resume"
+            },
+            {
+              "domain_effect": "terraformer.recover",
+              "from": "PARTIALLY_INTEGRATED",
+              "id": "terraformer.partially_integrated.recover.recovery_required",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "terraformer.invalidation"
+              ],
+              "to": "RECOVERY_REQUIRED",
+              "trigger": "recover",
+              "work_class": "recover"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "terraformer.qualify",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "INTEGRATED",
+              "id": "terraformer.integrated.qualify.qualified",
+              "path_class": "normal",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "terraformer.e2e",
+                "terraformer.ownership_integrity",
+                "terraformer.lifecycle_recovery",
+                "terraformer.compatibility",
+                "terraformer.qualification"
+              ],
+              "to": "QUALIFIED",
+              "trigger": "qualify",
+              "work_class": "qualify"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "terraformer.publish",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "QUALIFIED",
+              "id": "terraformer.qualified.publish.complete",
+              "path_class": "normal",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "terraformer.completion",
+                "terraformer.qualification"
+              ],
+              "to": "COMPLETE",
+              "trigger": "publish",
+              "work_class": "publish"
+            },
+            {
+              "domain_effect": "terraformer.next_slice",
+              "from": "QUALIFIED",
+              "id": "terraformer.qualified.next_slice.composition_planned",
+              "path_class": "normal",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "terraformer.composition_plan",
+                "terraformer.qualification"
+              ],
+              "to": "COMPOSITION_PLANNED",
+              "trigger": "next_slice",
+              "work_class": "next_slice"
+            },
+            {
+              "domain_effect": "terraformer.replan",
+              "from": "INTEGRATED",
+              "id": "terraformer.integrated.replan.composition_planned",
+              "path_class": "normal",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "terraformer.incompatibility",
+                "terraformer.composition_plan"
+              ],
+              "to": "COMPOSITION_PLANNED",
+              "trigger": "replan",
+              "work_class": "replan"
+            },
+            {
+              "domain_effect": "terraformer.recover",
+              "from": "CONNECTING",
+              "id": "terraformer.connecting.recover.recovery_required",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "terraformer.invalidation"
+              ],
+              "to": "RECOVERY_REQUIRED",
+              "trigger": "recover",
+              "work_class": "recover"
+            },
+            {
+              "domain_effect": "terraformer.reobserve",
+              "from": "RECOVERY_REQUIRED",
+              "id": "terraformer.recovery_required.reobserve.unassessed",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "terraformer.recovery",
+                "terraformer.inventory"
+              ],
+              "to": "UNASSESSED",
+              "trigger": "reobserve",
+              "work_class": "reobserve"
+            },
+            {
+              "domain_effect": "terraformer.reobserve",
+              "from": "BLOCKED",
+              "id": "terraformer.blocked.reobserve.unassessed",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "terraformer.recovery",
+                "terraformer.inventory"
+              ],
+              "to": "UNASSESSED",
+              "trigger": "reobserve",
+              "work_class": "reobserve"
+            },
+            {
+              "domain_effect": "terraformer.reobserve",
+              "from": "INVALIDATED",
+              "id": "terraformer.invalidated.reobserve.unassessed",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "terraformer.invalidation",
+                "terraformer.inventory"
+              ],
+              "to": "UNASSESSED",
+              "trigger": "reobserve",
+              "work_class": "reobserve"
+            },
+            {
+              "domain_effect": "terraformer.block",
+              "from": "*",
+              "id": "terraformer.any.block.blocked",
+              "path_class": "failure",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "terraformer.blocker"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "block"
+            },
+            {
+              "domain_effect": "terraformer.invalidate",
+              "from": "*",
+              "id": "terraformer.any.invalidate.invalidated",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "terraformer.invalidation"
+              ],
+              "to": "INVALIDATED",
+              "trigger": "invalidate",
+              "work_class": "invalidate"
+            }
+          ],
+          "version": "1.0.0"
+        },
+        "contract_hash": "d81e72459b67d86a3fa85fef52fcd544c80c9a0c754a3c6cc30ad96714c1aa0e",
+        "contract_path": "transitions.yaml",
+        "contract_version": "state-machine/v1",
+        "kind": "state_machine"
+      },
+      "file_hashes": {
+        "CHECKSUMS.sha256": "dc99d16d87e5bfed99efb4548c0e127e66bbf88f5c9274f68c65e9a1da90e4e8",
+        "README.md": "10733a7cd2cb7aa1c9e95556e79128e50bf168869136dbf42b3939f2062f514b",
+        "SKILL.md": "fec119a561e11972c8847e9ea8aa198e74dddef2ac834bdae6a0e23ea480597a",
+        "contracts/architecture-boundary.md": "851bd3d05b9e80eeb366f3ada4e4c0faedf67c16d82cf7b45bb8a73a5658feb2",
+        "contracts/evidence-kinds.yaml": "200b3f9fd392929b2f90fe462b037c5348993ab070c746262e1b096b7418be10",
+        "contracts/packets.yaml": "a50db814b0a5b71e4c3cd0489bd0ea23edc838dae81f1da96fab94eadfb30494",
+        "contracts/schemas/architecture-boundary-v1.schema.json": "82723b20fe151e2af1bc40010621948533596e70ab015ef7d7eff725e5785066",
+        "contracts/schemas/handoff-packet.schema.json": "f7fe14b934e95966b4d0a4f6dc7715bc6781fcde12731d4b6584de84646a356c",
+        "contracts/schemas/terraformer_integration_packet.schema.json": "e3a4add6a95994b73a08397a3a006da43f6dbe67511273c55df46a1f67a9e74a",
+        "flows/complete/flow.md": "2a8bf287be9c90f38244a40ed59e3430062ac735f26d577814dcadd838fc2f71",
+        "flows/connect/flow.md": "365096163bc243f3dee024b00299e90aeb4d56e91ce679fb58dbd9a52817f61e",
+        "flows/inventory/flow.md": "fce936c1d2f69117e2afa04eeb7b12d8217f4f66b61af5fcb086f20c49ff72e6",
+        "flows/plan/flow.md": "129f486095f1a5a71c2434c6331911dedb7960fa1b473322b07b09c80a6495d7",
+        "flows/qualify/flow.md": "d1ace09d5f38f8edcb0a50564281f192493f6a34048667a056b018612ddb54aa",
+        "flows/reconcile/flow.md": "54950200665d498e2b54c01562e816f1793b12b8511f172bd38db995f59f0618",
+        "flows/recover/flow.md": "839f005727089a2429720e4ccac13c9a2a8264e814bd4f32643b813ff162b969",
+        "flows/triage/flow.md": "e52b3ecb5adc48c67c19dfb1ae8d6b82d5eee41c10eee8612427f49bc2a912cf",
+        "guidance.md": "ab583ab6785b2dd2f2b52275cfd70db765a9274932ec8dd5bb227ff5b9342934",
+        "manifest.yaml": "34b7d5f8223783495c3a568bbccfe011b9be49ea05f39f7dc1045390808ff82a",
+        "qualification/README.md": "2322e43ca2c657d557b4eee8280a0cac540ce207833f8c98bbea48d927a5ca6f",
+        "qualification/cases.yaml": "f9373516f83ba110d9e25b50dfdadaeab8c92792f182dbdcd9c1ef3cd2c1c11a",
+        "qualification/negative/invalid_outcome.json": "c1070a17ebe07f8223e54d32a2be27fd84354b19aefe2a51a9146f60e3281704",
+        "qualification/negative/missing_owner.json": "6681aaa9d3521e107631542703e74def978096f2dee34dd0c7d65279c024d3aa",
+        "qualification/negative/missing_revision.json": "d14d13eebb2876f4110b8a01bc2314431ae1e60587cb13a89c428aff6bc45487",
+        "qualification/negative/wrong_producer.json": "7b736734363ae4f8e544145e2707107384be76a028cf46e09bea8733d4cb2de8",
+        "qualification/packet-valid.example.json": "14db11179dc91c1f715cc9ed547d6e6e6acf1ea3d5fdaca05e715c60aaa645c2",
+        "references/authority.md": "a1cb5385ab25f5b7fa6f69591d6ba7ce560db9dbd1b3cc1d475cd766260f573c",
+        "references/lifecycle.md": "8b310dc49d821945d099f1c3025526735a638e838536d14e116f82099b966cf7",
+        "references/ownership.md": "82c57d75b566436a10d558e2d4181222fdb78c19113a26ea4dcb93bf3aab4e8a",
+        "references/qualification.md": "7f280d1317cfdc574251d80b30f5922eb29e655ce07985919fcecf205d36806a",
+        "references/reconciliation.md": "66cda29a9e75ec9e679239099b244d63fd807209b851acf291a090628852177d",
+        "runtime.md": "54153c5351d648332143193da09f458e2bfc1e89ddcb631cb07561d2d62fc9b7",
+        "templates/architecture-boundary.example.yaml": "476399a31dd8862ad75e5023e71835504e74f687f425be6d2b3c0cc187b05068",
+        "templates/assessment.md": "3b24a2e6c84872d23c7178ba56e6d8e87f4cb23365001f2e9590767fc1a54385",
+        "templates/evidence-ledger.yaml": "504cc6d2fe63925955e96b40995674ef80da8e739a34143c5ee8072113e3837b",
+        "templates/slice-plan.md": "b478c18d6bc2af55c386ddc86ea304567179f045de76b5d5985cb471269bdb54",
+        "tests/validate.py": "1e5f89c333678c10b43f8d8d6bf78a1185d146fce891c67b37a5b5a84dbc0a2b",
+        "transitions.yaml": "f418de043f4621dd921c60c0181901f5f4e22dddd3b8f905d4474164a3262813"
+      },
+      "id": "terraformer",
+      "manifest": {
+        "advisory_entrypoint": "SKILL.md",
+        "behavior_tags": [
+          "diagnose",
+          "implementation",
+          "verification",
+          "recovery"
+        ],
+        "bundle_schema_version": 2,
+        "composition": {
+          "conflicts": [],
+          "group": "architectural_recomposition",
+          "mode": "composable",
+          "requires": []
+        },
+        "context_budget": "medium",
+        "contracts": {
+          "evidence": "contracts/evidence-kinds.yaml",
+          "packets": "contracts/packets.yaml",
+          "schemas": [
+            "contracts/schemas/terraformer_integration_packet.schema.json",
+            "contracts/schemas/architecture-boundary-v1.schema.json"
+          ]
+        },
+        "domain": "architectural_recomposition",
+        "emits": [
+          "terraformer_integration_packet"
+        ],
+        "engine": {
+          "contract": "transitions.yaml",
+          "contract_version": "state-machine/v1",
+          "kind": "state_machine"
+        },
+        "entrypoint": "SKILL.md",
+        "flow_selection": {
+          "ambiguity": "error",
+          "fallback": "required",
+          "no_match": "blocked"
+        },
+        "handoff": "terraformer_integration_packet",
+        "id": "terraformer",
+        "inputs": {
+          "optional": [],
+          "required": [
+            "task_context"
+          ]
+        },
+        "integrations": {
+          "cognitiveframeworks": {
+            "enhancements": [
+              "owl",
+              "anchor",
+              "dox",
+              "fuse",
+              "ward",
+              "flow",
+              "sispis"
+            ],
+            "required": []
+          }
+        },
+        "match": {
+          "required_any": [
+            "architectural recomposition",
+            "component integration",
+            "contract reconciliation",
+            "lifecycle composition",
+            "integration gaps"
+          ],
+          "secondary": [
+            "distributed component wiring",
+            "ownership conflict",
+            "component compatibility",
+            "partial integration"
+          ]
+        },
+        "name": "TerraFormer",
+        "phase_tags": [
+          "domain_state",
+          "architecture"
+        ],
+        "purpose": "Reconcile component contracts and establish evidence-backed, reversible architectural integration without centralizing authority.",
+        "triggers": [
+          "architectural recomposition",
+          "component integration",
+          "contract reconciliation",
+          "lifecycle composition",
+          "integration gaps",
+          "distributed component wiring",
+          "ownership conflict",
+          "component compatibility",
+          "partial integration"
+        ],
+        "version": "1.0.0"
+      },
+      "root_ref": ".",
+      "runtime_capsule": "# TerraFormer \u2014 StateWork\nDomain: architectural_recomposition\nPurpose: Reconcile component contracts and establish evidence-backed, reversible architectural integration without centralizing authority.\nWorkflow engine: state_machine (state-machine/v1)\nAvailable flows:\n- complete\n- connect\n- inventory\n- plan\n- qualify\n- reconcile\n- recover\n- triage\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n\n## Domain guidance\n\n# TerraFormer \u2014 runtime guidance\n\nKeep the active subject revision, explicit ownership, baseline contracts, host/operator mutation authority and claim-specific trusted evidence in scope. Distinguish declared from effective architecture. Never equate files or passing isolated tests with demonstrated correctness. Never call another StateWork. Use the existing CSW host for durable evidence and transition authority. In advisory installations do not claim enforcement. When evidence contradicts the state, invalidate and re-observe. Use smallest reversible slices; conclude no action is warranted when supported.\n",
+      "runtime_capsule_hash": "b37dff76a663d2dc18ac9a45c3d5ff1b35f3623261e0525fb3b2ffe94f0b412a",
+      "source_root": "."
+    },
+    {
+      "bundle_hash": "8ae92a8501d94b2c6805d38766b69fda0cb4ab20ace5da7c88689ec334e7a36c",
+      "bundle_ref": "testworks",
+      "contracts": {
+        "evidence": [
+          "testworks.inventory",
+          "testworks.strategy",
+          "testworks.risk_assessment",
+          "testworks.run_plan",
+          "testworks.run_receipt",
+          "testworks.evaluation",
+          "testworks.qualification",
+          "testworks.sufficiency",
+          "testworks.blocker",
+          "testworks.inconclusive",
+          "testworks.invalidation",
+          "testworks.recovery_plan",
+          "testworks.reassessment",
+          "testworks.subject_identity",
+          "testworks.authority"
+        ],
+        "packets": [
+          "testing_evidence_packet"
+        ]
+      },
+      "engine": {
+        "contract": {
+          "completion_states": [
+            "VERIFIED",
+            "NO_ADDITIONAL_TESTING_NEEDED"
+          ],
+          "initial_state": "UNASSESSED",
+          "normal_path": [
+            "UNASSESSED",
+            "INVENTORIED",
+            "STRATEGIZED",
+            "EXECUTING",
+            "EVALUATED",
+            "VERIFIED"
+          ],
+          "states": [
+            "UNASSESSED",
+            "INVENTORIED",
+            "STRATEGIZED",
+            "EXECUTING",
+            "EVALUATED",
+            "VERIFIED",
+            "NO_ADDITIONAL_TESTING_NEEDED",
+            "BLOCKED",
+            "INCONCLUSIVE",
+            "INVALIDATED"
+          ],
+          "transitions": [
+            {
+              "domain_effect": "capture_test_inventory",
+              "from": "UNASSESSED",
+              "id": "testworks.unassessed.inventory.inventoried",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "testworks.inventory"
+              ],
+              "to": "INVENTORIED",
+              "trigger": "inventory",
+              "work_class": "observation"
+            },
+            {
+              "domain_effect": "establish_risk_based_test_strategy",
+              "from": "INVENTORIED",
+              "id": "testworks.inventoried.strategize.strategized",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "testworks.strategy",
+                "testworks.risk_assessment"
+              ],
+              "to": "STRATEGIZED",
+              "trigger": "strategize",
+              "work_class": "planning"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "authorize_selected_test_work",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "STRATEGIZED",
+              "id": "testworks.strategized.plan_run.executing",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "testworks.run_plan",
+                "testworks.authority"
+              ],
+              "to": "EXECUTING",
+              "trigger": "plan_run",
+              "work_class": "planning"
+            },
+            {
+              "domain_effect": "record_test_execution",
+              "from": "EXECUTING",
+              "id": "testworks.executing.execute.evaluated",
+              "progress_class": "FORWARD_PROGRESS",
+              "required_evidence": [
+                "testworks.run_receipt",
+                "testworks.subject_identity"
+              ],
+              "to": "EVALUATED",
+              "trigger": "execute",
+              "work_class": "execution"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "verify_subject_assurance",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "EVALUATED",
+              "id": "testworks.evaluated.qualify.verified",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "testworks.qualification",
+                "testworks.subject_identity"
+              ],
+              "to": "VERIFIED",
+              "trigger": "qualify",
+              "work_class": "validation"
+            },
+            {
+              "consequential": true,
+              "domain_effect": "justify_no_additional_testing",
+              "evidence_freshness": {
+                "mode": "after_state_entry"
+              },
+              "from": "STRATEGIZED",
+              "id": "testworks.strategized.decline.no_additional_testing_needed",
+              "progress_class": "TERMINAL",
+              "required_evidence": [
+                "testworks.sufficiency",
+                "testworks.subject_identity"
+              ],
+              "to": "NO_ADDITIONAL_TESTING_NEEDED",
+              "trigger": "decline",
+              "work_class": "validation"
+            },
+            {
+              "domain_effect": "record_inconclusive_evidence",
+              "from": "EVALUATED",
+              "id": "testworks.evaluated.mark_inconclusive.inconclusive",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "testworks.inconclusive"
+              ],
+              "to": "INCONCLUSIVE",
+              "trigger": "mark_inconclusive",
+              "work_class": "assessment"
+            },
+            {
+              "domain_effect": "record_inconclusive_evidence",
+              "from": "EXECUTING",
+              "id": "testworks.executing.mark_inconclusive.inconclusive",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "testworks.inconclusive"
+              ],
+              "to": "INCONCLUSIVE",
+              "trigger": "mark_inconclusive",
+              "work_class": "assessment"
+            },
+            {
+              "domain_effect": "record_inconclusive_evidence",
+              "from": "STRATEGIZED",
+              "id": "testworks.strategized.mark_inconclusive.inconclusive",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "testworks.inconclusive"
+              ],
+              "to": "INCONCLUSIVE",
+              "trigger": "mark_inconclusive",
+              "work_class": "assessment"
+            },
+            {
+              "domain_effect": "record_blocking_condition",
+              "from": "UNASSESSED",
+              "id": "testworks.unassessed.block.blocked",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "testworks.blocker"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "blocking"
+            },
+            {
+              "domain_effect": "record_blocking_condition",
+              "from": "INVENTORIED",
+              "id": "testworks.inventoried.block.blocked",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "testworks.blocker"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "blocking"
+            },
+            {
+              "domain_effect": "record_blocking_condition",
+              "from": "STRATEGIZED",
+              "id": "testworks.strategized.block.blocked",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "testworks.blocker"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "blocking"
+            },
+            {
+              "domain_effect": "record_blocking_condition",
+              "from": "EXECUTING",
+              "id": "testworks.executing.block.blocked",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "testworks.blocker"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "blocking"
+            },
+            {
+              "domain_effect": "record_blocking_condition",
+              "from": "EVALUATED",
+              "id": "testworks.evaluated.block.blocked",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "testworks.blocker"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "blocking"
+            },
+            {
+              "domain_effect": "record_blocking_condition",
+              "from": "INCONCLUSIVE",
+              "id": "testworks.inconclusive.block.blocked",
+              "progress_class": "LATERAL",
+              "required_evidence": [
+                "testworks.blocker"
+              ],
+              "to": "BLOCKED",
+              "trigger": "block",
+              "work_class": "blocking"
+            },
+            {
+              "domain_effect": "invalidate_stale_assurance",
+              "from": "STRATEGIZED",
+              "id": "testworks.strategized.invalidate.invalidated",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "testworks.invalidation"
+              ],
+              "to": "INVALIDATED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "invalidate_stale_assurance",
+              "from": "EXECUTING",
+              "id": "testworks.executing.invalidate.invalidated",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "testworks.invalidation"
+              ],
+              "to": "INVALIDATED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "invalidate_stale_assurance",
+              "from": "EVALUATED",
+              "id": "testworks.evaluated.invalidate.invalidated",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "testworks.invalidation"
+              ],
+              "to": "INVALIDATED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "invalidate_stale_assurance",
+              "from": "INCONCLUSIVE",
+              "id": "testworks.inconclusive.invalidate.invalidated",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "testworks.invalidation"
+              ],
+              "to": "INVALIDATED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "invalidate_stale_assurance",
+              "from": "BLOCKED",
+              "id": "testworks.blocked.invalidate.invalidated",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "testworks.invalidation"
+              ],
+              "to": "INVALIDATED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "invalidate_stale_assurance",
+              "from": "VERIFIED",
+              "id": "testworks.verified.invalidate.invalidated",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "testworks.invalidation"
+              ],
+              "to": "INVALIDATED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "invalidate_stale_assurance",
+              "from": "NO_ADDITIONAL_TESTING_NEEDED",
+              "id": "testworks.no_additional_testing_needed.invalidate.invalidated",
+              "path_class": "invalidation",
+              "progress_class": "INVALIDATION",
+              "required_evidence": [
+                "testworks.invalidation"
+              ],
+              "to": "INVALIDATED",
+              "trigger": "invalidate",
+              "work_class": "invalidation"
+            },
+            {
+              "domain_effect": "reobserve_changed_subject",
+              "from": "INVALIDATED",
+              "id": "testworks.invalidated.reassess.unassessed",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "testworks.reassessment"
+              ],
+              "to": "UNASSESSED",
+              "trigger": "reassess",
+              "work_class": "recovery"
+            },
+            {
+              "domain_effect": "reobserve_changed_subject",
+              "from": "BLOCKED",
+              "id": "testworks.blocked.reassess.unassessed",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "testworks.reassessment"
+              ],
+              "to": "UNASSESSED",
+              "trigger": "reassess",
+              "work_class": "recovery"
+            },
+            {
+              "domain_effect": "plan_assurance_recovery",
+              "from": "INCONCLUSIVE",
+              "id": "testworks.inconclusive.recover.strategized",
+              "path_class": "recovery",
+              "progress_class": "RECOVERY",
+              "required_evidence": [
+                "testworks.recovery_plan"
+              ],
+              "to": "STRATEGIZED",
+              "trigger": "recover",
+              "work_class": "recovery"
+            }
+          ],
+          "version": "1.0.0"
+        },
+        "contract_hash": "2d2cc5f7c271fe55e9ade42e2047a899b1e70d16dbbb294ddcdc22f0de1d69e2",
+        "contract_path": "transitions.yaml",
+        "contract_version": "state-machine/v1",
+        "kind": "state_machine"
+      },
+      "file_hashes": {
+        "README.md": "c5c44ff2fa6cdfd640be592502dc46fa3d24a5007e7db1dfe07b38c82981ba0d",
+        "SKILL.md": "05b864dd40ef388a054b66f40b87ba0f5603ffbb44c8785fbd5248144b4d1329",
+        "contracts/evidence-kinds.yaml": "ac86081bd58a2fd12ce8fcfe60d5e376505b8a9f720115f5e8293e24abc71801",
+        "contracts/packets.yaml": "79d28d9935b267bca92ccee55c3fdea46d30997efede9c0b80774bd15d904160",
+        "contracts/schemas/testing-evidence-packet.schema.json": "9a60211e26aa705682089cea49185819f3d6c3e4939db7cec382f06f07fc93bc",
+        "flows/README.md": "01db407a3d0ca044d959259743438f9c357432acf5456603b3b5f9f40d5e50dd",
+        "flows/audit/FLOW.md": "33c4aac090ef861bed0dc6b20e2c65e555d14ffff11f3aef46d104b11434c218",
+        "flows/audit/flow.md": "48a29349d0ee4595ed0833834088ca3264b72381faacf431c6e1c8e511d8c5d6",
+        "flows/audit/flow.yaml": "a9d0dcff397de61d71f9df39f64c2a736cf43e4a3673331788ac8b2590319ad6",
+        "flows/consolidate/FLOW.md": "2e96463e926770a50f07ab39f48d0098f13d642f468cd92a5ea39aa698c2f7a7",
+        "flows/consolidate/flow.md": "8964571426522669326240ab02a080db28888e0f8bc68068dad1e9c6d2a234f4",
+        "flows/consolidate/flow.yaml": "a8c53b83d33e6054af26739e0c04ea044cb3da85b077b7f2578ed4f861373694",
+        "flows/design/FLOW.md": "bdbf5e20eae2ba2a97484ca61095506c14023604cfbfee9428df1d235b53597b",
+        "flows/design/flow.md": "90bce465c26d351bdd424cb65419ac4dfb0a6717216612d2b97ffdb84791cb59",
+        "flows/design/flow.yaml": "d6824747ae4294d29d5c0e667d6c910df2b285dd8be245e4f4ee00b2f2756df2",
+        "flows/diagnose/FLOW.md": "0890316162b87ed2b5d0d75b4c061f51b6b5e42fecbc9fb0669bc4d2862e9636",
+        "flows/diagnose/flow.md": "509bee38a3407cb046d754cfb75aa29aa14e9af4ee39817148ef143c441df474",
+        "flows/diagnose/flow.yaml": "79325bc42b421eebc7799dfa9bcee6e0529befeee6aad00b311bd9ce620c1d15",
+        "flows/execute/FLOW.md": "cf8db7ad1a9c8584ef1131f97ddfe876f97e7b2464d8ff895e48f015cacfd83d",
+        "flows/execute/flow.md": "8fa347e27b3c3ad10776c5f04674c1feb8b70402cda98c991aec5fc67ededc5b",
+        "flows/execute/flow.yaml": "4531fe38012cb786e84932c36ea89e92baec6bb109922aefc70e7e8acb2a3917",
+        "flows/generate/FLOW.md": "f40b365d54fdddd4ef7b0707079c75fb94697342cd669e7cd198f2a4c18b9513",
+        "flows/generate/flow.md": "267a62f6998059ce1bf421de132fc638bb813740da37fe9b0134d8649fbd61c9",
+        "flows/generate/flow.yaml": "c20a12a57caa084e4ad393443dc52aa9d2e9d07cbb67d9a9e33ec01811742a34",
+        "flows/qualify/FLOW.md": "f05adf19b5e5486332dfb58a0c9aef57a40c77cbc7da635d220535c4d5fd85e1",
+        "flows/qualify/flow.md": "d86954feff0cf8626be6e15cb00b2f545767825004f7645c6c96cf8365aa710a",
+        "flows/qualify/flow.yaml": "fd00899f0df5ddc63f336032582a4256c71448eba2d2bbfeecea2b03214f791a",
+        "flows/recover/FLOW.md": "5c447131df2edc7f3ee7c0ba5001dc10e84f1bc167394390707858258c15f56f",
+        "flows/recover/flow.md": "14fffccd76894dad3b52701d322e4bbf6c2b045cdb0dcda46a979077111cc84c",
+        "flows/recover/flow.yaml": "9738cee7c738de893008b9aa1c4df158d8bd23056eab738b03d142943ab5c034",
+        "flows/select/FLOW.md": "3a57c872b343886f6afa01642f49f98fe01332d832b108addf59105df2a60ede",
+        "flows/select/flow.md": "aed4234cd9de62bb5731e8e8eb4b4801b42ec601d3345ea9d7b35e9bd7d7830c",
+        "flows/select/flow.yaml": "8aaa6d86435fd9e211d3c9e6ea62fc9b9ed29c2bdbf31ac764217b93721ceb96",
+        "flows/triage/FLOW.md": "e49ad0998bbdee6e96408d14fe2bde763c0e2839674fac18e75333778c0516ab",
+        "flows/triage/flow.md": "d2e0cca9db5e22b4a688418f036e3e7d0da54a6dae23ca1e4c367065d857a5a1",
+        "flows/triage/flow.yaml": "3f34e4b58aaf585426bc15e3a4df6a5bd62b9f07a524c119cac9300febaa30e0",
+        "guidance.md": "eeeb10368c514532258a366a10c028a77158c74148b115ead0ca56c4bdacecfa",
+        "manifest.yaml": "9f45f3ca9ca084124053c51f4548ef2e0245e35ed4d2b2731985a7d281afa13a",
+        "qualification/README.md": "fed208a386a1cb736b50ab6e2081268bd4a9822efe0259ed75837cbe5f33fd2f",
+        "qualification/__pycache__/policy.cpython-311.pyc": "69dd5b5df52ba5b0ef46cfa32637bfdd3014a4958b6eaed66a1e42e911053d5d",
+        "qualification/__pycache__/policy.cpython-313.pyc": "e49ead9bf03c66ef6507e2025d7283821170c101238774c78af339973964d7c4",
+        "qualification/cases.yaml": "68f748e1a6da6d89755d2ece8c82618e19a8683c88cdf24677d5b4d64e0b5a04",
+        "qualification/policy.py": "3dac8513d21e12e085828ad5e364a94f4ef4436ca564ffbff25095932eebd382",
+        "qualification/scenarios.yaml": "87e67ca07f339a8c6a06966b01d3a020d59e3976d6fc0140ba8a9d4441eb4b6b",
+        "references/decision-matrix.md": "c11376c2f67282ce71181e2d34f46b1ddcb1eced2e2f5a158b5c50bc8e158798",
+        "references/oracle-and-coverage.md": "f503b8b5e52196c5b6dd37a0f5be587eca9405987b2ab49239d751a86553b184",
+        "runtime.md": "3c8d36a6c8c063d883d88a4f0ec1905aa1e9365b6428e45854a9291dd220347f",
+        "templates/run-receipt.example.yaml": "3f89d8be5b613cf2f11e58920efa14e973ab3777cf421614409cec31e10def83",
+        "templates/testing-evidence-packet.example.yaml": "f1ecc6515d91dada06e7957cd27c58107aa9e258112120ff52d069edd93a866e",
+        "tests/__pycache__/test_qualification.cpython-311-pytest-9.1.1.pyc": "11f1964cea08db8a83e55c87a1609b9fbc178dca42d9dee7e770b95f06419088",
+        "tests/__pycache__/test_qualification.cpython-313.pyc": "73992b4bf768176f5042fef6c9e423933094a9153173dd371c1c4303f8e42422",
+        "tests/fixtures/handoff-packet.schema.json": "78f296a5795efec652f15b0b1a8379518f3fd4e7b21fb8677b1f5d10625fd77c",
+        "tests/test_qualification.py": "b9eb1b3ccce062b79019866b070ee246722479f3ce704b27a655b4442ba5587d",
+        "transitions.yaml": "23e190a342d378276deb74207ed79798457832bbf618d3c87b1ab5de0c114e5e"
+      },
+      "id": "testworks",
+      "manifest": {
+        "advisory_entrypoint": "SKILL.md",
+        "behavior_tags": [
+          "testing",
+          "assurance",
+          "risk",
+          "verification",
+          "evidence",
+          "diagnose",
+          "recovery"
+        ],
+        "bundle_schema_version": 2,
+        "composition": {
+          "conflicts": [],
+          "group": "test_assurance",
+          "mode": "composable",
+          "requires": []
+        },
+        "context_budget": "medium",
+        "contracts": {
+          "evidence": "contracts/evidence-kinds.yaml",
+          "packets": "contracts/packets.yaml",
+          "schemas": [
+            "contracts/schemas/testing-evidence-packet.schema.json"
+          ]
+        },
+        "domain": "test_assurance",
+        "emits": [
+          "testing_evidence_packet"
+        ],
+        "engine": {
+          "contract": "transitions.yaml",
+          "contract_version": "state-machine/v1",
+          "kind": "state_machine"
+        },
+        "entrypoint": "testworks/SKILL.md",
+        "flow_selection": {
+          "ambiguity": "error",
+          "fallback": "required",
+          "no_match": "blocked"
+        },
+        "handoff": "testing_evidence_packet",
+        "id": "testworks",
+        "inputs": {
+          "optional": [
+            "repository_truth_packet",
+            "infrastructure_truth_packet"
+          ],
+          "required": [
+            "task_context"
+          ]
+        },
+        "integrations": {
+          "cognitiveframeworks": {
+            "enhancements": [
+              "owl",
+              "anchor"
+            ],
+            "required": []
+          }
+        },
+        "name": "TestWorks",
+        "phase_tags": [
+          "domain_state"
+        ],
+        "purpose": "Select, produce, evaluate, conserve, and qualify proportionate software test evidence without rewarding test volume.",
+        "triggers": [
+          "testing strategy",
+          "test suite",
+          "test coverage",
+          "regression testing",
+          "test generation",
+          "flaky test",
+          "test qualification",
+          "test audit",
+          "release test evidence",
+          "redundant tests"
+        ],
+        "version": "1.0.0"
+      },
+      "root_ref": ".",
+      "runtime_capsule": "# TestWorks \u2014 StateWork\nDomain: test_assurance\nPurpose: Select, produce, evaluate, conserve, and qualify proportionate software test evidence without rewarding test volume.\nWorkflow engine: state_machine (state-machine/v1)\nAvailable flows:\n- audit\n- consolidate\n- design\n- diagnose\n- execute\n- generate\n- qualify\n- recover\n- select\n- triage\nInspect current workflow progress and eligible steps through the host workflow authority.\nUse the selected flow as guidance; the workflow contract and host authority determine legal steps.\n\n## Domain guidance\n\n# TestWorks Operating Guidance\n\n## Assurance-per-effort decision model\nDo not invent a universal quality score. Classify test value along independent\naxes: failure impact, distinct fault detection, oracle strength, provenance,\nmaintainability, determinism, runtime/compute cost, and current applicability.\nA test that has never failed may still enforce a critical invariant. A test that\nfails frequently may merely be broken. Frequency alone determines neither.\n\n**Minimal defensible selection:** identify all non-negotiable invariants, all\nplausible regressions introduced by the changed behavior, and every evidence\nclaim a downstream release gate needs. For each candidate test ask whether a\ncheaper existing test reliably detects the same meaningful failure. Choose\nsmoke/targeted/contract/integration/security/load/endurance as required.\nUse full-suite qualification when risk, policy, changed shared semantics, or\ninsufficient coverage requires it \u2014 not because \"full\" sounds safer.\n\n**Stop rule:** further testing is unjustified once the explicit risk model is\nadequately covered at the required confidence, existing receipts are current,\nnew proposed tests add no defensible detection value, and critical invariants\nremain intact. Document scope and uncertainty; zero residual risk is not required.\n\n## Portfolio lifecycle decisions\n| Class | Recommendation | Necessary evidence |\n| --- | --- | --- |\n| CRITICAL_INVARIANT | Keep regardless of low failure rate or cost | policy, impact, invariant ownership |\n| UNIQUE_REGRESSION | Keep | unique historical failure or differential mutation/negative case |\n| USEFUL_EXPENSIVE | Schedule selectively; do not delete by default | measured cost + retained release gate |\n| REDUNDANT | Propose consolidation | equivalent detection/oracle plus retained distinguishing failure modes |\n| FLAKY | Diagnose and repair; quarantine only with stated risk | seed/logs/repeats/environment attribution |\n| OBSOLETE | Propose removal | retired behavior and ownership confirmation |\n| UNPROVEN_VALUE | Investigate; only then propose removal | evidence gaps, proposed replacement, authorization |\n\nDo not use arbitrary deletion quotas or automated \"delete all passing duplicates\".\nWhen wall-clock duration is the bottleneck, first recommend incremental selection,\nparallel execution where isolation is proven, caching compatible with evidence\nidentity, or separate fast gates and release gates.\n\n## Impact-based test shapes\n- LOW: relevant unit/contract tests and narrowly matched prior regressions.\n- MODERATE: targeted tests plus boundary and relevant integration evidence.\n- HIGH: affected contracts, state/invariant, failure-mode and integration gates.\n- CRITICAL: independent safety/security/ownership controls, negative/adversarial\n  cases and explicit approval; full or endurance gates if the actual risk warrants.\nThese are defaults, not substitutes for risk reasoning or organization policy.\n\n## Diagnosis discipline\nFAIL is not automatically PRODUCT_DEFECT. Use outcome classes: product regression,\ntest defect, environmental fault, infrastructure deficiency, flake, and unknown.\nCompare repeat runs under controlled inputs only when it adds diagnostic value.\nA changed runtime/fixture/seed voids simple equivalence comparisons.\n\n## Change and handoff boundaries\nTestWorks owns test *intent* and evidence. Gitter supplies a scoped truth packet\nwhen repository identity/ownership must be established. Getter owns controlled\nmodifications to tests or other repository state. Infrae owns distributed test\ninfrastructure and environmental qualification. GodKiller decomposes excessive\nresponsibility concentration; TerraFormer recomposes architecture. No direct\nStateWork-to-StateWork calls. Emit a request for the composition layer.\n\n## Invalidation\nCompare claimed and observed state. If SHA, dirty-tree hash, test definitions,\napplicable dependency/toolchain/environment assumptions, workload, or required\nrisk scope change, mark the old claim historical; do not silently reuse it.\nRerun only invalidated evidence where independence is demonstrable. Shared\ncross-cutting changes may invalidate multiple receipts and require broader gates.\n",
+      "runtime_capsule_hash": "fe28b55deccb13f5078192e6a81cefd683c5b9763195fc88fb374e2dac24afea",
       "source_root": "."
     }
   ],

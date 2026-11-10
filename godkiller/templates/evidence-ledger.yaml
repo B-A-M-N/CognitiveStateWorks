@@ -1,0 +1,17 @@
+schema_version: architecture-evidence-ledger/v1
+subject_ref: replace-with-observed-subject
+revision: replace-with-observed-revision
+entries:
+- id: example
+  claim: replace with observed claim
+  kind: godkiller.inventory
+  issuer: host:statework-observation
+  validator: host-statework-observation-v1
+  oracle: replace with independent oracle
+  observed_at: '2026-11-10T00:00:00Z'
+  subject_fingerprint: replace-with-observed-fingerprint
+  status: pending
+  artifact_refs: []
+  limitations:
+  - Template only; never use as real evidence
+

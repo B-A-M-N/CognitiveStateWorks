@@ -1,0 +1,22 @@
+id: testworks.consolidate
+statework: testworks
+kind: internal_flow
+version: 1.0.0
+purpose: Prove proposed removals or consolidation preserve distinct regression detection.
+inputs:
+- audit classification
+- test semantics
+- owner approvals
+- prior regressions
+- candidate replacement
+outputs:
+- semantic equivalence evidence
+- proposed changes only
+- risk/rollback plan
+- fresh requalification plan
+prohibitions:
+- Auto-deleting tests
+- Inferring equivalence from same name or same coverage percentage
+- Removing a critical control for speed
+handoff_rule: Getter must apply any approved repository changes; Gitter supplies revision and ownership
+  truth.

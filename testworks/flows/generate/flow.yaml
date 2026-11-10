@@ -1,0 +1,20 @@
+id: testworks.generate
+statework: testworks
+kind: internal_flow
+version: 1.0.0
+purpose: Construct or propose executable tests with trustworthy oracles and reproducible fixtures.
+inputs:
+- approved design
+- test harness conventions
+- ownership and mutation authorization
+outputs:
+- test change proposal
+- proof of oracle sensitivity
+- test fixture specification
+- expected run command
+prohibitions:
+- Repository ownership or mutation authority is unknown
+- Only tautological tests are possible
+- Generated tests duplicate coverage with no additional detection
+handoff_rule: TestWorks may author proposed diffs in isolated artifacts; Getter owns integration into
+  repository state.

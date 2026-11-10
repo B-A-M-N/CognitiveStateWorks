@@ -69,7 +69,7 @@ def test_host_binding_filters_task_candidates_but_keeps_scoped_active_workflows(
     bindings = resolve_bindings(
         authority, scope, {"behavior_tags": ["implementation"]})
     assert {item.identity["statework_id"] for item in bindings} == {
-        "gitter", "getter", "tuid"}
+        "gitter", "getter", "tuid", "godkiller", "terraformer"}
 
     other_scope = _scope("repo:other")
     other_bindings = resolve_bindings(

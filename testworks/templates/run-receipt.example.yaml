@@ -1,0 +1,20 @@
+# Example evidence content. Host must authenticate and attest the receipt; this
+# illustrative file does not establish trust.
+receipt_id: host-run:987
+subject_fingerprint: sha256:example-effective-context
+revision: abc123
+environment_fingerprint: sha256:runner-image-dependencies
+suite_fingerprint: sha256:tests-and-configuration
+workload_fingerprint: sha256:run-args-seed-fixtures
+started_at: '2026-11-10T00:00:00Z'
+finished_at: '2026-11-10T00:00:05Z'
+command: 'example-test-runner --target scoped-tests'
+exit_code: 0
+outcome: PASS
+results:
+- test_id: scope/regression-1
+  outcome: PASS
+artifacts:
+- sha256:example-immutable-log
+issuer: host:test-execution
+verified_by: host-registered-execution-validator

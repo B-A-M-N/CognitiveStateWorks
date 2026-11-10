@@ -1,0 +1,21 @@
+id: testworks.triage
+statework: testworks
+kind: internal_flow
+version: 1.0.0
+purpose: Inventory the change, test inventory, prior regressions, risk and confidence in existing results.
+inputs:
+- task_context
+- subject identity
+- change surface
+- known incidents
+- existing suites and receipts
+outputs:
+- inventory evidence with revision bindings
+- protected-invariant inventory
+- risk classification
+- unknowns and next decision
+prohibitions:
+- No trustworthy subject identity
+- Scope of observed code cannot be established
+handoff_rule: When repository observation or ownership is absent, request a Gitter truth packet through
+  composition.

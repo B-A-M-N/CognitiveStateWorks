@@ -68,7 +68,7 @@ def test_snapshot_cannot_be_forged_by_host_supplied_active_ids(tmp_path):
 
     assert snapshot["active_workflows"] == []
     assert {item["statework_id"] for item in snapshot["eligible_stateworks"]} == {
-        "gitter", "infrae", "tuid"}
+        "gitter", "infrae", "tuid", "godkiller", "terraformer", "testworks"}
 
 
 def test_rejected_transition_attempt_is_durable_and_does_not_advance_revision(tmp_path):

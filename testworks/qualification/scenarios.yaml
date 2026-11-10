@@ -1,0 +1,177 @@
+version: 1.0.0
+scenarios:
+- id: existing-evidence-sufficient
+  phase: before
+  expect: NO_ADDITIONAL_TESTING_NEEDED
+  context:
+    subject_known: true
+    scope_known: true
+    fingerprints_match: true
+    coverage_gap: false
+    receipts_fresh: true
+    requirements_met: true
+    risk_justified: true
+    mandatory_release_gate_due: false
+- id: behavioral-regression-gap
+  phase: before
+  expect: ADD_COVERAGE
+  context:
+    subject_known: true
+    scope_known: true
+    fingerprints_match: true
+    coverage_gap: true
+    receipts_fresh: true
+    requirements_met: false
+    risk_justified: true
+- id: unprotected-critical-invariant
+  phase: before
+  expect: ADD_COVERAGE
+  context:
+    subject_known: true
+    scope_known: true
+    fingerprints_match: true
+    unprotected_critical_invariant: true
+    receipts_fresh: true
+    requirements_met: true
+    risk_justified: true
+- id: stale-receipts-run-selected
+  phase: before
+  expect: RUN_SELECTED
+  context:
+    subject_known: true
+    scope_known: true
+    fingerprints_match: true
+    coverage_gap: false
+    receipts_fresh: false
+    requirements_met: true
+    risk_justified: true
+- id: revision-drift-invalidates
+  phase: before
+  expect: INVALIDATED
+  context:
+    subject_known: true
+    scope_known: true
+    fingerprints_match: false
+    receipts_fresh: true
+    requirements_met: true
+    risk_justified: true
+- id: ambiguous-subject-blocks
+  phase: before
+  expect: BLOCKED
+  context:
+    subject_known: false
+    scope_known: true
+    fingerprints_match: true
+    requirements_met: true
+- id: flaky-required-gate-is-inconclusive
+  phase: before
+  expect: INCONCLUSIVE
+  context:
+    subject_known: true
+    scope_known: true
+    fingerprints_match: true
+    flaky_required_gate: true
+    receipts_fresh: true
+    requirements_met: true
+    risk_justified: true
+- id: release-mandated-gate-cannot-be-skipped
+  phase: before
+  expect: RUN_SELECTED
+  context:
+    subject_known: true
+    scope_known: true
+    fingerprints_match: true
+    receipts_fresh: true
+    requirements_met: true
+    risk_justified: true
+    mandatory_release_gate_due: true
+- id: all-matching-required-results-qualified
+  phase: after
+  expect: QUALIFIED
+  context:
+    fingerprints_match: true
+    host_attested: true
+    receipts_fresh: true
+    required_tests:
+    - security-deny
+    - regression-1
+    results:
+      security-deny: PASS
+      regression-1: PASS
+    requirements_met: true
+- id: previous-revision-results-not-qualified
+  phase: after
+  expect: INVALIDATED
+  context:
+    fingerprints_match: false
+    host_attested: true
+    receipts_fresh: true
+    required_tests:
+    - security-deny
+    results:
+      security-deny: PASS
+    requirements_met: true
+- id: missing-execution-receipt-not-qualified
+  phase: after
+  expect: INCONCLUSIVE
+  context:
+    fingerprints_match: true
+    host_attested: false
+    receipts_fresh: true
+    required_tests:
+    - regression-1
+    results:
+      regression-1: PASS
+    requirements_met: true
+- id: skipped-required-test-not-qualified
+  phase: after
+  expect: INCONCLUSIVE
+  context:
+    fingerprints_match: true
+    host_attested: true
+    receipts_fresh: true
+    required_tests:
+    - regression-1
+    results:
+      regression-1: SKIP
+    requirements_met: true
+- id: no-required-tests-not-accidentally-qualified
+  phase: after
+  expect: INCONCLUSIVE
+  context:
+    fingerprints_match: true
+    host_attested: true
+    receipts_fresh: true
+    required_tests: []
+    results: {}
+    requirements_met: true
+- id: critical-invariant-not-removable
+  phase: removal
+  expect: false
+  context:
+    classification: CRITICAL_INVARIANT
+    owner_authorized: true
+    semantic_equivalence_proven: true
+    regression_detection_preserved: true
+    rollback_available: true
+    post_change_qualification_planned: true
+- id: redundancy-not-proven-not-removable
+  phase: removal
+  expect: false
+  context:
+    classification: REDUNDANT
+    owner_authorized: true
+    semantic_equivalence_proven: false
+    regression_detection_preserved: true
+    rollback_available: true
+    post_change_qualification_planned: true
+- id: safe-candidate-proposal-only
+  phase: removal
+  expect: true
+  context:
+    classification: REDUNDANT
+    owner_authorized: true
+    semantic_equivalence_proven: true
+    regression_detection_preserved: true
+    rollback_available: true
+    post_change_qualification_planned: true

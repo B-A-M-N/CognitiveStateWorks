@@ -1,0 +1,64 @@
+id: testworks
+domain: test_assurance
+purpose: Select, produce, evaluate, conserve, and qualify proportionate software test evidence without
+  rewarding test volume.
+name: TestWorks
+entrypoint: testworks/SKILL.md
+advisory_entrypoint: SKILL.md
+triggers:
+- testing strategy
+- test suite
+- test coverage
+- regression testing
+- test generation
+- flaky test
+- test qualification
+- test audit
+- release test evidence
+- redundant tests
+phase_tags:
+- domain_state
+behavior_tags:
+- testing
+- assurance
+- risk
+- verification
+- evidence
+- diagnose
+- recovery
+inputs:
+  required:
+  - task_context
+  optional:
+  - repository_truth_packet
+  - infrastructure_truth_packet
+emits:
+- testing_evidence_packet
+context_budget: medium
+handoff: testing_evidence_packet
+version: 1.0.0
+bundle_schema_version: 2
+engine:
+  kind: state_machine
+  contract: transitions.yaml
+  contract_version: state-machine/v1
+composition:
+  group: test_assurance
+  mode: composable
+  requires: []
+  conflicts: []
+contracts:
+  packets: contracts/packets.yaml
+  evidence: contracts/evidence-kinds.yaml
+  schemas:
+  - contracts/schemas/testing-evidence-packet.schema.json
+integrations:
+  cognitiveframeworks:
+    required: []
+    enhancements:
+    - owl
+    - anchor
+flow_selection:
+  fallback: required
+  ambiguity: error
+  no_match: blocked

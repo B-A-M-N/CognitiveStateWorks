@@ -12,6 +12,7 @@ packets:
     producer: gitter
     consumers:
     - getter
+    - testworks
     freshness:
       strategy: trusted_validator
       validator_id: repository_truth_v1

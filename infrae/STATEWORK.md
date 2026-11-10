@@ -210,6 +210,8 @@ flow names the states it serves:
 | [`recover`](flows/recover/flow.md) | DEGRADED/INCIDENT → STABLE | Restore redundancy, integrity, and capacity — not just liveness |
 | [`migrate`](flows/migrate/flow.md) | multi-state transitions | Dual-state coexistence; the migration state machine |
 | [`scale`](flows/scale/flow.md) | capacity transitions | Locate the bottleneck before adding anything |
+| [`qualify-distributed-test`](flows/qualify-distributed-test/flow.md) | remote host and async test runs | Preserve target identity, job continuity, and attributable evidence across connections |
+| [`qualify-container-runtime`](flows/qualify-container-runtime/flow.md) | Docker/container runtime qualification | Prove effective runtime identity, lifecycle, attribution, and ownership-safe cleanup |
 | [`decommission`](flows/decommission/flow.md) | any → RETIRED | Removal as a production change; may legally end in BLOCKED |
 
 ## Domains (specialists invoked by flows)

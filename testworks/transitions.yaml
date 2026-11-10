@@ -1,0 +1,273 @@
+version: 1.0.0
+initial_state: UNASSESSED
+states:
+- UNASSESSED
+- INVENTORIED
+- STRATEGIZED
+- EXECUTING
+- EVALUATED
+- VERIFIED
+- NO_ADDITIONAL_TESTING_NEEDED
+- BLOCKED
+- INCONCLUSIVE
+- INVALIDATED
+completion_states:
+- VERIFIED
+- NO_ADDITIONAL_TESTING_NEEDED
+normal_path:
+- UNASSESSED
+- INVENTORIED
+- STRATEGIZED
+- EXECUTING
+- EVALUATED
+- VERIFIED
+transitions:
+- from: UNASSESSED
+  to: INVENTORIED
+  trigger: inventory
+  id: testworks.unassessed.inventory.inventoried
+  work_class: observation
+  domain_effect: capture_test_inventory
+  progress_class: FORWARD_PROGRESS
+  required_evidence:
+  - testworks.inventory
+- from: INVENTORIED
+  to: STRATEGIZED
+  trigger: strategize
+  id: testworks.inventoried.strategize.strategized
+  work_class: planning
+  domain_effect: establish_risk_based_test_strategy
+  progress_class: FORWARD_PROGRESS
+  required_evidence:
+  - testworks.strategy
+  - testworks.risk_assessment
+- from: STRATEGIZED
+  to: EXECUTING
+  trigger: plan_run
+  id: testworks.strategized.plan_run.executing
+  work_class: planning
+  domain_effect: authorize_selected_test_work
+  progress_class: FORWARD_PROGRESS
+  consequential: true
+  required_evidence:
+  - testworks.run_plan
+  - testworks.authority
+  evidence_freshness:
+    mode: after_state_entry
+- from: EXECUTING
+  to: EVALUATED
+  trigger: execute
+  id: testworks.executing.execute.evaluated
+  work_class: execution
+  domain_effect: record_test_execution
+  progress_class: FORWARD_PROGRESS
+  required_evidence:
+  - testworks.run_receipt
+  - testworks.subject_identity
+- from: EVALUATED
+  to: VERIFIED
+  trigger: qualify
+  id: testworks.evaluated.qualify.verified
+  work_class: validation
+  domain_effect: verify_subject_assurance
+  progress_class: TERMINAL
+  consequential: true
+  required_evidence:
+  - testworks.qualification
+  - testworks.subject_identity
+  evidence_freshness:
+    mode: after_state_entry
+- from: STRATEGIZED
+  to: NO_ADDITIONAL_TESTING_NEEDED
+  trigger: decline
+  id: testworks.strategized.decline.no_additional_testing_needed
+  work_class: validation
+  domain_effect: justify_no_additional_testing
+  progress_class: TERMINAL
+  consequential: true
+  required_evidence:
+  - testworks.sufficiency
+  - testworks.subject_identity
+  evidence_freshness:
+    mode: after_state_entry
+- from: EVALUATED
+  to: INCONCLUSIVE
+  trigger: mark_inconclusive
+  id: testworks.evaluated.mark_inconclusive.inconclusive
+  work_class: assessment
+  domain_effect: record_inconclusive_evidence
+  progress_class: LATERAL
+  required_evidence:
+  - testworks.inconclusive
+- from: EXECUTING
+  to: INCONCLUSIVE
+  trigger: mark_inconclusive
+  id: testworks.executing.mark_inconclusive.inconclusive
+  work_class: assessment
+  domain_effect: record_inconclusive_evidence
+  progress_class: LATERAL
+  required_evidence:
+  - testworks.inconclusive
+- from: STRATEGIZED
+  to: INCONCLUSIVE
+  trigger: mark_inconclusive
+  id: testworks.strategized.mark_inconclusive.inconclusive
+  work_class: assessment
+  domain_effect: record_inconclusive_evidence
+  progress_class: LATERAL
+  required_evidence:
+  - testworks.inconclusive
+- from: UNASSESSED
+  to: BLOCKED
+  trigger: block
+  id: testworks.unassessed.block.blocked
+  work_class: blocking
+  domain_effect: record_blocking_condition
+  progress_class: LATERAL
+  required_evidence:
+  - testworks.blocker
+- from: INVENTORIED
+  to: BLOCKED
+  trigger: block
+  id: testworks.inventoried.block.blocked
+  work_class: blocking
+  domain_effect: record_blocking_condition
+  progress_class: LATERAL
+  required_evidence:
+  - testworks.blocker
+- from: STRATEGIZED
+  to: BLOCKED
+  trigger: block
+  id: testworks.strategized.block.blocked
+  work_class: blocking
+  domain_effect: record_blocking_condition
+  progress_class: LATERAL
+  required_evidence:
+  - testworks.blocker
+- from: EXECUTING
+  to: BLOCKED
+  trigger: block
+  id: testworks.executing.block.blocked
+  work_class: blocking
+  domain_effect: record_blocking_condition
+  progress_class: LATERAL
+  required_evidence:
+  - testworks.blocker
+- from: EVALUATED
+  to: BLOCKED
+  trigger: block
+  id: testworks.evaluated.block.blocked
+  work_class: blocking
+  domain_effect: record_blocking_condition
+  progress_class: LATERAL
+  required_evidence:
+  - testworks.blocker
+- from: INCONCLUSIVE
+  to: BLOCKED
+  trigger: block
+  id: testworks.inconclusive.block.blocked
+  work_class: blocking
+  domain_effect: record_blocking_condition
+  progress_class: LATERAL
+  required_evidence:
+  - testworks.blocker
+- from: STRATEGIZED
+  to: INVALIDATED
+  trigger: invalidate
+  id: testworks.strategized.invalidate.invalidated
+  work_class: invalidation
+  domain_effect: invalidate_stale_assurance
+  progress_class: INVALIDATION
+  required_evidence:
+  - testworks.invalidation
+  path_class: invalidation
+- from: EXECUTING
+  to: INVALIDATED
+  trigger: invalidate
+  id: testworks.executing.invalidate.invalidated
+  work_class: invalidation
+  domain_effect: invalidate_stale_assurance
+  progress_class: INVALIDATION
+  required_evidence:
+  - testworks.invalidation
+  path_class: invalidation
+- from: EVALUATED
+  to: INVALIDATED
+  trigger: invalidate
+  id: testworks.evaluated.invalidate.invalidated
+  work_class: invalidation
+  domain_effect: invalidate_stale_assurance
+  progress_class: INVALIDATION
+  required_evidence:
+  - testworks.invalidation
+  path_class: invalidation
+- from: INCONCLUSIVE
+  to: INVALIDATED
+  trigger: invalidate
+  id: testworks.inconclusive.invalidate.invalidated
+  work_class: invalidation
+  domain_effect: invalidate_stale_assurance
+  progress_class: INVALIDATION
+  required_evidence:
+  - testworks.invalidation
+  path_class: invalidation
+- from: BLOCKED
+  to: INVALIDATED
+  trigger: invalidate
+  id: testworks.blocked.invalidate.invalidated
+  work_class: invalidation
+  domain_effect: invalidate_stale_assurance
+  progress_class: INVALIDATION
+  required_evidence:
+  - testworks.invalidation
+  path_class: invalidation
+- from: VERIFIED
+  to: INVALIDATED
+  trigger: invalidate
+  id: testworks.verified.invalidate.invalidated
+  work_class: invalidation
+  domain_effect: invalidate_stale_assurance
+  progress_class: INVALIDATION
+  required_evidence:
+  - testworks.invalidation
+  path_class: invalidation
+- from: NO_ADDITIONAL_TESTING_NEEDED
+  to: INVALIDATED
+  trigger: invalidate
+  id: testworks.no_additional_testing_needed.invalidate.invalidated
+  work_class: invalidation
+  domain_effect: invalidate_stale_assurance
+  progress_class: INVALIDATION
+  required_evidence:
+  - testworks.invalidation
+  path_class: invalidation
+- from: INVALIDATED
+  to: UNASSESSED
+  trigger: reassess
+  id: testworks.invalidated.reassess.unassessed
+  work_class: recovery
+  domain_effect: reobserve_changed_subject
+  progress_class: RECOVERY
+  required_evidence:
+  - testworks.reassessment
+  path_class: recovery
+- from: BLOCKED
+  to: UNASSESSED
+  trigger: reassess
+  id: testworks.blocked.reassess.unassessed
+  work_class: recovery
+  domain_effect: reobserve_changed_subject
+  progress_class: RECOVERY
+  required_evidence:
+  - testworks.reassessment
+  path_class: recovery
+- from: INCONCLUSIVE
+  to: STRATEGIZED
+  trigger: recover
+  id: testworks.inconclusive.recover.strategized
+  work_class: recovery
+  domain_effect: plan_assurance_recovery
+  progress_class: RECOVERY
+  required_evidence:
+  - testworks.recovery_plan
+  path_class: recovery

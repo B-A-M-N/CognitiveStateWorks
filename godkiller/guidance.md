@@ -1,0 +1,3 @@
+# GodKiller — runtime guidance
+
+Keep the active subject revision, explicit ownership, baseline contracts, host/operator mutation authority and claim-specific trusted evidence in scope. Distinguish declared from effective architecture. Never equate files or passing isolated tests with demonstrated correctness. Never call another StateWork. Use the existing CSW host for durable evidence and transition authority. In advisory installations do not claim enforcement. When evidence contradicts the state, invalidate and re-observe. Use smallest reversible slices; conclude no action is warranted when supported.

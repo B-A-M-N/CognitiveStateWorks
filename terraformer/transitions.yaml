@@ -1,0 +1,258 @@
+version: 1.0.0
+initial_state: UNASSESSED
+states:
+- UNASSESSED
+- CONTRACTS_VALIDATED
+- COMPOSITION_PLANNED
+- CONNECTING
+- INTEGRATED
+- QUALIFIED
+- COMPLETE
+- NO_COMPOSITION_NEEDED
+- INCOMPATIBLE
+- PARTIALLY_INTEGRATED
+- BLOCKED
+- INVALIDATED
+- RECOVERY_REQUIRED
+completion_states:
+- COMPLETE
+- NO_COMPOSITION_NEEDED
+normal_path:
+- UNASSESSED
+- CONTRACTS_VALIDATED
+- COMPOSITION_PLANNED
+- CONNECTING
+- INTEGRATED
+- QUALIFIED
+- COMPLETE
+transitions:
+- id: terraformer.unassessed.validate_contracts.contracts_validated
+  from: UNASSESSED
+  to: CONTRACTS_VALIDATED
+  trigger: validate_contracts
+  required_evidence:
+  - terraformer.inventory
+  - terraformer.contract_validation
+  work_class: validate_contracts
+  domain_effect: terraformer.validate_contracts
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+- id: terraformer.contracts_validated.no_action.no_composition_needed
+  from: CONTRACTS_VALIDATED
+  to: NO_COMPOSITION_NEEDED
+  trigger: no_action
+  required_evidence:
+  - terraformer.no_action
+  - terraformer.contract_validation
+  work_class: no_action
+  domain_effect: terraformer.no_action
+  progress_class: TERMINAL
+  path_class: normal
+- id: terraformer.contracts_validated.plan.composition_planned
+  from: CONTRACTS_VALIDATED
+  to: COMPOSITION_PLANNED
+  trigger: plan
+  required_evidence:
+  - terraformer.composition_plan
+  - terraformer.contract_validation
+  work_class: plan
+  domain_effect: terraformer.plan
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+- id: terraformer.contracts_validated.reject.incompatible
+  from: CONTRACTS_VALIDATED
+  to: INCOMPATIBLE
+  trigger: reject
+  required_evidence:
+  - terraformer.incompatibility
+  work_class: reject
+  domain_effect: terraformer.reject
+  progress_class: INVALIDATION
+  path_class: failure
+- id: terraformer.incompatible.reconcile.contracts_validated
+  from: INCOMPATIBLE
+  to: CONTRACTS_VALIDATED
+  trigger: reconcile
+  required_evidence:
+  - terraformer.contract_validation
+  - terraformer.recovery
+  work_class: reconcile
+  domain_effect: terraformer.reconcile
+  progress_class: RECOVERY
+  path_class: recovery
+- id: terraformer.composition_planned.authorize.connecting
+  from: COMPOSITION_PLANNED
+  to: CONNECTING
+  trigger: authorize
+  required_evidence:
+  - terraformer.authority
+  - terraformer.composition_plan
+  work_class: authorize
+  domain_effect: terraformer.authorize
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+  consequential: true
+  evidence_freshness:
+    mode: after_state_entry
+- id: terraformer.connecting.integrate.integrated
+  from: CONNECTING
+  to: INTEGRATED
+  trigger: integrate
+  required_evidence:
+  - terraformer.connection_result
+  - terraformer.ownership_integrity
+  work_class: integrate
+  domain_effect: terraformer.integrate
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+  consequential: true
+  evidence_freshness:
+    mode: after_state_entry
+- id: terraformer.connecting.partial.partially_integrated
+  from: CONNECTING
+  to: PARTIALLY_INTEGRATED
+  trigger: partial
+  required_evidence:
+  - terraformer.partial_integration
+  work_class: partial
+  domain_effect: terraformer.partial
+  progress_class: LATERAL
+  path_class: normal
+- id: terraformer.partially_integrated.resume.connecting
+  from: PARTIALLY_INTEGRATED
+  to: CONNECTING
+  trigger: resume
+  required_evidence:
+  - terraformer.composition_plan
+  - terraformer.recovery
+  work_class: resume
+  domain_effect: terraformer.resume
+  progress_class: RECOVERY
+  path_class: recovery
+- id: terraformer.partially_integrated.recover.recovery_required
+  from: PARTIALLY_INTEGRATED
+  to: RECOVERY_REQUIRED
+  trigger: recover
+  required_evidence:
+  - terraformer.invalidation
+  work_class: recover
+  domain_effect: terraformer.recover
+  progress_class: RECOVERY
+  path_class: recovery
+- id: terraformer.integrated.qualify.qualified
+  from: INTEGRATED
+  to: QUALIFIED
+  trigger: qualify
+  required_evidence:
+  - terraformer.e2e
+  - terraformer.ownership_integrity
+  - terraformer.lifecycle_recovery
+  - terraformer.compatibility
+  - terraformer.qualification
+  work_class: qualify
+  domain_effect: terraformer.qualify
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+  consequential: true
+  evidence_freshness:
+    mode: after_state_entry
+- id: terraformer.qualified.publish.complete
+  from: QUALIFIED
+  to: COMPLETE
+  trigger: publish
+  required_evidence:
+  - terraformer.completion
+  - terraformer.qualification
+  work_class: publish
+  domain_effect: terraformer.publish
+  progress_class: TERMINAL
+  path_class: normal
+  consequential: true
+  evidence_freshness:
+    mode: after_state_entry
+- id: terraformer.qualified.next_slice.composition_planned
+  from: QUALIFIED
+  to: COMPOSITION_PLANNED
+  trigger: next_slice
+  required_evidence:
+  - terraformer.composition_plan
+  - terraformer.qualification
+  work_class: next_slice
+  domain_effect: terraformer.next_slice
+  progress_class: LATERAL
+  path_class: normal
+- id: terraformer.integrated.replan.composition_planned
+  from: INTEGRATED
+  to: COMPOSITION_PLANNED
+  trigger: replan
+  required_evidence:
+  - terraformer.incompatibility
+  - terraformer.composition_plan
+  work_class: replan
+  domain_effect: terraformer.replan
+  progress_class: LATERAL
+  path_class: normal
+- id: terraformer.connecting.recover.recovery_required
+  from: CONNECTING
+  to: RECOVERY_REQUIRED
+  trigger: recover
+  required_evidence:
+  - terraformer.invalidation
+  work_class: recover
+  domain_effect: terraformer.recover
+  progress_class: RECOVERY
+  path_class: recovery
+- id: terraformer.recovery_required.reobserve.unassessed
+  from: RECOVERY_REQUIRED
+  to: UNASSESSED
+  trigger: reobserve
+  required_evidence:
+  - terraformer.recovery
+  - terraformer.inventory
+  work_class: reobserve
+  domain_effect: terraformer.reobserve
+  progress_class: RECOVERY
+  path_class: recovery
+- id: terraformer.blocked.reobserve.unassessed
+  from: BLOCKED
+  to: UNASSESSED
+  trigger: reobserve
+  required_evidence:
+  - terraformer.recovery
+  - terraformer.inventory
+  work_class: reobserve
+  domain_effect: terraformer.reobserve
+  progress_class: RECOVERY
+  path_class: recovery
+- id: terraformer.invalidated.reobserve.unassessed
+  from: INVALIDATED
+  to: UNASSESSED
+  trigger: reobserve
+  required_evidence:
+  - terraformer.invalidation
+  - terraformer.inventory
+  work_class: reobserve
+  domain_effect: terraformer.reobserve
+  progress_class: RECOVERY
+  path_class: recovery
+- id: terraformer.any.block.blocked
+  from: '*'
+  to: BLOCKED
+  trigger: block
+  required_evidence:
+  - terraformer.blocker
+  work_class: block
+  domain_effect: terraformer.block
+  progress_class: INVALIDATION
+  path_class: failure
+- id: terraformer.any.invalidate.invalidated
+  from: '*'
+  to: INVALIDATED
+  trigger: invalidate
+  required_evidence:
+  - terraformer.invalidation
+  work_class: invalidate
+  domain_effect: terraformer.invalidate
+  progress_class: INVALIDATION
+  path_class: invalidation
+

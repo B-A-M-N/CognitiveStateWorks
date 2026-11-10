@@ -1,0 +1,56 @@
+schema_version: qualification-cases/v1
+skill: godkiller
+cases:
+- id: monolith
+  shape: single-process monolith
+  observed: A single object owns persistence, policy, transport and reporting; three independent change
+    drivers
+  expected: Partition by cohesive authority and retain a single-process runtime; verify no shared writable
+    context
+  negative: Reject changing a class name or adding wrappers as completed work
+- id: event-service
+  shape: event-driven service
+  observed: Dispatcher owns unrelated domain decisions, retries and delivery state
+  expected: Keep legitimate delivery authority, move unrelated policies and prove event semantics
+  negative: Reject event bus as universal architectural answer
+- id: plugin-host
+  shape: plugin-based application
+  observed: Plugin host owns plugin-specific business state and all extension decisions
+  expected: Separate plugin-owned policy while host retains legitimate lifecycle/trust authority
+  negative: Reject new global plugin manager with unrestricted mutable state
+- id: shared-state
+  shape: concurrent shared-state system
+  observed: Single synchronized owner coordinates one coherent invariant despite large size
+  expected: NO_DECOMPOSITION_NEEDED if invariant is coherent and coupling claims fail
+  negative: Reject duplicate writers and stale subject revision
+- id: partial-iteration
+  shape: incremental transformation
+  observed: A bounded responsibility or connection slice has been verified and other scope remains
+  expected: Re-enter PARTITIONED from VERIFIED and continue without peer dependence
+  negative: Reject full-system completion from one successful local slice
+- id: stale-evidence
+  shape: changed subject revision
+  observed: Observed revision changed after packet creation
+  expected: Invalidate dependent state; re-observe and requalify before consequential action
+  negative: Reject previously passing tests as fresh proof
+- id: legitimate-central-authority
+  shape: large synchronized owner
+  observed: One component owns a cross-resource invariant; independent decision and state ownership is not demonstrated
+  expected: NO_DECOMPOSITION_NEEDED unless causal evidence establishes distinct responsibilities and safe ownership transfer
+  negative: Reject size, method count, or team count as sufficient evidence to split
+- id: shared-state-invariant
+  shape: concurrent shared-state system
+  observed: A proposed extraction would introduce a second writer for state protected by one coherent owner
+  expected: Preserve the single owner or establish an explicit coordination contract before extraction
+  negative: Reject wrappers, mirrored state, or a proxy manager as independent ownership
+- id: cosmetic-split
+  shape: wrapper-only decomposition
+  observed: Methods moved into files while mutable state, decisions, and central dispatch remain in the original owner
+  expected: Keep EXTRACTING or reject the partition; VERIFIED requires demonstrated independent responsibility and authority
+  negative: Reject file-count growth or a renamed facade as proof of decomposition
+- id: stale-revision
+  shape: concurrent repository change
+  observed: Subject revision changes between partition approval and extraction authorization
+  expected: Reject stale evidence and re-map the current subject before authorizing the slice
+  negative: Reject a prior approval or green test run as current authorization
+

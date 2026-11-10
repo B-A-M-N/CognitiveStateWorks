@@ -1,0 +1,106 @@
+version: 1.0.0
+kinds:
+  testworks.inventory:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.strategy:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.risk_assessment:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.run_plan:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.run_receipt:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.evaluation:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.qualification:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.sufficiency:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.blocker:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.inconclusive:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.invalidation:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.recovery_plan:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.reassessment:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.subject_identity:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  testworks.authority:
+    authoritative: true
+    allowed_issuers:
+    - host:authorization
+    validator: host-authorization-v1
+    schema: authority-record-v1

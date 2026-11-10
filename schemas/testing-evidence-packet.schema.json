@@ -1,0 +1,345 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitivestatework.dev/schemas/testing-evidence-packet.schema.json",
+  "title": "TestWorks testing evidence packet",
+  "description": "Typed test-assurance handoff. Inherits canonical CSW envelope; host validates trust, subject fingerprint, and transitions.",
+  "allOf": [
+    {
+      "$ref": "handoff-packet.schema.json"
+    },
+    {
+      "properties": {
+        "packet_type": {
+          "const": "testing_evidence_packet"
+        },
+        "producer": {
+          "const": "testworks"
+        },
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "payload": {
+          "type": "object",
+          "required": [
+            "subject",
+            "purpose",
+            "decision",
+            "risk",
+            "selection",
+            "results",
+            "evidence_quality",
+            "residual_risks",
+            "next_action"
+          ],
+          "properties": {
+            "subject": {
+              "type": "object",
+              "required": [
+                "kind",
+                "identifier",
+                "revision",
+                "fingerprint",
+                "environment_fingerprint"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "identifier": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "fingerprint": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "environment_fingerprint": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "dirty_tree_fingerprint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "suite_fingerprint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "workload_fingerprint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "purpose": {
+              "type": "string",
+              "minLength": 10
+            },
+            "decision": {
+              "enum": [
+                "ADD_COVERAGE",
+                "RUN_SELECTED",
+                "REPAIR_TESTS",
+                "CONSOLIDATE_CANDIDATES",
+                "QUALIFIED",
+                "NO_ADDITIONAL_TESTING_NEEDED",
+                "BLOCKED",
+                "INCONCLUSIVE",
+                "INVALIDATED"
+              ]
+            },
+            "risk": {
+              "type": "object",
+              "required": [
+                "severity",
+                "rationale",
+                "critical_invariants"
+              ],
+              "properties": {
+                "severity": {
+                  "enum": [
+                    "LOW",
+                    "MODERATE",
+                    "HIGH",
+                    "CRITICAL"
+                  ]
+                },
+                "rationale": {
+                  "type": "string",
+                  "minLength": 3
+                },
+                "critical_invariants": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "selection": {
+              "type": "object",
+              "required": [
+                "chosen",
+                "omitted"
+              ],
+              "properties": {
+                "chosen": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/test_selection"
+                  }
+                },
+                "omitted": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/omitted_selection"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "results": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/test_result"
+              }
+            },
+            "evidence_quality": {
+              "type": "object",
+              "required": [
+                "grade",
+                "explanation",
+                "receipt_refs"
+              ],
+              "properties": {
+                "grade": {
+                  "enum": [
+                    "OBSERVATIONAL",
+                    "EXECUTED",
+                    "ATTESTED",
+                    "INSUFFICIENT"
+                  ]
+                },
+                "explanation": {
+                  "type": "string"
+                },
+                "receipt_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "residual_risks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "next_action": {
+              "type": "string",
+              "minLength": 1
+            },
+            "portfolio_findings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/portfolio_finding"
+              }
+            },
+            "qualification_scope": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "test_selection": {
+      "type": "object",
+      "required": [
+        "id",
+        "purpose",
+        "reason"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "omitted_selection": {
+      "type": "object",
+      "required": [
+        "id",
+        "reason",
+        "residual_risk"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "residual_risk": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "test_result": {
+      "type": "object",
+      "required": [
+        "test_id",
+        "status",
+        "receipt_ref"
+      ],
+      "properties": {
+        "test_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "SKIP",
+            "FLAKY",
+            "NOT_RUN"
+          ]
+        },
+        "receipt_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "duration_ms": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "failure_class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "portfolio_finding": {
+      "type": "object",
+      "required": [
+        "test_id",
+        "classification",
+        "action",
+        "justification"
+      ],
+      "properties": {
+        "test_id": {
+          "type": "string"
+        },
+        "classification": {
+          "enum": [
+            "CRITICAL_INVARIANT",
+            "UNIQUE_REGRESSION",
+            "USEFUL_EXPENSIVE",
+            "REDUNDANT",
+            "FLAKY",
+            "OBSOLETE",
+            "UNPROVEN_VALUE"
+          ]
+        },
+        "action": {
+          "enum": [
+            "KEEP",
+            "SELECTIVE_RUN",
+            "REPAIR",
+            "QUARANTINE_WITH_RISK",
+            "PROPOSE_CONSOLIDATION",
+            "PROPOSE_REMOVAL"
+          ]
+        },
+        "justification": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

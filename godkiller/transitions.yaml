@@ -1,0 +1,219 @@
+version: 1.0.0
+initial_state: UNASSESSED
+states:
+- UNASSESSED
+- MAPPED
+- DIAGNOSED
+- PARTITIONED
+- EXTRACTING
+- VERIFIED
+- HANDOFF_READY
+- NO_DECOMPOSITION_NEEDED
+- BLOCKED
+- INVALIDATED
+- RECOVERY_REQUIRED
+completion_states:
+- HANDOFF_READY
+- NO_DECOMPOSITION_NEEDED
+normal_path:
+- UNASSESSED
+- MAPPED
+- DIAGNOSED
+- PARTITIONED
+- EXTRACTING
+- VERIFIED
+- HANDOFF_READY
+transitions:
+- id: godkiller.unassessed.observe.mapped
+  from: UNASSESSED
+  to: MAPPED
+  trigger: observe
+  required_evidence:
+  - godkiller.inventory
+  work_class: observe
+  domain_effect: godkiller.observe
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+- id: godkiller.mapped.diagnose.diagnosed
+  from: MAPPED
+  to: DIAGNOSED
+  trigger: diagnose
+  required_evidence:
+  - godkiller.diagnosis
+  work_class: diagnose
+  domain_effect: godkiller.diagnose
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+- id: godkiller.mapped.no_action.no_decomposition_needed
+  from: MAPPED
+  to: NO_DECOMPOSITION_NEEDED
+  trigger: no_action
+  required_evidence:
+  - godkiller.no_action
+  - godkiller.baseline
+  work_class: no_action
+  domain_effect: godkiller.no_action
+  progress_class: TERMINAL
+  path_class: normal
+- id: godkiller.diagnosed.no_action.no_decomposition_needed
+  from: DIAGNOSED
+  to: NO_DECOMPOSITION_NEEDED
+  trigger: no_action
+  required_evidence:
+  - godkiller.no_action
+  - godkiller.diagnosis
+  work_class: no_action
+  domain_effect: godkiller.no_action
+  progress_class: TERMINAL
+  path_class: normal
+- id: godkiller.diagnosed.partition.partitioned
+  from: DIAGNOSED
+  to: PARTITIONED
+  trigger: partition
+  required_evidence:
+  - godkiller.partition
+  - godkiller.baseline
+  work_class: partition
+  domain_effect: godkiller.partition
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+- id: godkiller.partitioned.authorize.extracting
+  from: PARTITIONED
+  to: EXTRACTING
+  trigger: authorize
+  required_evidence:
+  - godkiller.authority
+  - godkiller.partition
+  - godkiller.baseline
+  work_class: authorize
+  domain_effect: godkiller.authorize
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+  consequential: true
+  evidence_freshness:
+    mode: after_state_entry
+- id: godkiller.extracting.verify.verified
+  from: EXTRACTING
+  to: VERIFIED
+  trigger: verify
+  required_evidence:
+  - godkiller.change_result
+  - godkiller.boundary_independence
+  - godkiller.regression
+  work_class: verify
+  domain_effect: godkiller.verify
+  progress_class: FORWARD_PROGRESS
+  path_class: normal
+  consequential: true
+  evidence_freshness:
+    mode: after_state_entry
+- id: godkiller.verified.publish.handoff_ready
+  from: VERIFIED
+  to: HANDOFF_READY
+  trigger: publish
+  required_evidence:
+  - godkiller.packet_validation
+  - godkiller.regression
+  work_class: publish
+  domain_effect: godkiller.publish
+  progress_class: TERMINAL
+  path_class: normal
+  consequential: true
+  evidence_freshness:
+    mode: after_state_entry
+- id: godkiller.verified.next_slice.partitioned
+  from: VERIFIED
+  to: PARTITIONED
+  trigger: next_slice
+  required_evidence:
+  - godkiller.partition
+  - godkiller.regression
+  work_class: next_slice
+  domain_effect: godkiller.next_slice
+  progress_class: LATERAL
+  path_class: normal
+- id: godkiller.extracting.replan.partitioned
+  from: EXTRACTING
+  to: PARTITIONED
+  trigger: replan
+  required_evidence:
+  - godkiller.change_result
+  - godkiller.partition
+  work_class: replan
+  domain_effect: godkiller.replan
+  progress_class: LATERAL
+  path_class: normal
+- id: godkiller.extracting.recover.recovery_required
+  from: EXTRACTING
+  to: RECOVERY_REQUIRED
+  trigger: recover
+  required_evidence:
+  - godkiller.invalidation
+  work_class: recover
+  domain_effect: godkiller.recover
+  progress_class: RECOVERY
+  path_class: recovery
+- id: godkiller.partitioned.recover.recovery_required
+  from: PARTITIONED
+  to: RECOVERY_REQUIRED
+  trigger: recover
+  required_evidence:
+  - godkiller.invalidation
+  work_class: recover
+  domain_effect: godkiller.recover
+  progress_class: RECOVERY
+  path_class: recovery
+- id: godkiller.recovery_required.reobserve.mapped
+  from: RECOVERY_REQUIRED
+  to: MAPPED
+  trigger: reobserve
+  required_evidence:
+  - godkiller.recovery
+  - godkiller.inventory
+  work_class: reobserve
+  domain_effect: godkiller.reobserve
+  progress_class: RECOVERY
+  path_class: recovery
+- id: godkiller.blocked.reobserve.mapped
+  from: BLOCKED
+  to: MAPPED
+  trigger: reobserve
+  required_evidence:
+  - godkiller.recovery
+  - godkiller.inventory
+  work_class: reobserve
+  domain_effect: godkiller.reobserve
+  progress_class: RECOVERY
+  path_class: recovery
+- id: godkiller.invalidated.reobserve.mapped
+  from: INVALIDATED
+  to: MAPPED
+  trigger: reobserve
+  required_evidence:
+  - godkiller.invalidation
+  - godkiller.inventory
+  work_class: reobserve
+  domain_effect: godkiller.reobserve
+  progress_class: RECOVERY
+  path_class: recovery
+- id: godkiller.any.block.blocked
+  from: '*'
+  to: BLOCKED
+  trigger: block
+  required_evidence:
+  - godkiller.blocker
+  work_class: block
+  domain_effect: godkiller.block
+  progress_class: INVALIDATION
+  path_class: failure
+- id: godkiller.any.invalidate.invalidated
+  from: '*'
+  to: INVALIDATED
+  trigger: invalidate
+  required_evidence:
+  - godkiller.invalidation
+  work_class: invalidate
+  domain_effect: godkiller.invalidate
+  progress_class: INVALIDATION
+  path_class: invalidation
+

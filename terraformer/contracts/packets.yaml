@@ -1,0 +1,14 @@
+version: 1.0.0
+packets:
+  terraformer_integration_packet:
+    schema: contracts/schemas/terraformer_integration_packet.schema.json
+    schema_version: 1.0.0
+    producer: terraformer
+    consumers: []
+    freshness:
+      strategy: exact_context
+      packet_path: payload.composition_fingerprint
+      context_path: composition_fingerprint
+    required_context:
+    - composition_fingerprint
+

@@ -1,0 +1,94 @@
+version: 1.0.0
+kinds:
+  godkiller.inventory:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.diagnosis:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.no_action:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.partition:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.baseline:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.authority:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.change_result:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.boundary_independence:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.regression:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.packet_validation:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.blocker:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.invalidation:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+  godkiller.recovery:
+    authoritative: true
+    allowed_issuers:
+    - host:statework-observation
+    validator: host-statework-observation-v1
+    schema: statework-observation-v1
+    mintable_by_host: true
+

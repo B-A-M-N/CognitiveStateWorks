@@ -1,0 +1,47 @@
+packet_id: testworks-example-001
+packet_type: testing_evidence_packet
+schema_version: 1.0.0
+producer: testworks
+task_id: example
+subject_ref: repo:example@abc123
+observed_at: '2026-11-10T00:00:00Z'
+input_state: STRATEGIZED
+output_state: NO_ADDITIONAL_TESTING_NEEDED
+evidence_refs: [testworks:inventory:01, testworks:sufficiency:01]
+unknowns: []
+blockers: []
+authority: host:authorization/example
+invalidated_by: fingerprint_change_or_contradictory_observation
+recommended_next: close_scoped_assurance_decision
+payload:
+  subject:
+    kind: repository
+    identifier: repo:example
+    revision: abc123
+    fingerprint: sha256:example-effective-context
+    environment_fingerprint: sha256:example-environment
+    dirty_tree_fingerprint: null
+    suite_fingerprint: sha256:example-suites
+    workload_fingerprint: null
+  purpose: Determine whether a nonfunctional documentation edit warrants new tests.
+  decision: NO_ADDITIONAL_TESTING_NEEDED
+  risk:
+    severity: LOW
+    rationale: Documentation-only, no generated behavioral artifact.
+    critical_invariants: []
+  selection:
+    chosen: []
+    omitted:
+    - id: existing-unit-suite
+      reason: No executable behavior or test definition changed.
+      residual_risk: Changed documentation could be interpreted incorrectly.
+  results: []
+  evidence_quality:
+    grade: OBSERVATIONAL
+    explanation: Diff verified as documentation only; no new execution asserted.
+    receipt_refs: [gitter:truth:01]
+  residual_risks:
+  - Documentation could mislead; review documentation separately.
+  next_action: No new tests or runs for this scoped decision.
+  portfolio_findings: []
+  qualification_scope: Documentation-only edit at abc123, excluding generated docs.

@@ -1,0 +1,19 @@
+id: testworks.design
+statework: testworks
+kind: internal_flow
+version: 1.0.0
+purpose: Choose independent behavioral oracles and a minimum useful fault-detection case set.
+inputs:
+- inventory
+- risk model
+- known defects
+- behavioral specification
+outputs:
+- case specifications
+- oracle evidence
+- duplication assessment
+- expected detection claims
+prohibitions:
+- No meaningful invariant or independent oracle
+- Same defect is already credibly detected by an existing test
+handoff_rule: No source mutation; pass designed cases to generate when warranted.
